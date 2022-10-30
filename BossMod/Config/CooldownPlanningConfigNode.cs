@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Logging;
+using ImGuiNET;
 using System;
 using System.Collections.Generic;
 
@@ -33,7 +34,7 @@ namespace BossMod
 
             var plans = CooldownPlans.GetOrAdd(c);
             ImGui.SetNextItemWidth(100);
-            if (ImGui.BeginCombo("Cooldown plan", plans.Selected()?.Name ?? "none"))
+            if (ImGui.BeginCombo("冷却计划", plans.Selected()?.Name ?? "none"))
             {
                 if (ImGui.Selectable("none", plans.SelectedIndex < 0))
                 {
@@ -51,7 +52,7 @@ namespace BossMod
                 ImGui.EndCombo();
             }
             ImGui.SameLine();
-            if (ImGui.Button(plans.SelectedIndex >= 0 ? "Edit plan" : "Create new plan"))
+            if (ImGui.Button(plans.SelectedIndex >= 0 ? "编辑计划" : "创建新计划"))
             {
                 if (plans.SelectedIndex < 0)
                 {
@@ -65,19 +66,19 @@ namespace BossMod
 
         public override void DrawCustom(UITree tree, WorldState ws)
         {
-            foreach (var _ in tree.Node("Cooldown plans"))
+            foreach (var _ in tree.Node("冷却计划"))
             {
                 foreach (var (c, plans) in CooldownPlans)
                 {
                     for (int i = 0; i < plans.Available.Count; ++i)
                     {
                         ImGui.PushID($"{c}/{i}");
-                        if (ImGui.Button($"Edit"))
+                        if (ImGui.Button($"编辑"))
                         {
                             StartPlanEditor(plans.Available[i], CreateStateMachine());
                         }
                         ImGui.SameLine();
-                        if (ImGui.Button($"Copy"))
+                        if (ImGui.Button($"创建副本"))
                         {
                             var plan = plans.Available[i].Clone();
                             plan.Name += " Copy";
@@ -86,7 +87,7 @@ namespace BossMod
                             StartPlanEditor(plan, CreateStateMachine());
                         }
                         ImGui.SameLine();
-                        if (ImGui.Button($"Delete"))
+                        if (ImGui.Button($"删除"))
                         {
                             if (plans.SelectedIndex == i)
                                 plans.SelectedIndex = -1;
@@ -106,7 +107,7 @@ namespace BossMod
                         ImGui.PopID();
                     }
                 }
-                ImGui.TextUnformatted("Add new plan:");
+                ImGui.TextUnformatted("添加新计划:");
                 foreach (var (c, plans) in CooldownPlans)
                 {
                     ImGui.SameLine();
@@ -126,7 +127,7 @@ namespace BossMod
             if (sm == null)
                 return;
             var editor = new CooldownPlanEditor(plan, sm, NotifyModified);
-            var w = WindowManager.CreateWindow($"Cooldown planner", editor.Draw, () => { }, () => true);
+            var w = WindowManager.CreateWindow($"冷却计划", editor.Draw, () => { }, () => true);
             w.SizeHint = new(600, 600);
             w.MinSize = new(100, 100);
         }

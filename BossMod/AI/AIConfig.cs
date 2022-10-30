@@ -1,12 +1,12 @@
 ﻿namespace BossMod.AI
 {
-    [ConfigDisplay(Name = "AI settings (very experimental!!!)", Order = 5)]
+    [ConfigDisplay(Name = "AI设置 (非常实验性!!!)", Order = 5)]
     class AIConfig : ConfigNode
     {
-        [PropertyDisplay("Enable AI")]
+        [PropertyDisplay("启用 AI")]
         public bool Enabled = false;
 
-        [PropertyDisplay("Broadcast keypresses to other windows")]
+        [PropertyDisplay("广播按键到其他窗口")]
         public bool BroadcastToSlaves = false;
     }
 }

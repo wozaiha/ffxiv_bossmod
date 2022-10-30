@@ -1,15 +1,15 @@
 ﻿namespace BossMod
 {
-    [ConfigDisplay(Name = "General settings", Order = 0)]
+    [ConfigDisplay(Name = "常规设置", Order = 0)]
     public class GeneralConfig : ConfigNode
     {
-        [PropertyDisplay("Dump world state events")]
+        [PropertyDisplay("转储世界状态事件")]
         public bool DumpWorldStateEvents = false;
 
-        [PropertyDisplay("Dump server packets")]
+        [PropertyDisplay("转储服务器发包")]
         public bool DumpServerPackets = false;
 
-        [PropertyDisplay("Dump client packets")]
+        [PropertyDisplay("转储客户端发包")]
         public bool DumpClientPackets = false;
     }
 }

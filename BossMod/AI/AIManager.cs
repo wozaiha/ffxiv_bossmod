@@ -68,13 +68,13 @@ namespace BossMod.AI
 
         private void DrawOverlay()
         {
-            ImGui.TextUnformatted($"AI: {(_beh != null ? "on" : "off")}, master={_autorot.WorldState.Party[_masterSlot]?.Name}");
-            ImGui.TextUnformatted($"Navi={_controller.NaviTargetPos} / {_controller.NaviTargetRot}{(_controller.ForceFacing ? " forced" : "")}");
+            ImGui.TextUnformatted($"AI: {(_beh != null ? "开" : "关")}, 队长={_autorot.WorldState.Party[_masterSlot]?.Name}");
+            ImGui.TextUnformatted($"Navi={_controller.NaviTargetPos} / {_controller.NaviTargetRot}{(_controller.ForceFacing ? " 强制" : "")}");
             _beh?.DrawDebug();
-            if (ImGui.Button("Reset"))
+            if (ImGui.Button("重设"))
                 SwitchToIdle();
             ImGui.SameLine();
-            if (ImGui.Button("Follow leader"))
+            if (ImGui.Button("跟随队长"))
             {
                 var leader = Service.PartyList[(int)Service.PartyList.PartyLeaderIndex];
                 int leaderSlot = leader != null ? _autorot.WorldState.Party.ContentIDs.IndexOf((ulong)leader.ContentId) : -1;

@@ -57,20 +57,20 @@ namespace BossMod
 
         public void DrawControls()
         {
-            if (ImGui.Button("Export to clipboard"))
+            if (ImGui.Button("导出至剪切板"))
                 ExportToClipboard();
             ImGui.SameLine();
-            if (ImGui.Button("Import from clipboard"))
+            if (ImGui.Button("从剪切板导入"))
                 ImportFromClipboard();
             ImGui.SameLine();
             ImGui.SetNextItemWidth(100);
-            if (ImGui.InputText("Name", ref _name, 255))
+            if (ImGui.InputText("名称", ref _name, 255))
                 _onModified();
 
             if (ImGui.Button("<##Phase") && _selectedPhase > 0)
                 --_selectedPhase;
             ImGui.SameLine();
-            ImGui.TextUnformatted($"Current phase: {_selectedPhase + 1}/{_tree.Phases.Count}");
+            ImGui.TextUnformatted($"当前阶段: {_selectedPhase + 1}/{_tree.Phases.Count}");
             ImGui.SameLine();
             if (ImGui.Button(">##Phase") && _selectedPhase < _tree.Phases.Count - 1)
                 ++_selectedPhase;
@@ -88,7 +88,7 @@ namespace BossMod
             if (ImGui.Button("<##Branch") && _phaseBranches[_selectedPhase] > 0)
                 --_phaseBranches[_selectedPhase];
             ImGui.SameLine();
-            ImGui.TextUnformatted($"Current branch: {_phaseBranches[_selectedPhase] + 1}/{selPhase.StartingNode.NumBranches}");
+            ImGui.TextUnformatted($"当前分支: {_phaseBranches[_selectedPhase] + 1}/{selPhase.StartingNode.NumBranches}");
             ImGui.SameLine();
             if (ImGui.Button(">##Branch") && _phaseBranches[_selectedPhase] < selPhase.StartingNode.NumBranches - 1)
                 ++_phaseBranches[_selectedPhase];

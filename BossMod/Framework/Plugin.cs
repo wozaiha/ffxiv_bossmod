@@ -39,7 +39,6 @@ namespace BossMod
             Service.LuminaGameData = Service.DataManager.GameData;
             //Service.Device = pluginInterface.UiBuilder.Device;
             Service.Condition.ConditionChange += OnConditionChanged;
-            MultiboxUnlock.Exec();
             Camera.Instance = new();
             Mouseover.Instance = new();
             ActionManagerEx.Instance = new();
