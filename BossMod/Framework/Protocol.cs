@@ -74,17 +74,20 @@ namespace BossMod
             Logout = 0x0316,
 
             // 需要单独处理
-            EffectResult1 = 0x034C, // Valid
-            EffectResult4 = 0x0284,
-            EffectResult8 = 0x027D,
-            EffectResult16 = 0x0150,
+            // 48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 81 EA ? ? ? ?
+            // Second match
+            EffectResult1 = 0x034C, // Size 0x60
+            EffectResult4 = 0x03B4, // Size 0x168
+            EffectResult8 = 0x0080, // Size 0x2C8
+            EffectResult16 = 0x01CE, // Size 0x588
 
-            EffectResultBasic1 = 0x0204, // Valid
-            EffectResultBasic4 = 0x00C4,
-            EffectResultBasic8 = 0x036F,
-            EffectResultBasic16 = 0x014A,
-            EffectResultBasic32 = 0x0089,
-            EffectResultBasic64 = 0x0307,
+            // 48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ?
+            EffectResultBasic1 = 0x0204, // Size 0x18
+            EffectResultBasic4 = 0x01DF, // Size 0x48
+            EffectResultBasic8 = 0x03D9, // Size 0x88
+            EffectResultBasic16 = 0x036A, // Size 0x108
+            EffectResultBasic32 = 0x02C8, // Size 0x208
+            EffectResultBasic64 = 0x01BB, // Size 0x408
 
             // below are opcodes i've reversed myself...
 
