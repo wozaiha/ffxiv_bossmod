@@ -25,6 +25,10 @@ namespace BossMod.Endwalker.Alliance.A3Azeyma
             {
                 _active.Add(caster.Position + 40 * caster.Rotation.ToDirection());
             }
+            else
+            {
+                _active.Clear();
+            }
         }
 
         public override void OnEventEnvControl(BossModule module, uint directorID, byte index, uint state)
