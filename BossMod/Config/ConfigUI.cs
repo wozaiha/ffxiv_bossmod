@@ -97,12 +97,6 @@ namespace BossMod
             }
         }
 
-        private string EnumString(Enum v)
-        {
-            var name = v.ToString();
-            return v.GetType().GetField(name)?.GetCustomAttribute<PropertyDisplayAttribute>()?.Label ?? name;
-        }
-
         private bool DrawProperty(PropertyDisplayAttribute props, ConfigNode node, FieldInfo member, bool v)
         {
             if (ImGui.Checkbox(props.Label, ref v))
@@ -115,18 +109,10 @@ namespace BossMod
 
         private bool DrawProperty(PropertyDisplayAttribute props, ConfigNode node, FieldInfo member, Enum v)
         {
-            ImGui.SetNextItemWidth(200);
-            if (ImGui.BeginCombo(props.Label, EnumString(v)))
+            if (UICombo.Enum(props.Label, ref v))
             {
-                foreach (var opt in Enum.GetValues(v.GetType()))
-                {
-                    if (ImGui.Selectable(EnumString((Enum)opt), opt.Equals(v)))
-                    {
-                        member.SetValue(node, opt);
-                        node.NotifyModified();
-                    }
-                }
-                ImGui.EndCombo();
+                member.SetValue(node, v);
+                node.NotifyModified();
             }
             return true;
         }
@@ -162,7 +148,7 @@ namespace BossMod
             if (group == null)
                 return false;
 
-            foreach (var tn in _tree.Node(props.Label, false, v.Validate() ? 0xffffffff : 0xff00ffff))
+            foreach (var tn in _tree.Node(props.Label, false, v.Validate() ? 0xffffffff : 0xff00ffff, () => DrawPropertyContextMenu(node, member, v)))
             {
                 var assignments = _root.Get<PartyRolesConfig>().SlotsPerAssignment(_ws.Party);
                 if (ImGui.BeginTable("table", group.Names.Length + 2, ImGuiTableFlags.SizingFixedFit))
@@ -202,6 +188,19 @@ namespace BossMod
                 }
             }
             return true;
+        }
+
+        private void DrawPropertyContextMenu(ConfigNode node, FieldInfo member, GroupAssignment v)
+        {
+            foreach (var preset in member.GetCustomAttributes<GroupPresetAttribute>())
+            {
+                if (ImGui.MenuItem(preset.Name))
+                {
+                    for (int i = 0; i < preset.Preset.Length; ++i)
+                        v.Assignments[i] = preset.Preset[i];
+                    node.NotifyModified();
+                }
+            }
         }
     }
 }

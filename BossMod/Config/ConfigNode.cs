@@ -18,10 +18,12 @@ namespace BossMod
     public class PropertyDisplayAttribute : Attribute
     {
         public string Label;
+        public uint Color;
 
-        public PropertyDisplayAttribute(string label)
+        public PropertyDisplayAttribute(string label, uint color = 0xffffffff)
         {
             Label = label;
+            Color = color;
         }
     }
 
@@ -60,19 +62,7 @@ namespace BossMod
         // deserialize fields from json; default implementation should work fine for most cases
         public virtual void Deserialize(JObject j, JsonSerializer ser)
         {
-            var t = GetType();
-            foreach (var (f, data) in j)
-            {
-                var field = t.GetField(f);
-                if (field == null)
-                    continue;
-
-                var value = data?.ToObject(field.FieldType, ser);
-                if (value == null)
-                    continue;
-
-                field.SetValue(this, value);
-            }
+            ser.DeserializeFields(j, this);
         }
 
         // serialize node to json; default implementation should work fine for most cases

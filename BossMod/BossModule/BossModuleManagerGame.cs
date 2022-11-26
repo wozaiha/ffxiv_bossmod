@@ -1,6 +1,4 @@
-﻿using Dalamud.Interface;
-using Dalamud.Utility;
-using ImGuiNET;
+﻿using ImGuiNET;
 using System;
 using System.Numerics;
 
@@ -67,6 +65,8 @@ namespace BossMod
                     _planWindow.Flags |= ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoInputs;
             }
         }
+
+        protected override float PrepullTimer() => Countdown.TimeRemaining() ?? 10000;
 
         private void DrawMainWindow()
         {
@@ -152,7 +152,7 @@ namespace BossMod
                 w.MinSize = new(100, 100);
             }
             ImGui.SameLine();
-            ActiveModule.PlanConfig?.DrawSelectionUI(ActiveModule.Raid.Player()?.Class ?? Class.None, ActiveModule.StateMachine);
+            ActiveModule.PlanConfig?.DrawSelectionUI(ActiveModule.Raid.Player()?.Class ?? Class.None, ActiveModule.StateMachine, ActiveModule.Info);
 
             ActiveModule.PlanExecution.Draw(ActiveModule.StateMachine);
         }

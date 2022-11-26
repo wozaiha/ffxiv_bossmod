@@ -81,6 +81,7 @@ namespace BossMod
         public int AutoAction { get; private set; }
         public float MaxCastTime { get; private set; }
         protected Autorotation Autorot;
+        private DateTime _playerCombatStart;
         private DateTime _autoActionExpire;
         private QuestLockCheck _lock;
         private ManualActionOverride _mq;
@@ -104,6 +105,17 @@ namespace BossMod
         // this is called after worldstate update
         public void UpdateMainTick()
         {
+            bool wasInCombat = _playerCombatStart != new DateTime();
+            if (Player.InCombat && !wasInCombat)
+            {
+                _playerCombatStart = Autorot.WorldState.CurrentTime;
+            }
+            else if (!Player.InCombat && wasInCombat)
+            {
+                _playerCombatStart = new();
+                _autoActionExpire = new(); // immediately expire auto actions, if any
+            }
+
             _mq.RemoveExpired();
             if (AutoAction != AutoActionNone && _autoActionExpire < Autorot.WorldState.CurrentTime)
             {
@@ -176,10 +188,19 @@ namespace BossMod
         public void UpdateAutoAction(int autoAction, float maxCastTime)
         {
             if (AutoAction != autoAction)
+            {
                 Log($"Auto action set to {autoAction}");
-            AutoAction = autoAction;
+                AutoAction = autoAction;
+                _autoActionExpire = Autorot.Config.StickyAutoActions ? DateTime.MaxValue : Autorot.WorldState.CurrentTime.AddSeconds(1.0f);
+            }
+            else if (Autorot.Config.StickyAutoActions)
+            {
+                Log($"Turning off auto action {autoAction}");
+                AutoAction = AutoActionNone;
+                _autoActionExpire = new();
+            }
+
             MaxCastTime = maxCastTime;
-            _autoActionExpire = Autorot.WorldState.CurrentTime.AddSeconds(1.0f);
         }
 
         public bool HandleUserActionRequest(ActionID action, Actor? target, Vector3? forcedGTPos = null)
@@ -251,26 +272,37 @@ namespace BossMod
             var mqGCD = _mq.PeekGCD();
             var nextGCD = mqGCD != null ? new NextAction(mqGCD.Action, mqGCD.Target, mqGCD.TargetPos, mqGCD.Definition, ActionSource.Manual) : AutoAction != AutoActionNone ? CalculateAutomaticGCD() : new();
             float ogcdDeadline = nextGCD.Action ? Autorot.Cooldowns[CommonDefinitions.GCDGroup] : float.MaxValue;
+            //Log($"{nextGCD.Action} = {ogcdDeadline}");
 
             // search for any oGCDs that we can execute without delaying GCD
             var mqOGCD = _mq.PeekOGCD(effAnimLock, animLockDelay, ogcdDeadline);
             if (mqOGCD != null)
                 return new(mqOGCD.Action, mqOGCD.Target, mqOGCD.TargetPos, mqOGCD.Definition, ActionSource.Manual);
 
-            // see if there is anything from cooldown plan to be executed
-            var cpAction = Autorot.Hints.PlannedActions.FirstOrDefault(x => CanExecutePlannedAction(x.action, x.target, effAnimLock, animLockDelay, ogcdDeadline));
-            if (cpAction.action)
-                return new(cpAction.action, cpAction.target, new(), SupportedActions[cpAction.action].Definition, ActionSource.Planned);
+            // see if there is anything high-priority from cooldown plan to be executed
+            var cpActionHigh = Autorot.Hints.PlannedActions.FirstOrDefault(x => !x.lowPriority && CanExecutePlannedAction(x.action, x.target, effAnimLock, animLockDelay, ogcdDeadline));
+            if (cpActionHigh.action)
+                return new(cpActionHigh.action, cpActionHigh.target, new(), SupportedActions[cpActionHigh.action].Definition, ActionSource.Planned);
 
             // note: we intentionally don't check that automatic oGCD really does not clip GCD - we provide utilities that allow module checking that, but also allow overriding if needed
             var nextOGCD = AutoAction != AutoActionNone ? CalculateAutomaticOGCD(ogcdDeadline) : new();
-            return nextOGCD.Action ? nextOGCD : nextGCD;
+            if (nextOGCD.Action)
+                return nextOGCD;
+
+            // finally see whether there are any low-priority planned actions
+            var cpActionLow = Autorot.Hints.PlannedActions.FirstOrDefault(x => x.lowPriority && CanExecutePlannedAction(x.action, x.target, effAnimLock, animLockDelay, ogcdDeadline));
+            if (cpActionLow.action)
+                return new(cpActionLow.action, cpActionLow.target, new(), SupportedActions[cpActionLow.action].Definition, ActionSource.Planned);
+
+            return nextGCD;
         }
 
-        public void NotifyActionExecuted(ActionID action, Actor? target)
+        public void NotifyActionExecuted(NextAction action)
         {
-            _mq.Pop(action);
-            OnActionExecuted(action, target);
+            _mq.Pop(action.Action);
+            if (action.Source == ActionSource.Planned)
+                Autorot.Bossmods.ActiveModule?.PlanExecution?.NotifyActionExecuted(Autorot.Bossmods.ActiveModule.StateMachine, action.Action);
+            OnActionExecuted(action.Action, action.Target);
         }
 
         public void NotifyActionSucceeded(ActorCastEvent ev)
@@ -290,16 +322,16 @@ namespace BossMod
         protected abstract void OnActionExecuted(ActionID action, Actor? target);
         protected abstract void OnActionSucceeded(ActorCastEvent ev);
 
-        protected NextAction MakeResult(ActionID action, Actor target)
+        protected NextAction MakeResult(ActionID action, Actor? target)
         {
             var data = action ? SupportedActions[action] : null;
             if (data == null)
                 return new();
             if (data.Definition.Range == 0)
                 target = Player; // override range-0 actions to always target player
-            return data.Allowed(Player, target) ? new(action, target, new(), data.Definition, ActionSource.Automatic) : new();
+            return target != null && data.Allowed(Player, target) ? new(action, target, new(), data.Definition, ActionSource.Automatic) : new();
         }
-        protected NextAction MakeResult<AID>(AID aid, Actor target) where AID : Enum => MakeResult(ActionID.MakeSpell(aid), target);
+        protected NextAction MakeResult<AID>(AID aid, Actor? target) where AID : Enum => MakeResult(ActionID.MakeSpell(aid), target);
 
         protected void SimulateManualActionForAI(ActionID action, Actor? target, bool enable)
         {
@@ -317,17 +349,20 @@ namespace BossMod
         // fill common state properties
         protected void FillCommonPlayerState(CommonRotation.PlayerState s)
         {
+            var vuln = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextVulnerable(Autorot.Bossmods.ActiveModule.StateMachine) ?? (false, 10000);
+
             var am = ActionManagerEx.Instance!;
             var pc = Service.ClientState.LocalPlayer;
             s.Level = pc?.Level ?? 0;
             s.UnlockProgress = _lock.Progress();
             s.CurMP = Player.CurMP;
+            s.TargetingEnemy = Autorot.PrimaryTarget != null && Autorot.PrimaryTarget.Type is ActorType.Enemy or ActorType.Unknown && !Autorot.PrimaryTarget.IsAlly;
             s.AnimationLock = am.EffectiveAnimationLock;
             s.AnimationLockDelay = am.EffectiveAnimationLockDelay;
             s.ComboTimeLeft = am.ComboTimeLeft;
             s.ComboLastAction = am.ComboLastMove;
 
-            s.RaidBuffsLeft = 0;
+            s.RaidBuffsLeft = vuln.Item1 ? vuln.Item2 : 0;
             foreach (var status in Player.Statuses.Where(s => IsDamageBuff(s.ID)))
             {
                 s.RaidBuffsLeft = MathF.Max(s.RaidBuffsLeft, StatusDuration(status.ExpireAt));
@@ -339,17 +374,18 @@ namespace BossMod
         protected void FillCommonStrategy(CommonRotation.Strategy strategy, ActionID potion)
         {
             var targetEnemy = Autorot.PrimaryTarget != null ? Autorot.Hints.PotentialTargets.Find(e => e.Actor == Autorot.PrimaryTarget) : null;
-            strategy.Prepull = !Player.InCombat;
+            var downtime = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextDowntime(Autorot.Bossmods.ActiveModule.StateMachine) ?? (false, 0);
+            var poslock = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextPositioning(Autorot.Bossmods.ActiveModule.StateMachine) ?? (false, 10000);
+            var vuln = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextVulnerable(Autorot.Bossmods.ActiveModule.StateMachine) ?? (false, 10000);
+
+            strategy.CombatTimer = CombatTimer();
             strategy.ForbidDOTs = targetEnemy?.ForbidDOTs ?? false;
             strategy.ForceMovementIn = MaxCastTime;
-            strategy.FightEndIn = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextDowntime(Autorot.Bossmods.ActiveModule?.StateMachine) ?? 0;
-            strategy.RaidBuffsIn = Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextVulnerable(Autorot.Bossmods.ActiveModule?.StateMachine) ?? 10000;
+            strategy.FightEndIn = downtime.Item1 ? 0 : downtime.Item2;
+            strategy.RaidBuffsIn = vuln.Item1 ? 0 : vuln.Item2;
             if (Autorot.Bossmods.ActiveModule?.PlanConfig != null) // assumption: if there is no planning support for encounter (meaning it's something trivial, like outdoor boss), don't expect any cooldowns
                 strategy.RaidBuffsIn = Math.Min(strategy.RaidBuffsIn, Autorot.Bossmods.RaidCooldowns.NextDamageBuffIn(Autorot.WorldState.CurrentTime));
-            strategy.PositionLockIn = Autorot.Config.EnableMovement ? (Autorot.Bossmods.ActiveModule?.PlanExecution?.EstimateTimeToNextPositioning(Autorot.Bossmods.ActiveModule?.StateMachine) ?? 10000) : 0;
-            strategy.Potion = Autorot.Config.PotionUse;
-            if (strategy.Potion != CommonRotation.Strategy.PotionUse.Manual && !HaveItemInInventory(potion.ID)) // don't try to use potions if player doesn't have any
-                strategy.Potion = CommonRotation.Strategy.PotionUse.Manual;
+            strategy.PositionLockIn = Autorot.Config.EnableMovement && !poslock.Item1 ? poslock.Item2 : 0;
         }
 
         // smart targeting utility: return target (if friendly) or mouseover (if friendly) or null (otherwise)
@@ -394,6 +430,14 @@ namespace BossMod
                 && Autorot.Cooldowns[definition.Definition.CooldownGroup] - effAnimLock <= definition.Definition.CooldownAtFirstCharge
                 && effAnimLock + definition.Definition.AnimationLock + animLockDelay <= deadline
                 && definition.Allowed(Player, target);
+        }
+
+        private float CombatTimer()
+        {
+            if (_playerCombatStart != new DateTime())
+                return (float)(Autorot.WorldState.CurrentTime - _playerCombatStart).TotalSeconds;
+            var countdown = Countdown.TimeRemaining();
+            return countdown != null ? -Math.Max(0.001f, countdown.Value) : float.MinValue;
         }
     }
 }

@@ -24,8 +24,8 @@
         [PropertyDisplay("移除瞬发技能所带来的动画锁定 (a-la xivalex)")]
         public bool RemoveAnimationLockDelay = false;
 
-        [PropertyDisplay("药水使用策略")]
-        public CommonRotation.Strategy.PotionUse PotionUse = CommonRotation.Strategy.PotionUse.Manual;
+        [PropertyDisplay("Sticky auto actions")]
+        public bool StickyAutoActions = false;
 
         public enum GroundTargetingMode
         {

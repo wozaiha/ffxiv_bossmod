@@ -11,7 +11,7 @@ namespace BossMod
 {
     public class ConfigRoot
     {
-        private const int _version = 5;
+        private const int _version = 6;
 
         public event EventHandler? Modified;
         private Dictionary<Type, ConfigNode> _nodes = new();
@@ -47,7 +47,7 @@ namespace BossMod
                 if (payload != null)
                 {
                     payload = ConvertConfig(payload, version);
-                    var ser = BuildSerializer();
+                    var ser = Serialization.BuildSerializer();
                     foreach (var (t, j) in payload)
                     {
                         var type = Type.GetType(t);
@@ -70,7 +70,7 @@ namespace BossMod
         {
             try
             {
-                var ser = BuildSerializer();
+                var ser = Serialization.BuildSerializer();
                 JObject payload = new();
                 foreach (var (t, n) in _nodes)
                 {
@@ -89,13 +89,6 @@ namespace BossMod
             {
                 Service.Log($"Failed to save config to {file.FullName}: {e}");
             }
-        }
-
-        public static JsonSerializer BuildSerializer()
-        {
-            var res = new JsonSerializer();
-            res.Converters.Add(new StringEnumConverter());
-            return res;
         }
 
         public List<string> ConsoleCommand(IReadOnlyList<string> args)
@@ -259,6 +252,54 @@ namespace BossMod
                             {
                                 RenameKeys(planAbilities, renames);
                             }
+                        }
+                    }
+                }
+            }
+            // v6: new cooldown planner
+            if (version < 6)
+            {
+                foreach (var (k, config) in payload)
+                {
+                    var plans = config?["CooldownPlans"] as JObject;
+                    if (plans == null)
+                        continue;
+                    bool isTEA = k == typeof(Shadowbringers.Ultimate.TEA.TEAConfig).FullName;
+                    foreach (var (cls, planList) in plans)
+                    {
+                        var avail = planList?["Available"] as JArray;
+                        if (avail == null)
+                            continue;
+                        var c = Enum.Parse<Class>(cls);
+                        var aidType = PlanDefinitions.Classes[c].AIDType;
+                        foreach (var plan in avail)
+                        {
+                            var abilities = plan?["PlanAbilities"] as JObject;
+                            if (abilities == null)
+                                continue;
+
+                            var actions = new JArray();
+                            foreach (var (aidRaw, aidData) in abilities)
+                            {
+                                var aidList = aidData as JArray;
+                                if (aidList == null)
+                                    continue;
+
+                                var aid = new ActionID(uint.Parse(aidRaw));
+                                // hack revert, out of config modules existing before v6 only TEA could use raw intuition instead of BW
+                                if (!isTEA && aid.ID == (uint)WAR.AID.RawIntuition)
+                                    aid = ActionID.MakeSpell(WAR.AID.Bloodwhetting);
+
+                                foreach (var abilUse in aidList)
+                                {
+                                    abilUse["ID"] = aidType.GetEnumName(aid.ID);
+                                    abilUse["StateID"] = $"0x{abilUse["StateID"]?.Value<uint>():X8}";
+                                    actions.Add(abilUse);
+                                }
+                            }
+                            var jplan = (JObject)plan!;
+                            jplan.Remove("PlanAbilities");
+                            jplan["Actions"] = actions;
                         }
                     }
                 }
