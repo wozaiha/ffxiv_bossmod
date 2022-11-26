@@ -15,7 +15,7 @@ namespace BossMod
             ActorCast = 0x0166,
             ActorControl = 0x00E4,
             ActorControlSelf = 0x0125,
-            ActorControlTarget = 0x02A3,
+            ActorControlTarget = 0x0292,
             ActorGauge = 0x0388,
             PresetWaymark = 0x00BD,
             Waymark = 0x0079,

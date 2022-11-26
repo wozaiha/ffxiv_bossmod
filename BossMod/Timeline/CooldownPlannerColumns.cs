@@ -67,13 +67,7 @@ namespace BossMod
             return index >= 0 ? _colCooldowns[index] : null;
         }
 
-        public void ClearEvents()
-        {
-            foreach (var c in _columns.Values)
-                c.Events.Clear();
-        }
-
-        public void DrawControls()
+        public void DrawCommonControls()
         {
             if (ImGui.Button("导出至剪切板"))
                 ExportToClipboard();
