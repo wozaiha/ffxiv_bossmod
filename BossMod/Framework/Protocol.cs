@@ -51,9 +51,11 @@ namespace BossMod
             // S: E8 ? ? ? ? 4C 8B C0 BA ? ? ? ? 48 63 C6
             UpdateHater = 0x0236, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
 
-            // Unused
-            Countdown = 0xF34E,
-            CountdownCancel = 0xF17B,
+            // E8 ? ? ? ? 80 7B 0A ? 75 ?
+            Countdown = 0x0240,
+
+            // E8 ? ? ? ? 48 85 C0 74 ? 44 0F B7 4B 04 4C 8D 43 08
+            CountdownCancel = 0x02F7,
 
             // 44 8B 09 4C 8D 41 34
             RSVData = 0x008D,
