@@ -27,6 +27,9 @@
         [PropertyDisplay("Sticky auto actions")]
         public bool StickyAutoActions = false;
 
+        [PropertyDisplay("Restore rotation after action use")]
+        public bool RestoreRotation = false;
+
         public enum GroundTargetingMode
         {
             [PropertyDisplay("通过额外的点击手动选择位置 (正常游戏行为)")]
