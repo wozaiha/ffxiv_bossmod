@@ -20,10 +20,10 @@ namespace BossMod
         private WorldStateGame _ws;
         private WorldStateLogger _debugLogger;
         private BossModuleManagerGame _bossmod;
-        private InputOverride _inputOverride;
-        private Autorotation _autorotation;
-        private AI.AIManager _ai;
-        private AI.Broadcast _broadcast;
+        // private InputOverride _inputOverride;
+        // private Autorotation _autorotation;
+        // private AI.AIManager _ai;
+        // private AI.Broadcast _broadcast;
         private TimeSpan _prevUpdateTime;
 
         public Plugin(
@@ -54,10 +54,10 @@ namespace BossMod
             _ws = new(_network);
             _debugLogger = new(_ws, dalamud.ConfigDirectory);
             _bossmod = new(_ws);
-            _inputOverride = new();
-            _autorotation = new(_network, _bossmod, _inputOverride);
-            _ai = new(_inputOverride, _autorotation);
-            _broadcast = new();
+            // _inputOverride = new();
+            // _autorotation = new(_network, _bossmod, _inputOverride);
+            // _ai = new(_inputOverride, _autorotation);
+            // _broadcast = new();
 
             dalamud.UiBuilder.DisableAutomaticUiHide = true;
             dalamud.UiBuilder.Draw += DrawUI;
@@ -71,9 +71,9 @@ namespace BossMod
             _debugLogger.Dispose();
             _bossmod.Dispose();
             _network.Dispose();
-            _ai.Dispose();
-            _autorotation.Dispose();
-            _inputOverride.Dispose();
+            // _ai.Dispose();
+            // _autorotation.Dispose();
+            // _inputOverride.Dispose();
             Mouseover.Instance?.Dispose();
             ActionManagerEx.Instance?.Dispose();
             _commandManager.RemoveHandler("/vbm");
@@ -111,7 +111,8 @@ namespace BossMod
 
         private void OpenDebugUI()
         {
-            var ui = new DebugUI(_ws, _autorotation, _inputOverride);
+            // var ui = new DebugUI(_ws, _autorotation, _inputOverride);
+            var ui = new DebugUI(_ws, null, null);
             var w = WindowManager.CreateWindow("Boss mod debug UI", ui.Draw, ui.Dispose, () => true);
             w.SizeHint = new Vector2(300, 200);
         }
@@ -123,9 +124,9 @@ namespace BossMod
             Camera.Instance?.Update();
             _ws.Update(_prevUpdateTime);
             _bossmod.Update();
-            _autorotation.Update();
-            _ai.Update();
-            _broadcast.Update();
+            // _autorotation.Update();
+            // _ai.Update();
+            // _broadcast.Update();
 
             bool uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
             if (!uiHidden)
