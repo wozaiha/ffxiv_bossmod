@@ -42,7 +42,7 @@ namespace BossMod
     {
         public static ActionID IDAutoAttack = new(ActionType.Spell, 7);
         public static ActionID IDAutoShot = new(ActionType.Spell, 8);
-        public static ActionID IDSprint = new(ActionType.General, 3);
+        public static ActionID IDSprint = new(ActionType.Spell, 3);
         public static ActionID IDPotionStr = new(ActionType.Item, 1036109); // hq grade 6 tincture of strength
         public static ActionID IDPotionDex = new(ActionType.Item, 1036110); // hq grade 6 tincture of dexterity
         public static ActionID IDPotionVit = new(ActionType.Item, 1036111); // hq grade 6 tincture of vitality
