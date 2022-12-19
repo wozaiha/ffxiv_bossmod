@@ -107,10 +107,10 @@ namespace BossMod
         //public static unsafe Vector3 GameObjectNonInterpolatedPosition(GameObject obj) => ReadField<Vector3>(GameObjectInternal(obj), 0x10);
         //public static unsafe float GameObjectNonInterpolatedRotation(GameObject obj) => ReadField<float>(GameObjectInternal(obj), 0x20);
         public static unsafe byte CharacterShieldValue(Character chr) => CharacterInternal(chr)->ShieldValue; // % of max hp; see effect result
-        public static unsafe byte CharacterAnimationState(Character chr, bool second) => ReadField<byte>(CharacterInternal(chr), second ? 0x1AC5 : 0x1AC4); // see actor control 62 // 41 88 86 ? ? ? ? E8 ? ? ? ? 0F 28 CE (second, first one just second - 1)
-        public static unsafe byte CharacterModelState(Character chr) => ReadField<byte>(CharacterInternal(chr), 0x1AC6); // see actor control 63 // 41 88 86 ? ? 00 00 49 8B CE 41 0F B6 ?
-        public static unsafe float CharacterCastRotation(Character chr) => ReadField<float>(CharacterInternal(chr), 0x1A6C); // see ActorCast -> Character::StartCast // F3 0F 11 97 ? ? ? ? F6 43
-        public static unsafe ulong CharacterTargetID(Character chr) => ReadField<ulong>(CharacterInternal(chr), 0x1A50); // until FFXIVClientStructs fixes offset and type... // 48 89 AB ? ? ? ? 48 89 AB ? ? ? ? 89 AB ? ? ? ? 48 89 B3
+        public static unsafe byte CharacterAnimationState(Character chr, bool second) => ReadField<byte>(CharacterInternal(chr), second ? 0x1ADD : 0x1ADC); // see actor control 62 // 41 88 86 ? ? ? ? E8 ? ? ? ? 0F 28 CE (second, first one just second - 1)
+        public static unsafe byte CharacterModelState(Character chr) => ReadField<byte>(CharacterInternal(chr), 0x1ADE); // see actor control 63 // 41 88 86 ? ? 00 00 49 8B CE 41 0F B6 ?
+        public static unsafe float CharacterCastRotation(Character chr) => ReadField<float>(CharacterInternal(chr), 0x1A84); // see ActorCast -> Character::StartCast // F3 0F 11 97 ? ? ? ? F6 43
+        public static unsafe ulong CharacterTargetID(Character chr) => ReadField<ulong>(CharacterInternal(chr), 0x1A68); // until FFXIVClientStructs fixes offset and type... // 48 89 AB ? ? ? ? 48 89 AB ? ? ? ? 89 AB ? ? ? ? 48 89 B3
         public static unsafe Vector3 BattleCharaCastLocation(BattleChara chara) => BattleCharaInternal(chara)->SpellCastInfo.CastLocation; // see ActorCast -> Character::StartCast -> Character::StartOmen
 
         public static unsafe ulong SceneObjectFlags(FFXIVClientStructs.FFXIV.Client.Graphics.Scene.Object* o)
