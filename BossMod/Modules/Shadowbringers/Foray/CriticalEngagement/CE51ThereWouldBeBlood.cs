@@ -5,8 +5,6 @@
         Boss = 0x319A, // R6.000, x1
         Helper = 0x233C, // R0.500, x17
         EmbitteredSoul = 0x319B, // R3.600, spawn during fight
-        //_Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x2, EventObj type
-        //_Gen_Actor1eb176 = 0x1EB176, // R0.500, x0, EventObj type, and more spawn during fight
     };
 
     public enum AID : uint
@@ -21,7 +19,8 @@
         Teleport = 23580, // Boss->location, no cast, teleport
         GaleCannon = 21475, // Boss->self, 5.0s cast, range 30 width 12 rect aoe
 
-        //FlightOfTheMalefic1 = 24810, // Boss->self, 7.0s cast, single-target
+        FlightOfTheMalefic1 = 24810, // Boss->self, 7.0s cast, single-target, visual (45, -45, -135)
+        //FlightOfTheMalefic2 = 24811, // Boss->self, 7.0s cast, single-target, visual (-45, -135, 135)
         FlightOfTheMalefic3 = 24812, // Boss->self, 7.0s cast, single-target, visual (45, -45, 135)
         FlightOfTheMalefic4 = 24813, // Boss->self, 7.0s cast, single-target, visual (45, -135, 135)
         FlightOfTheMaleficAOECone = 23579, // Helper->self, 7.0s cast, range 30 90-degree cone aoe
