@@ -36,6 +36,8 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
         CloseQuarters = 23944, // Boss->self, 5.0s cast, single-target
         CloseQuartersAOE = 23945, // Helper->self, 5.0s cast, range 15 circle
         // TODO: far
+        CallControlledBurn = 23950, // Boss->self, 5.0s cast, single-target, visual (spread)
+        CallControlledBurnAOE = 23951, // ImperialAssaultCraft->players, 5.0s cast, range 6 circle spread
         MagitekBlaster = 23952, // Boss->players, 5.0s cast, range 8 circle stack
     };
 
@@ -55,7 +57,6 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
     }
 
     // note: there are two casters, probably to avoid 32-target limit - we only want to show one
-    // TODO: does it really ignore immunes?..
     class GustSlash : Components.KnockbackFromCastTarget
     {
         public GustSlash() : base(ActionID.MakeSpell(AID.GustSlashAOE), 35, true, 1, null, Kind.DirForward) { }
@@ -71,16 +72,19 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
         public AirborneExplosion() : base(ActionID.MakeSpell(AID.AirborneExplosion), 10) { }
     }
 
+    class RideDownAOE : Components.SelfTargetedAOEs
+    {
+        public RideDownAOE() : base(ActionID.MakeSpell(AID.RideDown), new AOEShapeRect(60, 5)) { }
+    }
+
     // note: there are two casters, probably to avoid 32-target limit - we only want to show one
-    // TODO: show aoe near center (width?)
     // TODO: generalize to reusable component
-    // TODO: does it really ignore immunes?..
-    class RideDown : Components.Knockback
+    class RideDownKnockback : Components.Knockback
     {
         private List<Source> _sources = new();
         private static AOEShapeCone _shape = new(30, 90.Degrees());
 
-        public RideDown() : base(12, ActionID.MakeSpell(AID.RideDownAOE), true, 1) { }
+        public RideDownKnockback() : base(ActionID.MakeSpell(AID.RideDownAOE), false, 1) { }
 
         public override IEnumerable<Source> Sources(BossModule module, int slot, Actor actor) => _sources;
 
@@ -90,8 +94,8 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
             {
                 _sources.Clear();
                 // charge always happens through center, so create two sources with origin at center looking orthogonally
-                _sources.Add(new(module.Bounds.Center, spell.FinishAt, _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
-                _sources.Add(new(module.Bounds.Center, spell.FinishAt, _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
+                _sources.Add(new(module.Bounds.Center, 12, spell.FinishAt, _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
+                _sources.Add(new(module.Bounds.Center, 12, spell.FinishAt, _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
             }
         }
 
@@ -118,6 +122,11 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
         public CloseQuarters() : base(ActionID.MakeSpell(AID.CloseQuartersAOE), new AOEShapeCircle(15)) { }
     }
 
+    class CallControlledBurn : Components.SpreadFromCastTargets
+    {
+        public CallControlledBurn() : base(ActionID.MakeSpell(AID.CallControlledBurnAOE), 6) { }
+    }
+
     class MagitekBlaster : Components.StackWithCastTargets
     {
         public MagitekBlaster() : base(ActionID.MakeSpell(AID.MagitekBlaster), 8) { }
@@ -135,10 +144,12 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
                 .ActivateOnEnter<GustSlash>()
                 .ActivateOnEnter<FireShot>()
                 .ActivateOnEnter<AirborneExplosion>()
-                .ActivateOnEnter<RideDown>()
+                .ActivateOnEnter<RideDownAOE>()
+                .ActivateOnEnter<RideDownKnockback>()
                 .ActivateOnEnter<CallRaze>()
                 .ActivateOnEnter<RawSteel>()
                 .ActivateOnEnter<CloseQuarters>()
+                .ActivateOnEnter<CallControlledBurn>()
                 .ActivateOnEnter<MagitekBlaster>();
         }
     }
@@ -146,6 +157,13 @@ namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE53HereComesTheCavalr
     public class CE53HereComesTheCavalry : BossModule
     {
         public CE53HereComesTheCavalry(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-750, 790), 25)) { }
+
         protected override bool CheckPull() => PrimaryActor.InCombat; // not targetable at start
+
+        protected override void DrawEnemies(int pcSlot, Actor pc)
+        {
+            base.DrawEnemies(pcSlot, pc);
+            Arena.Actors(Enemies(OID.Cavalry), ArenaColor.Enemy);
+        }
     }
 }
