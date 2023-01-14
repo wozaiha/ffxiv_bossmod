@@ -146,9 +146,8 @@ namespace BossMod
 
         private unsafe void DrawStatus(string prompt, ActionID action, bool checkRecast, bool checkCasting)
         {
-            uint extra;
-            var status = ActionManagerEx.Instance!.GetActionStatus(action, Service.ClientState.LocalPlayer?.TargetObjectId ?? 0xE0000000, checkRecast, checkCasting, &extra);
-            ImGui.TextUnformatted($"{prompt}: {status} [{extra}] '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.LogMessage>(status)?.Text}'");
+            var status = ActionManagerEx.Instance!.GetActionStatus(action, Service.ClientState.LocalPlayer?.TargetObjectId ?? 0xE0000000, checkRecast, checkCasting);
+            ImGui.TextUnformatted($"{prompt}: {status} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.LogMessage>(status)?.Text}'");
         }
     }
 }
