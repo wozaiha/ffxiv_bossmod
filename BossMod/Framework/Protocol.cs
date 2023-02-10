@@ -60,14 +60,14 @@ namespace BossMod
 
             // 40 53 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 20 01 00 00 4D 8B E8
             RSVData = 0x0085,
+            // old - 0x1fd == EventObjSpawn? for stuff like exit points, etc.
 
+            // client->server; TODO move to a different enum
             // 48 8D 54 24 20 45 33 C9 C7 44 24 20
             ActionRequest = 0x0212, // just begin casting return...
 
             // 66 89 44 24 4C F3 0F 11 4C 24 54 F3 0F 11 44 24 58
             ActionRequestGroundTargeted = 0x0353, // XIVAlexander
-
-            // old - 0x1fd == EventObjSpawn? for stuff like exit points, etc.
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
