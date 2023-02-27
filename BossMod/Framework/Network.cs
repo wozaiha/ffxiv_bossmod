@@ -1,9 +1,13 @@
-﻿using Dalamud.Game.Network;
+﻿using BossMod.PlanTarget;
+using Dalamud.Game.Network;
 using Dalamud.Hooking;
+using Dalamud.Logging;
 using Dalamud.Memory;
 using System;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using static BossMod.Protocol;
 
 namespace BossMod
 {
@@ -43,6 +47,9 @@ namespace BossMod
         private unsafe delegate byte ProcessZonePacketUpDelegate(void* a1, void* dataPtr, void* a3, byte a4);
         private Hook<ProcessZonePacketUpDelegate> _processZonePacketUpHook;
 
+        private unsafe delegate byte ProcessReplayPacketDelegate(IntPtr replayModule, ReplayPacketHeader* header, IntPtr dataPtr);
+        private Hook<ProcessReplayPacketDelegate> _processReplayPacketHook;
+
         // this is a mega weird thing - apparently some IDs sent over network have some extra delta added to them (e.g. action ids, icon ids, etc.)
         // they change on relogs or zone changes or something...
         // we have one simple way of detecting them - by looking at casts, since they contain both offset id and real ('animation') id
@@ -63,6 +70,11 @@ namespace BossMod
             var processZonePacketUpAddress = Service.SigScanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 70 8B 81 ?? ?? ?? ??");
             _processZonePacketUpHook = Hook<ProcessZonePacketUpDelegate>.FromAddress(processZonePacketUpAddress, ProcessZonePacketUpDetour);
             _processZonePacketUpHook.Enable();
+
+            // Record playback support
+            var processReplayPacketAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? 48 8B 4B 38 48 89 4B 40");
+            _processReplayPacketHook = Hook<ProcessReplayPacketDelegate>.FromAddress(processReplayPacketAddress, ProcessReplayPacketDetour);
+            _processReplayPacketHook.Enable();
         }
 
         public void Dispose()
@@ -73,6 +85,7 @@ namespace BossMod
             //Service.GameNetwork.NetworkMessage -= HandleMessage;
             _processZonePacketDownHook.Dispose();
             _processZonePacketUpHook.Dispose();
+            _processReplayPacketHook.Dispose();
         }
 
         private void ApplyConfig(object? sender, EventArgs args)
@@ -98,6 +111,12 @@ namespace BossMod
         {
             HandleMessage((IntPtr)dataPtr + 0x20, Utils.ReadField<ushort>(dataPtr, 0), 0, 0, NetworkMessageDirection.ZoneUp);
             return _processZonePacketUpHook.Original(self, dataPtr, a3, a4);
+        }
+
+        private unsafe byte ProcessReplayPacketDetour(IntPtr replayModule, ReplayPacketHeader* header, IntPtr dataPtr)
+        {
+            HandleMessage(dataPtr, header->MessageType, 0, header->TargetId, NetworkMessageDirection.ZoneDown);
+            return _processReplayPacketHook.Original(replayModule, header, dataPtr);
         }
 
         private unsafe void HandleMessage(IntPtr dataPtr, ushort opCode, uint sourceActorId, uint targetActorId, NetworkMessageDirection direction)
