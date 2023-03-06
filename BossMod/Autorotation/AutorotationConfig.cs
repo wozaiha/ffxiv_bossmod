@@ -12,6 +12,9 @@
         [PropertyDisplay("显示游戏内GUI")]
         public bool ShowUI = false;
 
+        [PropertyDisplay("在世界内显示移动指示")]
+        public bool ShowPositionals = false;
+
         [PropertyDisplay("启用能影响玩家位置的技能 (例如 猛攻, 蛮荒崩裂)")]
         public bool EnableMovement = true;
 
