@@ -367,6 +367,7 @@ namespace BossMod
             TripleTriadUnknown = 1205, // from dissector
             FateNpc = 2351, // from dissector
             FateInit = 2353, // from dissector
+            FateAssignID = 2356, // p1 = fate id, assigned to main obj
             FateStart = 2357, // from dissector
             FateEnd = 2358, // from dissector
             FateProgress = 2366, // from dissector
@@ -510,7 +511,7 @@ namespace BossMod
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public unsafe struct Server_EnvironmentControl
+        public unsafe struct Server_EnvControl
         {
             public uint FeatureID; // seen 0x80xxxxxx, seems to be unique identifier of controlled feature
             public uint State; // typically hiword and loword both have one bit set; in disassembly this is actually 2 words
