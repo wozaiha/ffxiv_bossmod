@@ -41,7 +41,7 @@ namespace BossMod
 
             // Second match
             // 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3
-            EnvironmentControl = 0x0133, // updated - size=16, look for a bunch of messages starting with 0x8003759F after P1N intemperance cast...
+            EnvControl = 0x0133, // updated - size=16, look for a bunch of messages starting with 0x8003759F after P1N intemperance cast...
 
             // 48 89 5C 24 08 57 48 83 EC ? 48 8B DA 33 FF 90
             UpdateRecastTimes = 0x02B9, // payload = 80 floats 'elapsed' + 80 floats 'total'
