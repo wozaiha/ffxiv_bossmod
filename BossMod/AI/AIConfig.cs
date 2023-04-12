@@ -1,6 +1,6 @@
 ﻿namespace BossMod.AI
 {
-    [ConfigDisplay(Name = "AI设置 (非常实验性!!!)", Order = 5)]
+    [ConfigDisplay(Name = "AI设置 (非常实验性!!!)", Order = 6)]
     class AIConfig : ConfigNode
     {
         [PropertyDisplay("启用 AI")]

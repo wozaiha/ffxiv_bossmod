@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BossMod.Endwalker.Alliance.A4Naldthal;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -58,7 +59,7 @@ namespace BossMod
         public uint MaxTargets;
         public List<Target> Targets = new();
         public Vector3 TargetPos;
-        public uint SourceSequence; // note: transient
+        public uint SourceSequence;
         public uint GlobalSequence;
 
         public WPos TargetXZ => new(TargetPos.XZ());
