@@ -9,29 +9,29 @@ namespace BossMod
     class DebugUI : IDisposable
     {
         private WorldState _ws;
-        // private Autorotation _autorot;
+        private Autorotation _autorot;
         private DebugObjects _debugObjects = new();
         private DebugParty _debugParty = new();
         private DebugGraphics _debugGraphics = new();
         private DebugAction _debugAction;
         private DebugHate _debugHate = new();
-        // private DebugInput _debugInput;
-        // private DebugAutorotation _debugAutorot;
+        private DebugInput _debugInput;
+        private DebugAutorotation _debugAutorot;
         private DebugClassDefinitions _debugClassDefinitions;
 
         public DebugUI(WorldState ws, Autorotation autorot, InputOverride inputOverride)
         {
             _ws = ws;
-            // _autorot = autorot;
+            _autorot = autorot;
             _debugAction = new(ws);
-            // _debugInput = new(inputOverride, autorot);
-            // _debugAutorot = new(autorot);
+            _debugInput = new(inputOverride, autorot);
+            _debugAutorot = new(autorot);
             _debugClassDefinitions = new(ws);
         }
 
         public void Dispose()
         {
-            // _debugInput.Dispose();
+            _debugInput.Dispose();
             _debugClassDefinitions.Dispose();
         }
 
@@ -74,10 +74,10 @@ namespace BossMod
             {
                 _debugParty.DrawPartyCustom();
             }
-            /*if (ImGui.CollapsingHeader("Autorotation"))
+            if (ImGui.CollapsingHeader("Autorotation"))
             {
                 _debugAutorot.Draw();
-            }*/
+            }
             if (ImGui.CollapsingHeader("Graphics scene"))
             {
                 _debugGraphics.DrawSceneTree();
@@ -110,10 +110,10 @@ namespace BossMod
             {
                 DrawTargets();
             }
-            /*if (ImGui.CollapsingHeader("Input"))
+            if (ImGui.CollapsingHeader("Input"))
             {
                 _debugInput.Draw();
-            }*/
+            }
             if (ImGui.CollapsingHeader("Class definitions"))
             {
                 _debugClassDefinitions.Draw();
