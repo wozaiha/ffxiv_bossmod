@@ -16,6 +16,9 @@
         [PropertyDisplay("旋转地图与视角一致")]
         public bool RotateArena = true;
 
+        [PropertyDisplay("Expand space reserved for map to allow arbitrary rotations")]
+        public bool AddSlackForRotations = true;
+
         [PropertyDisplay("显示边框")]
         public bool ShowBorder = true;
 
@@ -36,6 +39,9 @@
 
         [PropertyDisplay("显示警告和提示")]
         public bool ShowPlayerHints = true;
+
+        [PropertyDisplay("Show text hints in separate window")]
+        public bool HintsInSeparateWindow = false;
 
         [PropertyDisplay("透明模式: 仅雷达, 不显示窗体")]
         public bool TrishaMode = false;
