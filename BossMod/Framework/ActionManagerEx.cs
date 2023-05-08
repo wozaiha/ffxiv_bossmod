@@ -218,7 +218,7 @@ namespace BossMod
 
         public unsafe uint GetActionStatus(ActionID action, ulong target, bool checkRecastActive = true, bool checkCastingActive = true)
         {
-            return _inst->GetActionStatus((FFXIVClientStructs.FFXIV.Client.Game.ActionType)action.Type, action.ID, (long)target, checkRecastActive ? 1u : 0, checkCastingActive ? 1u : 0);
+            return _inst->GetActionStatus((FFXIVClientStructs.FFXIV.Client.Game.ActionType)action.Type, action.ID, (long)target, checkRecastActive, checkCastingActive);
         }
 
         // returns time in ms

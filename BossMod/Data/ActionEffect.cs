@@ -216,11 +216,11 @@ namespace BossMod
                     var kbData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Knockback>(eff.Value);
                     res.Append($"row={eff.Value}, dist={kbData?.Distance}+{eff.Param0}, dir={(KnockbackDirection?)kbData?.Direction}{(kbData?.Direction == (byte)KnockbackDirection.Arg ? $" ({kbData.DirectionArg}deg)" : "")}, speed={kbData?.Speed}");
                     break;
-                /*TODO case ActionEffectType.Attract1:
+                case ActionEffectType.Attract1:
                 case ActionEffectType.Attract2:
                     var attrData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Attract>(eff.Value);
                     res.Append($"row={eff.Value}, dist<={attrData?.MaxDistance} up to {attrData?.MinRemainingDistance} between {(attrData?.UseDistanceBetweenHitboxes == true ? "hitboxes" : "centers")}, dir={attrData?.Direction}, speed={attrData?.Speed}");
-                    break;*/
+                    break;
                 case ActionEffectType.AttractCustom1:
                 case ActionEffectType.AttractCustom2:
                 case ActionEffectType.AttractCustom3:
