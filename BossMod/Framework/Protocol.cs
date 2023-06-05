@@ -7,7 +7,6 @@ namespace BossMod
     {
         public enum Opcode
         {
-            StatusEffectListBozja = 0x00A2, // StatusEffectList2
             ActionEffect1 = 0x0318,
             ActionEffect8 = 0x0175,
             ActionEffect16 = 0x0348,
