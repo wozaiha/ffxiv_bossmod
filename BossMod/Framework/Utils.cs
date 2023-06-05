@@ -109,6 +109,7 @@ namespace BossMod
         //public static unsafe Vector3 GameObjectNonInterpolatedPosition(GameObject obj) => ReadField<Vector3>(GameObjectInternal(obj), 0x10);
         //public static unsafe float GameObjectNonInterpolatedRotation(GameObject obj) => ReadField<float>(GameObjectInternal(obj), 0x20);
         public static unsafe byte CharacterShieldValue(Character chr) => CharacterInternal(chr)->ShieldValue; // % of max hp; see effect result
+        public static unsafe bool CharacterInCombat(Character chr) => (ReadField<byte>(CharacterInternal(chr), 0x1B1B) & 0x2) != 0; // see actor control 4
         public static unsafe byte CharacterAnimationState(Character chr, bool second) => ReadField<byte>(CharacterInternal(chr), second ? 0x1B09 : 0x1B08); // see actor control 62 // 41 88 86 ? ? ? ? E8 ? ? ? ? 0F 28 CE (second, first one just second - 1 and the first one just above the second one)
         public static unsafe byte CharacterModelState(Character chr) => ReadField<byte>(CharacterInternal(chr), 0x1B0A); // see actor control 63 // 41 88 86 ? ? 00 00 49 8B CE 41 0F B6 ?
         public static unsafe float CharacterCastRotation(Character chr) => ReadField<float>(CharacterInternal(chr), 0x1AA4); // see ActorCast -> Character::StartCast // F3 0F 11 97 ? ? ? ? F6 43
