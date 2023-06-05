@@ -7,6 +7,7 @@
     <OutputType>WinExe</OutputType>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -53,7 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="ImGui.NET" Version="1.86.0" /> -->
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>
 </Project>

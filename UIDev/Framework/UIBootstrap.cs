@@ -16,13 +16,13 @@ namespace UIDev
             using var scene = new SimpleImGuiScene(RendererFactory.RendererBackend.DirectX11, new WindowCreateInfo
             {
                 Title = "UI Test",
-                XPos = -10,
-                //YPos = 20,
-                //Width = 1200,
-                //Height = 800,
+                // XPos = 0,
+                // YPos = 20,
+                // Width = 1200,
+                // Height = 800,
                 Fullscreen = true,
                 TransparentColor = new float[] { 0, 0, 0 },
-            });
+            }, true);
 
             // the background color of your window - typically don't change this for fullscreen overlays
             scene.Renderer.ClearColor = new Vector4(0, 0, 0, 0);
@@ -43,7 +43,7 @@ namespace UIDev
             fontConfig.PixelSnapH = true;
 
             var fontPathJp = "NotoSansCJKjp-Medium.otf";
-            ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathJp, 17.0f, null, ImGui.GetIO().Fonts.GetGlyphRangesJapanese());
+            ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathJp, 17.0f, null, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
 
             var fontPathGame = "gamesym.ttf";
             var rangeHandle = GCHandle.Alloc(new ushort[] { 0xE020, 0xE0DB, 0 }, GCHandleType.Pinned);
@@ -53,7 +53,6 @@ namespace UIDev
 
             fontConfig.Destroy();
             rangeHandle.Free();
-
 
             ImGui.GetStyle().GrabRounding = 3f;
             ImGui.GetStyle().FrameRounding = 4f;

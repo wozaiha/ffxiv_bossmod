@@ -24,19 +24,21 @@ namespace UIDev
 
         public void Initialize(SimpleImGuiScene scene)
         {
-            _configPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs", "BossMod.json");
+            _configPath = Path.Join(@"F:\Dalamud\XIVLauncher\pluginConfigs", "BossMod.json");
 
             Service.LogHandler = msg => Debug.WriteLine(msg);
-            Service.LuminaGameData = new(FindGameDataPath());
-            Service.LuminaGameData.Options.PanicOnSheetChecksumMismatch = false; // TODO: remove - temporary workaround until lumina is updated
+            Service.LuminaGameData = new(FindGameDataPath(), new Lumina.LuminaOptions()
+            {
+                DefaultExcelLanguage = Lumina.Data.Language.ChineseSimplified,
+                PanicOnSheetChecksumMismatch = false
+            });
             Service.Config.Initialize();
             Service.Config.LoadFromFile(new(_configPath));
             Service.Config.Modified += (_, _) => _configModified = true;
-            //Service.Device = (SharpDX.Direct3D11.Device?)scene.Renderer.GetType().GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(scene.Renderer);
+            // Service.Device = (SharpDX.Direct3D11.Device?) scene.Renderer.GetType().GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(scene.Renderer);
 
             // scene is a little different from what you have access to in dalamud
             // but it can accomplish the same things, and is really only used for initial setup here
-
             scene.OnBuildUI += WindowManager.DrawAll;
 
             // saving this only so we can kill the test application by closing the window
@@ -145,7 +147,8 @@ namespace UIDev
                     }
                 }
             }
-            return "D:\\installed\\SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack";
+
+            return "F:\\FFXIV\\game\\sqpack";
         }
     }
 }
