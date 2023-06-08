@@ -63,10 +63,10 @@ namespace BossMod
 
             // client->server; TODO move to a different enum
             // 48 8D 54 24 20 45 33 C9 C7 44 24 20
-            ActionRequest = 0x0323, // just begin casting return...
+            // ActionRequest = 0x0323, // just begin casting return...
 
             // 66 89 44 24 4C F3 0F 11 4C 24 54 F3 0F 11 44 24 58
-            ActionRequestGroundTargeted = 0x0262, // XIVAlexander
+            // ActionRequestGroundTargeted = 0x0262, // XIVAlexander
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
