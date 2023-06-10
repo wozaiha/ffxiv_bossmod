@@ -14,22 +14,11 @@ namespace BossMod
         private unsafe GroupManager* _groupManager = GroupManager.Instance();
 
         public unsafe GroupManager* _replayGroupManager = (GroupManager*) IntPtr.Zero;
-        public unsafe FFXIVReplay* _replay = (FFXIVReplay*) IntPtr.Zero;
-
-
-        [StructLayout(LayoutKind.Explicit)]
-        public struct FFXIVReplay
-        {
-            [FieldOffset(0x48 + 0x30)] public ulong RecorderCID;
-        }
 
         public unsafe PartyAlliance()
         {
             _replayGroupManager = (GroupManager*) Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? 48 83 C4 28 E9 ?? ?? ?? ?? 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ??");
             Service.Log($"Playback GroupManager address = 0x{(IntPtr) _replayGroupManager:X}");
-
-            _replay = (FFXIVReplay*) Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? 88 44 24 24");
-            Service.Log($"Playback address = 0x{(IntPtr)_replay:X}");
         }
 
         private bool InPlayback => Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.DutyRecorderPlayback];
