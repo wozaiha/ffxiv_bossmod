@@ -1,4 +1,8 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Group;
+﻿using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
+using FFXIVClientStructs.Interop.Attributes;
+using System;
+using System.Runtime.InteropServices;
 
 namespace BossMod
 {
@@ -9,11 +13,32 @@ namespace BossMod
 
         private unsafe GroupManager* _groupManager = GroupManager.Instance();
 
-        public unsafe int NumPartyMembers => _groupManager->MemberCount;
-        public unsafe bool IsAlliance => (_groupManager->AllianceFlags & 1) != 0;
-        public unsafe bool IsSmallGroupAlliance => (_groupManager->AllianceFlags & 2) != 0; // alliance containing 6 groups of 4 members rather than 3x8
+        public unsafe GroupManager* _replayGroupManager = (GroupManager*) IntPtr.Zero;
+        public unsafe FFXIVReplay* _replay = (FFXIVReplay*) IntPtr.Zero;
 
-        public unsafe PartyMember* PartyMember(int index) => (index >= 0 && index < NumPartyMembers) ? ArrayElement(_groupManager->PartyMembers, index) : null;
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct FFXIVReplay
+        {
+            [FieldOffset(0x48 + 0x30)] public ulong RecorderCID;
+        }
+
+        public unsafe PartyAlliance()
+        {
+            _replayGroupManager = (GroupManager*) Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? 48 83 C4 28 E9 ?? ?? ?? ?? 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? C3 CC CC CC 8B 05 ?? ?? ?? ??");
+            Service.Log($"Playback GroupManager address = 0x{(IntPtr) _replayGroupManager:X}");
+
+            _replay = (FFXIVReplay*) Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? 88 44 24 24");
+            Service.Log($"Playback address = 0x{(IntPtr)_replay:X}");
+        }
+
+        private bool InPlayback => Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.DutyRecorderPlayback];
+
+        public unsafe int NumPartyMembers => InPlayback ? _replayGroupManager->MemberCount : _groupManager->MemberCount;
+        public unsafe bool IsAlliance => InPlayback ? (_replayGroupManager->AllianceFlags & 1) != 0 : (_groupManager->AllianceFlags & 1) != 0;
+        public unsafe bool IsSmallGroupAlliance => InPlayback ? (_replayGroupManager->AllianceFlags & 2) != 0 : (_groupManager->AllianceFlags & 2) != 0; // alliance containing 6 groups of 4 members rather than 3x8
+
+        public unsafe PartyMember* PartyMember(int index) => (index >= 0 && index < NumPartyMembers) ? ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, index) : null;
         public unsafe PartyMember* AllianceMember(int rawIndex) => (rawIndex is >= 0 and < 20) ? AllianceMemberIfValid(rawIndex) : null;
         public unsafe PartyMember* AllianceMember(int group, int index)
         {
@@ -27,8 +52,19 @@ namespace BossMod
         {
             for (int i = 0; i < NumPartyMembers; ++i)
             {
-                var m = ArrayElement(_groupManager->PartyMembers, i);
+                var m = ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, i);
                 if ((ulong)m->ContentID == contentID)
+                    return m;
+            }
+            return null;
+        }
+
+        public unsafe PartyMember* FindPartyMemberByOID(uint objectID)
+        {
+            for (int i = 0; i < NumPartyMembers; ++i)
+            {
+                var m = ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, i);
+                if (m->ObjectID == objectID)
                     return m;
             }
             return null;
@@ -37,7 +73,7 @@ namespace BossMod
         private static unsafe PartyMember* ArrayElement(byte* array, int index) => ((PartyMember*)array) + index;
         private unsafe PartyMember* AllianceMemberIfValid(int rawIndex)
         {
-            var p = ArrayElement(_groupManager->AllianceMembers, rawIndex);
+            var p = ArrayElement(InPlayback ? _replayGroupManager->AllianceMembers : _groupManager->AllianceMembers, rawIndex);
             return (p->Flags & 1) != 0 ? p : null;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Logging;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -274,10 +275,19 @@ namespace BossMod
             Execute(new ActorState.OpStatus() { InstanceID = act.InstanceID, Index = index, Value = value });
         }
 
+        private bool InPlayback => Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.DutyRecorderPlayback];
+
         private unsafe void UpdateParty()
         {
             // update player slot
-            UpdatePartySlot(PartyState.PlayerSlot, Service.ClientState.LocalContentId, Service.ClientState.LocalPlayer?.ObjectId ?? 0);
+            if (InPlayback)
+            {
+                var member = _alliance.FindPartyMemberByOID(Service.ClientState.LocalPlayer?.ObjectId ?? 0);
+                if (member != null)
+                    UpdatePartySlot(PartyState.PlayerSlot, (ulong)member->ContentID, member->ObjectID);
+            }
+            else
+                UpdatePartySlot(PartyState.PlayerSlot, Service.ClientState.LocalContentId, Service.ClientState.LocalPlayer?.ObjectId ?? 0);
 
             // update normal party slots: first update/remove existing members, then add new ones
             for (int i = PartyState.PlayerSlot + 1; i < PartyState.MaxPartySize; ++i)
@@ -290,8 +300,15 @@ namespace BossMod
                 if (member == null)
                     UpdatePartySlot(i, 0, 0);
                 else
-                    UpdatePartySlot(i, contentID, member->ObjectID);
+                {
+                    if (InPlayback && member->ObjectID == Service.ClientState.LocalPlayer?.ObjectId)
+                        UpdatePartySlot(i, 0, 0); // Remove duplicated member
+                    else
+                        UpdatePartySlot(i, contentID, member->ObjectID);
+                }
+
             }
+
             for (int i = 0; i < _alliance.NumPartyMembers; ++i)
             {
                 var member = _alliance.PartyMember(i);
