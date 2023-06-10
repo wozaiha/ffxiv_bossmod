@@ -11,9 +11,12 @@ namespace BossMod
     {
         public static int MaxAllianceMembers = 20;
 
-        private unsafe GroupManager* _groupManager = GroupManager.Instance();
+        private bool InPlayback => Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.DutyRecorderPlayback];
 
-        public unsafe GroupManager* _replayGroupManager = (GroupManager*) IntPtr.Zero;
+        private unsafe GroupManager* _dalamudGroupManager = GroupManager.Instance();
+        private unsafe GroupManager* _replayGroupManager = (GroupManager*) IntPtr.Zero;
+
+        private unsafe GroupManager* _groupManager => InPlayback ? _replayGroupManager : _dalamudGroupManager;
 
         public unsafe PartyAlliance()
         {
@@ -21,13 +24,11 @@ namespace BossMod
             Service.Log($"Playback GroupManager address = 0x{(IntPtr) _replayGroupManager:X}");
         }
 
-        private bool InPlayback => Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.DutyRecorderPlayback];
+        public unsafe int NumPartyMembers => _groupManager->MemberCount;
+        public unsafe bool IsAlliance => (_groupManager->AllianceFlags & 1) != 0;
+        public unsafe bool IsSmallGroupAlliance => (_groupManager->AllianceFlags & 2) != 0; // alliance containing 6 groups of 4 members rather than 3x8
 
-        public unsafe int NumPartyMembers => InPlayback ? _replayGroupManager->MemberCount : _groupManager->MemberCount;
-        public unsafe bool IsAlliance => InPlayback ? (_replayGroupManager->AllianceFlags & 1) != 0 : (_groupManager->AllianceFlags & 1) != 0;
-        public unsafe bool IsSmallGroupAlliance => InPlayback ? (_replayGroupManager->AllianceFlags & 2) != 0 : (_groupManager->AllianceFlags & 2) != 0; // alliance containing 6 groups of 4 members rather than 3x8
-
-        public unsafe PartyMember* PartyMember(int index) => (index >= 0 && index < NumPartyMembers) ? ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, index) : null;
+        public unsafe PartyMember* PartyMember(int index) => (index >= 0 && index < NumPartyMembers) ? ArrayElement(_groupManager->PartyMembers, index) : null;
         public unsafe PartyMember* AllianceMember(int rawIndex) => (rawIndex is >= 0 and < 20) ? AllianceMemberIfValid(rawIndex) : null;
         public unsafe PartyMember* AllianceMember(int group, int index)
         {
@@ -41,7 +42,7 @@ namespace BossMod
         {
             for (int i = 0; i < NumPartyMembers; ++i)
             {
-                var m = ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, i);
+                var m = ArrayElement(_groupManager->PartyMembers, i);
                 if ((ulong)m->ContentID == contentID)
                     return m;
             }
@@ -52,7 +53,7 @@ namespace BossMod
         {
             for (int i = 0; i < NumPartyMembers; ++i)
             {
-                var m = ArrayElement(InPlayback ? _replayGroupManager->PartyMembers : _groupManager->PartyMembers, i);
+                var m = ArrayElement(_groupManager->PartyMembers, i);
                 if (m->ObjectID == objectID)
                     return m;
             }
@@ -62,7 +63,7 @@ namespace BossMod
         private static unsafe PartyMember* ArrayElement(byte* array, int index) => ((PartyMember*)array) + index;
         private unsafe PartyMember* AllianceMemberIfValid(int rawIndex)
         {
-            var p = ArrayElement(InPlayback ? _replayGroupManager->AllianceMembers : _groupManager->AllianceMembers, rawIndex);
+            var p = ArrayElement(_groupManager->AllianceMembers, rawIndex);
             return (p->Flags & 1) != 0 ? p : null;
         }
     }
