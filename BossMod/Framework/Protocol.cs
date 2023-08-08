@@ -20,12 +20,12 @@ namespace BossMod
             PresetWaymark = 0x03D7,
             Waymark = 0x03A0,
 
-            EffectResult = 0x03A7,
+            EffectResult1 = 0x03A7,
             EffectResult4 = 0x0329,
             EffectResult8 = 0x03AC,
             EffectResult16 = 0x02E4,
 
-            EffectResultBasic = 0x0083,
+            EffectResultBasic1 = 0x0083,
             EffectResultBasic4 = 0x0225,
             EffectResultBasic8 = 0x02E2,
             EffectResultBasic16 = 0x035C,
