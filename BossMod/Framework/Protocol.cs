@@ -23,13 +23,13 @@ namespace BossMod
             // 需要单独处理
             // 48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?
             // Second match
-            EffectResult = 0x01FB, // Size 0x60
+            EffectResult1 = 0x01FB, // Size 0x60
             EffectResult4 = 0x02B0, // Size 0x168
             EffectResult8 = 0x03E7, // Size 0x2C8
             EffectResult16 = 0x01BE, // Size 0x588
 
             // 48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?
-            EffectResultBasic = 0x026A, // Size 0x18
+            EffectResultBasic1 = 0x026A, // Size 0x18
             EffectResultBasic4 = 0x022E, // Size 0x48
             EffectResultBasic8 = 0x0196, // Size 0x88
             EffectResultBasic16 = 0x01E5, // Size 0x108
