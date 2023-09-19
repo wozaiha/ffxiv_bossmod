@@ -107,7 +107,7 @@ namespace BossMod
 
         private unsafe byte ProcessReplayPacketDetour(IntPtr replayModule, ReplayPacketHeader* header, IntPtr dataPtr)
         {
-            HandleMessage(dataPtr, header->MessageType, 0, header->TargetId, NetworkMessageDirection.ZoneDown);
+            HandleMessage(dataPtr, header->MessageType, 0, header->TargetId, NetworkMessageDirection.ZoneDown, header->Size);
             return _processReplayPacketHook.Original(replayModule, header, dataPtr);
         }
 
