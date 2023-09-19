@@ -7,58 +7,58 @@ namespace BossMod
     {
         public enum Opcode
         {
-            ActionEffect1 = 0x0227,
-            ActionEffect8 = 0x0147,
-            ActionEffect16 = 0x032E,
-            ActionEffect24 = 0x01E2,
-            ActionEffect32 = 0x00EB,
-            ActorCast = 0x0097,
-            ActorControl = 0x0342,
-            ActorControlSelf = 0x03D5,
-            ActorControlTarget = 0x0359,
-            ActorGauge = 0x02C2,
-            PresetWaymark = 0x0243,
-            Waymark = 0x0346,
+            ActionEffect1 = 0x0385,
+            ActionEffect8 = 0x00F4,
+            ActionEffect16 = 0x03C1,
+            ActionEffect24 = 0x0138,
+            ActionEffect32 = 0x014C,
+            ActorCast = 0x0358,
+            ActorControl = 0x007A,
+            ActorControlSelf = 0x0139,
+            ActorControlTarget = 0x0103,
+            ActorGauge = 0x01AA,
+            PresetWaymark = 0x00FB,
+            Waymark = 0x02AE,
 
             // 需要单独处理
             // 48 83 EC ? 45 0F B7 D0 41 81 EA ? ? ? ? 74 ? 41 83 EA ? 74 ? 41 83 EA ?
             // Second match
-            EffectResult1 = 0x017C, // Size 0x60
-            EffectResult4 = 0x02DB, // Size 0x168
-            EffectResult8 = 0x0130, // Size 0x2C8
-            EffectResult16 = 0x016D, // Size 0x588
+            EffectResult = 0x01FB, // Size 0x60
+            EffectResult4 = 0x02B0, // Size 0x168
+            EffectResult8 = 0x03E7, // Size 0x2C8
+            EffectResult16 = 0x01BE, // Size 0x588
 
             // 48 83 EC ? 45 0F B7 D0 41 81 FA ? ? ? ? 77 ? 74 ? 41 81 EA ? ? ? ?
-            EffectResultBasic1 = 0x0213, // Size 0x18
-            EffectResultBasic4 = 0x0181, // Size 0x48
-            EffectResultBasic8 = 0x02EE, // Size 0x88
-            EffectResultBasic16 = 0x00BD, // Size 0x108
-            EffectResultBasic32 = 0x0370, // Size 0x208
-            EffectResultBasic64 = 0x022D, // Size 0x408
+            EffectResultBasic = 0x026A, // Size 0x18
+            EffectResultBasic4 = 0x022E, // Size 0x48
+            EffectResultBasic8 = 0x0196, // Size 0x88
+            EffectResultBasic16 = 0x01E5, // Size 0x108
+            EffectResultBasic32 = 0x0293, // Size 0x208
+            EffectResultBasic64 = 0x01ED, // Size 0x408
 
             // below are opcodes i've reversed myself...
 
             // Second match
             // 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B D3 48 83 C4 ? 5B E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 85 C0 74 ? 48 8B D3
-            EnvControl = 0x021B, // updated - size=16, look for a bunch of messages starting with 0x8003759F after P1N intemperance cast...
+            EnvControl = 0x011E, // updated - size=16, look for a bunch of messages starting with 0x8003759F after P1N intemperance cast...
 
             // 48 89 5C 24 08 57 48 83 EC ? 48 8B DA 33 FF 90
-            UpdateRecastTimes = 0x01D8, // payload = 80 floats 'elapsed' + 80 floats 'total'
+            UpdateRecastTimes = 0x02B8, // payload = 80 floats 'elapsed' + 80 floats 'total'
 
             // S: 41 89 0C 02 48 8D 40 08
-            UpdateHate = 0x011E, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
+            UpdateHate = 0x018F, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
 
             // S: E8 ? ? ? ? 4C 8B C0 BA ? ? ? ? 48 63 C6
-            UpdateHater = 0x017F, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
+            UpdateHater = 0x03C0, // payload = byte length + 3 bytes padding + { uint objID, byte enmity, byte padding[3] }[len]
 
             // E8 ? ? ? ? 80 7B 0A ? 75 ?
-            Countdown = 0x0293,
+            Countdown = 0x01C4,
 
             // E8 ? ? ? ? 48 85 C0 74 ? 44 0F B7 4B 04 4C 8D 43 08
-            CountdownCancel = 0x0283,
+            CountdownCancel = 0x034A,
 
             // 40 53 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 84 24 20 01 00 00 4D 8B E8
-            RSVData = 0x028B,
+            RSVData = 0x016C,
             // old - 0x1fd == EventObjSpawn? for stuff like exit points, etc.
 
             // client->server; TODO move to a different enum
