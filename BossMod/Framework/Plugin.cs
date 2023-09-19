@@ -1,12 +1,9 @@
-﻿using Dalamud.Game;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
-using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using System;
-using System.Numerics;
 
 namespace BossMod
 {
@@ -18,12 +15,18 @@ namespace BossMod
 
         private Network _network;
         private WorldStateGame _ws;
-        private WorldStateLogger _debugLogger;
-        private BossModuleManagerGame _bossmod;
+        private BossModuleManager _bossmod;
         private Autorotation _autorotation;
         private AI.AIManager _ai;
         private AI.Broadcast _broadcast;
         private TimeSpan _prevUpdateTime;
+
+        // windows
+        private BossModuleMainWindow _wndBossmod;
+        private BossModulePlanWindow _wndBossmodPlan;
+        private BossModuleHintsWindow _wndBossmodHints;
+        private ReplayRecorderWindow _wndReplayRecorder;
+        private MainDebugWindow _wndDebug;
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface dalamud,
@@ -36,6 +39,7 @@ namespace BossMod
             Service.LogHandler = (string msg) => PluginLog.Debug(msg);
 #endif
             Service.LuminaGameData = Service.DataManager.GameData;
+            Service.WindowSystem = new("vbm");
             //Service.Device = pluginInterface.UiBuilder.Device;
             Service.Condition.ConditionChange += OnConditionChanged;
             Camera.Instance = new();
@@ -50,13 +54,21 @@ namespace BossMod
             _commandManager = commandManager;
             _commandManager.AddHandler("/vbm", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod config UI" });
 
+            var recorderSettings = Service.Config.Get<ReplayRecorderConfig>();
+            recorderSettings.TargetDirectory = dalamud.ConfigDirectory;
+
             _network = new(dalamud.ConfigDirectory);
             _ws = new(_network);
-            _debugLogger = new(_ws, dalamud.ConfigDirectory);
             _bossmod = new(_ws);
             _autorotation = new(_bossmod);
-            _ai = new(ActionManagerEx.Instance.InputOverride, _autorotation);
+            _ai = new(_autorotation);
             _broadcast = new();
+
+            _wndBossmod = new(_bossmod);
+            _wndBossmodPlan = new(_bossmod);
+            _wndBossmodHints = new(_bossmod);
+            _wndReplayRecorder = new(_ws, recorderSettings);
+            _wndDebug = new(_ws, _autorotation);
 
             dalamud.UiBuilder.DisableAutomaticUiHide = true;
             dalamud.UiBuilder.Draw += DrawUI;
@@ -66,8 +78,11 @@ namespace BossMod
         public void Dispose()
         {
             Service.Condition.ConditionChange -= OnConditionChanged;
-            WindowManager.Reset();
-            _debugLogger.Dispose();
+            _wndDebug.Dispose();
+            _wndReplayRecorder.Dispose();
+            _wndBossmodHints.Dispose();
+            _wndBossmodPlan.Dispose();
+            _wndBossmod.Dispose();
             _bossmod.Dispose();
             _network.Dispose();
             _ai.Dispose();
@@ -90,7 +105,8 @@ namespace BossMod
             switch (split[0])
             {
                 case "d":
-                    OpenDebugUI();
+                    _wndDebug.IsOpen = true;
+                    _wndDebug.BringToFront();
                     break;
                 case "cfg":
                     var output = Service.Config.ConsoleCommand(new ArraySegment<string>(split, 1, split.Length - 1));
@@ -102,16 +118,7 @@ namespace BossMod
 
         private void OpenConfigUI()
         {
-            var ui = new ConfigUI(Service.Config, _ws);
-            var w = WindowManager.CreateWindow("Boss mod config", ui.Draw, () => { }, () => true);
-            w.SizeHint = new Vector2(300, 300);
-        }
-
-        private void OpenDebugUI()
-        {
-            var ui = new DebugUI(_ws, _autorotation, ActionManagerEx.Instance!.InputOverride);
-            var w = WindowManager.CreateWindow("Boss mod debug UI", ui.Draw, ui.Dispose, () => true);
-            w.SizeHint = new Vector2(300, 200);
+            new UISimpleWindow("Boss mod config", new ConfigUI(Service.Config, _ws).Draw, true, new(300, 300));
         }
 
         private void DrawUI()
@@ -127,7 +134,9 @@ namespace BossMod
 
             bool uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
             if (!uiHidden)
-                WindowManager.DrawAll();
+            {
+                Service.WindowSystem?.Draw();
+            }
 
             Camera.Instance?.DrawWorldPrimitives();
             _prevUpdateTime = DateTime.Now - tsStart;
