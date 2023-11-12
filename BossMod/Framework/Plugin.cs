@@ -16,9 +16,9 @@ namespace BossMod
         private Network _network;
         private WorldStateGame _ws;
         private BossModuleManager _bossmod;
-        private Autorotation _autorotation;
-        private AI.AIManager _ai;
-        private AI.Broadcast _broadcast;
+        // private Autorotation _autorotation;
+        // private AI.AIManager _ai;
+        // private AI.Broadcast _broadcast;
         private TimeSpan _prevUpdateTime;
 
         // windows
@@ -60,15 +60,15 @@ namespace BossMod
             _network = new(dalamud.ConfigDirectory);
             _ws = new(_network);
             _bossmod = new(_ws);
-            _autorotation = new(_bossmod);
-            _ai = new(_autorotation);
-            _broadcast = new();
+            // _autorotation = new(_bossmod);
+            // _ai = new(_autorotation);
+            // _broadcast = new();
 
             _wndBossmod = new(_bossmod);
             _wndBossmodPlan = new(_bossmod);
             _wndBossmodHints = new(_bossmod);
             _wndReplayRecorder = new(_ws, recorderSettings);
-            _wndDebug = new(_ws, _autorotation);
+            _wndDebug = new(_ws, null);
 
             dalamud.UiBuilder.DisableAutomaticUiHide = true;
             dalamud.UiBuilder.Draw += DrawUI;
@@ -85,8 +85,8 @@ namespace BossMod
             _wndBossmod.Dispose();
             _bossmod.Dispose();
             _network.Dispose();
-            _ai.Dispose();
-            _autorotation.Dispose();
+            // _ai.Dispose();
+            // _autorotation.Dispose();
             Mouseover.Instance?.Dispose();
             ActionManagerEx.Instance?.Dispose();
             _commandManager.RemoveHandler("/vbm");
@@ -128,9 +128,9 @@ namespace BossMod
             Camera.Instance?.Update();
             _ws.Update(_prevUpdateTime);
             _bossmod.Update();
-            _autorotation.Update();
-            _ai.Update();
-            _broadcast.Update();
+            // _autorotation.Update();
+            // _ai.Update();
+            // _broadcast.Update();
 
             bool uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
             if (!uiHidden)
