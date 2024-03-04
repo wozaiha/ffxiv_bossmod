@@ -65,7 +65,7 @@ namespace BossMod.Endwalker.Extreme.Ex5Rubicante
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
         {
             if ((AID)spell.Action.ID == AID.OrdealOfPurgation)
-                _activation = spell.FinishAt; // note: actual activation is several seconds later, but we need to finish our movements before shackles, so effective activation is around cast end
+                _activation = spell.NPCFinishAt; // note: actual activation is several seconds later, but we need to finish our movements before shackles, so effective activation is around cast end
         }
 
         public override void OnEventCast(BossModule module, Actor caster, ActorCastEvent spell)
@@ -91,32 +91,29 @@ namespace BossMod.Endwalker.Extreme.Ex5Rubicante
             }
         }
 
-        public override void OnEventEnvControl(BossModule module, uint directorID, byte index, uint state)
+        public override void OnEventEnvControl(BossModule module, byte index, uint state)
         {
-            if (directorID == 0x80034E77)
+            var dir = state switch
             {
-                var dir = state switch
+                0x00020001 => -1,
+                0x00200010 => +1,
+                _ => 0 // 0x00080004 = remove rotation markers
+            };
+            if (dir != 0)
+            {
+                switch (index)
                 {
-                    0x00020001 => -1,
-                    0x00200010 => +1,
-                    _ => 0 // 0x00080004 = remove rotation markers
-                };
-                if (dir != 0)
-                {
-                    switch (index)
-                    {
-                        case 1:
-                            _dirInner = NormalizeDirectionIndex(_dirInner + dir);
-                            _dirInnerExtra = NormalizeDirectionIndex(_dirInnerExtra + dir);
-                            break;
-                        case 2:
-                            _midIncrement = NormalizeDirectionIndex(_midIncrement + dir);
-                            _midDecrement = NormalizeDirectionIndex(_midDecrement + dir);
-                            break;
-                        case 3:
-                            _rotationOuter = dir;
-                            break;
-                    }
+                    case 1:
+                        _dirInner = NormalizeDirectionIndex(_dirInner + dir);
+                        _dirInnerExtra = NormalizeDirectionIndex(_dirInnerExtra + dir);
+                        break;
+                    case 2:
+                        _midIncrement = NormalizeDirectionIndex(_midIncrement + dir);
+                        _midDecrement = NormalizeDirectionIndex(_midDecrement + dir);
+                        break;
+                    case 3:
+                        _rotationOuter = dir;
+                        break;
                 }
             }
         }

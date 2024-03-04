@@ -24,12 +24,12 @@ namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS5TrinityAvowed
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
         {
             if (spell.Action == WatchedAction)
-                AOE = new(new AOEShapeRect(45, 25), caster.Position, spell.Rotation, spell.FinishAt, risky: _risky);
+                AOE = new(new AOEShapeRect(45, 25), caster.Position, spell.Rotation, spell.NPCFinishAt, risky: _risky);
         }
 
-        public override void OnEventEnvControl(BossModule module, uint directorID, byte index, uint state)
+        public override void OnEventEnvControl(BossModule module, byte index, uint state)
         {
-            if (directorID == 0x8004001F && index is 0x12 or 0x13 && state == 0x00080004) // 12/13 for east/west
+            if (index is 0x12 or 0x13 && state == 0x00080004) // 12/13 for east/west
                 AOE = null;
         }
     }
@@ -86,11 +86,8 @@ namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS5TrinityAvowed
                 ++NumCasts;
         }
 
-        public override void OnEventEnvControl(BossModule module, uint directorID, byte index, uint state)
+        public override void OnEventEnvControl(BossModule module, byte index, uint state)
         {
-            if (directorID != 0x8004001F)
-                return;
-
             var pattern = (index, state) switch
             {
                 (0x16, 0x00200010) => Pattern.EWNormal,

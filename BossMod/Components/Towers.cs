@@ -31,7 +31,12 @@ namespace BossMod.Components
         public List<Tower> Towers = new();
 
         // default tower styling
-        public static void DrawTower(MiniArena arena, WPos pos, float radius, bool safe) => arena.AddCircle(pos, radius, safe ? ArenaColor.Safe : ArenaColor.Danger, 2);
+        public static void DrawTower(MiniArena arena, WPos pos, float radius, bool safe)
+        {
+            if (arena.Config.ShowOutlinesAndShadows)
+                arena.AddCircle(pos, radius, 0xFF000000, 3);
+            arena.AddCircle(pos, radius, safe ? ArenaColor.Safe : ArenaColor.Danger, 2);
+        }
 
         public GenericTowers(ActionID aid = default) : base(aid) { }
 
@@ -65,16 +70,20 @@ namespace BossMod.Components
     public class CastTowers : GenericTowers
     {
         public float Radius;
+        public int MinSoakers;
+        public int MaxSoakers;
 
-        public CastTowers(ActionID aid, float radius) : base(aid)
+        public CastTowers(ActionID aid, float radius, int minSoakers = 1, int maxSoakers = 1) : base(aid)
         {
             Radius = radius;
+            MinSoakers = minSoakers;
+            MaxSoakers = maxSoakers;
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
         {
             if (spell.Action == WatchedAction)
-                Towers.Add(new(DeterminePosition(module, caster, spell), Radius));
+                Towers.Add(new(DeterminePosition(module, caster, spell), Radius, MinSoakers, MaxSoakers));
         }
 
         public override void OnCastFinished(BossModule module, Actor caster, ActorCastInfo spell)

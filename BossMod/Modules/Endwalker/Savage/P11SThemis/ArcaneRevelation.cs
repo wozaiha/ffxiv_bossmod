@@ -60,7 +60,7 @@ namespace BossMod.Endwalker.Savage.P11SThemis
         public override IEnumerable<Source> Sources(BossModule module, int slot, Actor actor)
         {
             if (_source != null)
-                yield return new(_source.Position, 11, _source.CastInfo!.FinishAt);
+                yield return new(_source.Position, 11, _source.CastInfo!.NPCFinishAt);
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
@@ -86,6 +86,6 @@ namespace BossMod.Endwalker.Savage.P11SThemis
 
     class OuterDark : Components.SelfTargetedAOEs
     {
-        public OuterDark() : base(ActionID.MakeSpell(AID.OuterDark), new AOEShapeDonut(7, 50)) { }
+        public OuterDark() : base(ActionID.MakeSpell(AID.OuterDark), new AOEShapeDonut(8, 50)) { }
     }
 }

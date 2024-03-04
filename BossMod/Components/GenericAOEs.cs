@@ -62,7 +62,7 @@ namespace BossMod.Components
     public class SelfTargetedAOEs : GenericAOEs
     {
         public AOEShape Shape { get; private init; }
-        public int MaxCasts { get; private init; } // used for staggered aoes, when showing all active would be pointless
+        public int MaxCasts; // used for staggered aoes, when showing all active would be pointless
         public uint Color = ArenaColor.AOE; // can be customized if needed
         public bool Risky = true; // can be customized if needed
         private List<Actor> _casters = new();
@@ -77,7 +77,7 @@ namespace BossMod.Components
 
         public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
         {
-            return ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.FinishAt, Color, Risky));
+            return ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt, Color, Risky));
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
@@ -110,7 +110,7 @@ namespace BossMod.Components
 
         public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
         {
-            return ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.Rotation, c.CastInfo!.FinishAt));
+            return ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.Rotation, c.CastInfo!.NPCFinishAt));
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
@@ -146,7 +146,7 @@ namespace BossMod.Components
         public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
         {
             foreach (var c in ActiveCasters)
-                yield return new(Shape, c.CastInfo!.LocXZ, c.CastInfo.Rotation, c.CastInfo.FinishAt, Color, Risky);
+                yield return new(Shape, c.CastInfo!.LocXZ, c.CastInfo.Rotation, c.CastInfo.NPCFinishAt, Color, Risky);
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
@@ -176,7 +176,7 @@ namespace BossMod.Components
 
         public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
         {
-            return Casters.Select(csr => new AOEInstance(csr.shape, csr.caster.Position, csr.direction, csr.caster.CastInfo!.FinishAt));
+            return Casters.Select(csr => new AOEInstance(csr.shape, csr.caster.Position, csr.direction, csr.caster.CastInfo!.NPCFinishAt));
         }
 
         public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)

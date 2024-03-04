@@ -51,6 +51,11 @@ namespace BossMod.Endwalker.Ultimate.TOP
             }
         }
 
+        public override PlayerPriority CalcPriority(BossModule module, int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
+        {
+            return PlayerStates[playerSlot].Order == PlayerStates[pcSlot].Order % 4 + 1 ? PlayerPriority.Interesting : base.CalcPriority(module, pcSlot, pc, playerSlot, player, ref customColor);
+        }
+
         public override void DrawArenaForeground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
         {
             var ps = PlayerStates[pcSlot];
@@ -69,13 +74,18 @@ namespace BossMod.Endwalker.Ultimate.TOP
                     arena.AddCircle(futureTowerToSoak.Position, _towerRadius, ArenaColor.Safe);
             }
 
+            bool grabThisTether = ps.Order == NextTethersOrder();
+            bool grabNextTether = ps.Order == NextTethersOrder(1);
             foreach (var (s, t) in module.Raid.WithSlot().IncludedInMask(_tethers))
             {
+                var ts = PlayerStates[s];
+                bool correctSoaker = ts.Order == NextTethersOrder();
+                bool tetherToGrab = ts.Group == ps.Group && (grabNextTether ? correctSoaker : grabThisTether ? NumTethersDone > 0 && ts.Order == NextTethersOrder(-1) : false);
                 arena.AddCircle(t.Position, _tetherRadius, t == pc ? ArenaColor.Safe : ArenaColor.Danger);
-                arena.AddLine(t.Position, module.PrimaryActor.Position, PlayerStates[s].Order == NextTethersOrder() ? ArenaColor.Safe : ArenaColor.Danger);
+                arena.AddLine(t.Position, module.PrimaryActor.Position, correctSoaker ? ArenaColor.Safe : ArenaColor.Danger, tetherToGrab ? 2 : 1);
             }
 
-            if (ps.Order == NextTethersOrder())
+            if (grabThisTether && NumTethersDone == NumTowersDone)
             {
                 // show hint for tether position
                 var spot = GetTetherDropSpot(module, ps.Group);
@@ -94,7 +104,7 @@ namespace BossMod.Endwalker.Ultimate.TOP
         {
             switch ((AID)spell.Action.ID)
             {
-                case AID.StorageViolation:
+                case AID.StorageViolation1:
                 case AID.StorageViolationObliteration:
                     ++NumTowersDone;
                     break;
@@ -155,12 +165,10 @@ namespace BossMod.Endwalker.Ultimate.TOP
             if (group == 0 || _towers.Count < NumTowersDone + 2)
                 return null;
 
-            var t1 = ClassifyTower(module, _towers[NumTowersDone]);
-            var t2 = ClassifyTower(module, _towers[NumTowersDone + 1]);
-            var potentialSpots = Enumerable.Range(0, 4);
-            if (group == 2)
-                potentialSpots = potentialSpots.Reverse();
-            var spot = potentialSpots.First(s => s != t1 && s != t2);
+            var safeSpots = new BitMask(0xF);
+            safeSpots.Clear(ClassifyTower(module, _towers[NumTowersDone]));
+            safeSpots.Clear(ClassifyTower(module, _towers[NumTowersDone + 1]));
+            var spot = group == 1 ? safeSpots.LowestSetBit() : safeSpots.HighestSetBit();
             return module.Bounds.Center + 18 * (180.Degrees() - 90.Degrees() * spot).ToDirection();
         }
     }

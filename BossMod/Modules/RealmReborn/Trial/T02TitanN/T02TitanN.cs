@@ -8,7 +8,7 @@ namespace BossMod.RealmReborn.Trial.T02TitanN
     {
         Boss = 0xF6, // x1
         Helper = 0x1B2, // x4
-        TitansHeart = 0x5E3, // Unknown type, spawn during fight
+        TitansHeart = 0x5E3, // Part type, spawn during fight
         GraniteGaol = 0x5A4, // spawn during fight
     };
 
@@ -77,9 +77,10 @@ namespace BossMod.RealmReborn.Trial.T02TitanN
         }
     }
 
+    [ModuleInfo(CFCID = 57, NameID = 1801)]
     public class T02TitanN : BossModule
     {
-        private List<Actor> _heart;
+        private IReadOnlyList<Actor> _heart;
         public IEnumerable<Actor> ActiveHeart => _heart.Where(h => h.IsTargetable && !h.IsDead);
 
         public T02TitanN(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-0, 0), 20)) // note: initial area is size 25, but it becomes smaller at 75%

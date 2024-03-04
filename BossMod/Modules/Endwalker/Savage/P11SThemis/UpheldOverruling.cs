@@ -11,12 +11,12 @@
                 case AID.UpheldOverrulingLight:
                 case AID.UpheldRulingLight:
                     if (module.WorldState.Actors.Find(caster.Tether.Target) is var stackTarget && stackTarget != null)
-                        AddStack(stackTarget, spell.FinishAt.AddSeconds(0.3f));
+                        AddStack(stackTarget, spell.NPCFinishAt.AddSeconds(0.3f));
                     break;
                 case AID.UpheldOverrulingDark:
                 case AID.UpheldRulingDark:
                     if (module.WorldState.Actors.Find(caster.Tether.Target) is var spreadTarget && spreadTarget != null)
-                        AddSpread(spreadTarget, spell.FinishAt.AddSeconds(0.3f));
+                        AddSpread(spreadTarget, spell.NPCFinishAt.AddSeconds(0.3f));
                     break;
             }
         }
@@ -49,11 +49,11 @@
 
     class DarkPerimeterBoss : Components.SelfTargetedAOEs
     {
-        public DarkPerimeterBoss() : base(ActionID.MakeSpell(AID.DarkPerimeterBoss), new AOEShapeDonut(7, 50)) { }
+        public DarkPerimeterBoss() : base(ActionID.MakeSpell(AID.DarkPerimeterBoss), new AOEShapeDonut(8, 50)) { }
     }
 
     class DarkPerimeterClone : Components.SelfTargetedAOEs
     {
-        public DarkPerimeterClone() : base(ActionID.MakeSpell(AID.DarkPerimeterClone), new AOEShapeDonut(7, 50)) { }
+        public DarkPerimeterClone() : base(ActionID.MakeSpell(AID.DarkPerimeterClone), new AOEShapeDonut(8, 50)) { }
     }
 }

@@ -64,8 +64,7 @@ namespace BossMod
             ActionManagerEx.Instance!.ActionRequested += OnActionRequested;
             WorldState.Actors.CastEvent += OnCastEvent;
 
-            var useActionAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? EB 64 B1 01");
-            _useActionHook = Hook<UseActionDelegate>.FromAddress(useActionAddress, UseActionDetour);
+            _useActionHook = Service.Hook.HookFromSignature<UseActionDelegate>("E8 ?? ?? ?? ?? EB 64 B1 01", UseActionDetour);
             
             if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
                 _useActionHook.Enable();
@@ -86,11 +85,11 @@ namespace BossMod
             _autoHints.Dispose();
         }
 
-        public void Update()
+        public unsafe void Update()
         {
             var player = WorldState.Party.Player();
             PrimaryTarget = WorldState.Actors.Find(player?.TargetID ?? 0);
-            SecondaryTarget = WorldState.Actors.Find(Mouseover.Instance?.Object?.ObjectId ?? 0);
+            SecondaryTarget = WorldState.Actors.Find(Utils.MouseoverID());
 
             Hints.Clear();
             if (player != null)
@@ -98,6 +97,7 @@ namespace BossMod
                 var playerAssignment = Service.Config.Get<PartyRolesConfig>()[WorldState.Party.ContentIDs[PartyState.PlayerSlot]];
                 var activeModule = Bossmods.ActiveModule?.StateMachine.ActivePhase != null ? Bossmods.ActiveModule : null;
                 Hints.FillPotentialTargets(WorldState, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !WorldState.Party.WithoutSlot().Any(p => p != player && p.Role == Role.Tank));
+                Hints.FillForcedTarget(Bossmods.ActiveModule, WorldState, player);
                 Hints.FillPlannedActions(Bossmods.ActiveModule, PartyState.PlayerSlot, player); // note that we might fill some actions even if module is not active yet (prepull)
                 if (activeModule != null)
                     activeModule.CalculateAIHints(PartyState.PlayerSlot, player, playerAssignment, Hints);
@@ -105,6 +105,11 @@ namespace BossMod
                     _autoHints.CalculateAIHints(Hints, player.Position);
             }
             Hints.Normalize();
+            if (Hints.ForcedTarget != null && PrimaryTarget != Hints.ForcedTarget)
+            {
+                PrimaryTarget = Hints.ForcedTarget;
+                FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->Target = Utils.GameObjectInternal(Service.ObjectTable.FirstOrDefault(go => go.ObjectId == Hints.ForcedTarget.InstanceID));
+            }
 
             // TODO: this should be part of worldstate update for player
             ActionManagerEx.Instance!.GetCooldowns(Cooldowns);
@@ -116,13 +121,17 @@ namespace BossMod
                 {
                     Class.WAR => typeof(WAR.Actions),
                     Class.PLD => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(PLD.Actions) : null,
-                    Class.MNK => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(MNK.Actions) : null,
+                    Class.MNK => typeof(MNK.Actions),
                     Class.DRG => typeof(DRG.Actions),
                     Class.BRD => typeof(BRD.Actions),
                     Class.BLM => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(BLM.Actions) : null,
                     Class.SMN => Service.ClientState.LocalPlayer?.Level <= 30 ? typeof(SMN.Actions) : null,
                     Class.WHM => typeof(WHM.Actions),
                     Class.SCH => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(SCH.Actions) : null,
+                    Class.RPR => typeof(RPR.Actions),
+                    Class.GNB => typeof(GNB.Actions),
+                    Class.SAM => Service.ClientState.LocalPlayer?.Level == 90 ? typeof(SAM.Actions) : null,
+                    Class.DNC => typeof(DNC.Actions),
                     _ => null
                 };
             }
@@ -134,7 +143,14 @@ namespace BossMod
             }
 
             _classActions?.Update();
-            ActionManagerEx.Instance!.AutoQueue = _classActions?.CalculateNextAction() ?? default;
+            var nextAction = _classActions?.CalculateNextAction() ?? default;
+            if (nextAction.Target != null && Hints.ForbiddenTargets.FirstOrDefault(e => e.Actor == nextAction.Target)?.Priority == AIHints.Enemy.PriorityForbidFully)
+                nextAction = default;
+            ActionManagerEx.Instance!.AutoQueue = nextAction; // TODO: this delays action for 1 frame after downtime, reconsider...
+
+            _classActions?.FillStatusesToCancel(Hints.StatusesToCancel);
+            foreach (var s in Hints.StatusesToCancel)
+                ActionManagerEx.Instance!.CancelStatus(s.statusId, s.sourceId != 0 ? (uint)s.sourceId : Dalamud.Game.ClientState.Objects.Types.GameObject.InvalidGameObjectId);
 
             _ui.IsOpen = _classActions != null && _config.ShowUI;
 
@@ -176,7 +192,7 @@ namespace BossMod
             ImGui.TextUnformatted($"GCD={Cooldowns[CommonDefinitions.GCDGroup]:f3}, AnimLock={EffAnimLock:f3}+{AnimLockDelay:f3}, Combo={state.ComboTimeLeft:f3}");
         }
 
-        private void OnActionRequested(object? sender, ClientActionRequest request)
+        private void OnActionRequested(ClientActionRequest request)
         {
             _classActions?.NotifyActionExecuted(request);
         }
@@ -202,7 +218,7 @@ namespace BossMod
             // callType is 0 for normal calls, 1 if called by queue mechanism, 2 if called from macro, 3 if combo (in such case comboRouteID is ActionComboRoute row id)
             // right when GCD ends, it is called internally by queue mechanism with aid=adjusted-id, a5=1, a4=a6=a7==0, returns True
             // itemLocation==0 for spells, 65535 for item used from hotbar, some value (bagID<<8 | slotID) for item used from inventory; it is the same as a4 in UseActionLocation
-            //Service.Log($"UA: {action} @ {targetID:X}: {a4} {a5} {a6} {a7}");
+            //Service.Log($"UA: {new ActionID(actionType, actionID)} @ {targetID:X}: {itemLocation} {callType} {comboRouteID}");
             if (callType != 0 || _classActions == null)
             {
                 // pass to hooked function transparently

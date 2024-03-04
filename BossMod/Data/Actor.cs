@@ -9,7 +9,7 @@ namespace BossMod
     {
         None = 0,
         Player = 0x104,
-        Unknown = 0x201,
+        Part = 0x201,
         Pet = 0x202,
         Chocobo = 0x203,
         Enemy = 0x205,
@@ -29,6 +29,8 @@ namespace BossMod
 
     public class ActorCastInfo
     {
+        public static readonly TimeSpan NPCFinishDelay = TimeSpan.FromSeconds(0.3); // for whatever reason, npc spells have reported remaining cast time consistently 0.3s smaller than reality
+
         public ActionID Action;
         public ulong TargetID;
         public Angle Rotation;
@@ -39,6 +41,7 @@ namespace BossMod
         public bool EventHappened;
 
         public WPos LocXZ => new(Location.XZ());
+        public DateTime NPCFinishAt => FinishAt + NPCFinishDelay;
 
         public bool IsSpell() => Action.Type == ActionType.Spell;
         public bool IsSpell<AID>(AID aid) where AID : Enum => Action == ActionID.MakeSpell(aid);
@@ -119,7 +122,7 @@ namespace BossMod
         public ulong TargetID;
         public ActorCastInfo? CastInfo;
         public ActorTetherInfo Tether = new();
-        public ActorStatus[] Statuses = new ActorStatus[30]; // empty slots have ID=0
+        public ActorStatus[] Statuses = new ActorStatus[60]; // empty slots have ID=0
 
         public Role Role => Class.GetRole();
         public WPos Position => new(PosRot.X, PosRot.Z);

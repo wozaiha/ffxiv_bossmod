@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,11 +76,23 @@ namespace BossMod
             }
         }
 
+        public class ForcedTargetData : ElementData
+        {
+            public uint OID;
+
+            public ForcedTargetData(uint oid, float windowStart, float windowEnd, int branchID, int numBranches)
+                : base(windowStart, windowEnd, branchID, numBranches)
+            {
+                OID = oid;
+            }
+        }
+
         public CooldownPlan? Plan { get; private init; }
         private StateData Pull;
         private Dictionary<uint, StateData> States = new();
         private List<ActionData> Actions = new();
         private List<StrategyData> Strategies = new();
+        private List<ForcedTargetData> ForcedTargets = new();
         private int _numStrategyTracks;
 
         public IReadOnlyList<StrategyData> Strats => Strategies;
@@ -122,6 +135,16 @@ namespace BossMod
                         }
                     }
                 }
+
+                foreach (var t in plan.TargetOverrides)
+                {
+                    var s = States.GetValueOrDefault(t.StateID);
+                    if (s != null)
+                    {
+                        var windowStart = s.EnterTime + Math.Min(s.Duration, t.TimeSinceActivation);
+                        ForcedTargets.Add(new(t.OID, windowStart, windowStart + t.WindowLength, s.BranchID, s.NumBranches));
+                    }
+                }
             }
         }
 
@@ -153,8 +176,7 @@ namespace BossMod
         public uint[] ActiveStrategyOverrides(StateMachine sm)
         {
             var res = new uint[_numStrategyTracks];
-            var max = new float[_numStrategyTracks];
-            Array.Fill(max, float.MinValue);
+            var max = Utils.MakeArray(_numStrategyTracks, float.MinValue);
             var s = FindStateData(sm.ActiveState);
             var t = s != Pull ? s.EnterTime + Math.Min(sm.TimeSinceTransition, s.Duration) : -sm.PrepullTimer;
             foreach (var st in Strategies.Where(st => st.IsActive(t, s) && st.WindowStart >= max[st.Index]))
@@ -179,6 +201,13 @@ namespace BossMod
             var t = s != Pull ? s.EnterTime + Math.Min(sm.TimeSinceTransition, s.Duration) : -sm.PrepullTimer;
             foreach (var a in Actions.Where(a => a.ID == action && a.IsActive(t, s)))
                 a.Executed = true;
+        }
+
+        public uint? ActiveForcedTarget(StateMachine sm)
+        {
+            var s = FindStateData(sm.ActiveState);
+            var t = s != Pull ? s.EnterTime + Math.Min(sm.TimeSinceTransition, s.Duration) : -sm.PrepullTimer;
+            return ForcedTargets.Where(o => o.IsActive(t, s)).MaxBy(o => o.WindowStart)?.OID;
         }
 
         public void Draw(StateMachine sm)

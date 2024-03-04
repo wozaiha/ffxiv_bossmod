@@ -5,7 +5,7 @@ namespace BossMod.RealmReborn.Dungeon.D08Qarn.D082TempleGuardian
     public enum OID : uint
     {
         Boss = 0x6DB, // x1
-        GolemSoulstone = 0x7FA, // x1, Unknown type, and more spawn during fight
+        GolemSoulstone = 0x7FA, // x1, Part type, and more spawn during fight
     };
 
     public enum AID : uint
@@ -44,6 +44,7 @@ namespace BossMod.RealmReborn.Dungeon.D08Qarn.D082TempleGuardian
         }
     }
 
+    [ModuleInfo(CFCID = 9, NameID = 1569)]
     public class D082TempleGuardian : BossModule
     {
         public D082TempleGuardian(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(50, -10), 15)) { }

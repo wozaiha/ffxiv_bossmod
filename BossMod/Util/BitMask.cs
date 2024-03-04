@@ -33,10 +33,15 @@ namespace BossMod
         public int LowestSetBit() => BitOperations.TrailingZeroCount(Raw); // returns out-of-range value (64) if no bits are set
         public int HighestSetBit() => 63 - BitOperations.LeadingZeroCount(Raw); // returns out-of-range value (-1) if no bits are set
 
+        public BitMask WithBit(int index) => new(Raw | MaskForBit(index));
+        public BitMask WithoutBit(int index) => new(Raw & ~MaskForBit(index));
+
         public static BitMask operator ~(BitMask a) => new(~a.Raw);
         public static BitMask operator &(BitMask a, BitMask b) => new(a.Raw & b.Raw);
         public static BitMask operator |(BitMask a, BitMask b) => new(a.Raw | b.Raw);
         public static BitMask operator ^(BitMask a, BitMask b) => new(a.Raw ^ b.Raw);
+        public static bool operator ==(BitMask a, BitMask b) => a.Raw == b.Raw;
+        public static bool operator !=(BitMask a, BitMask b) => a.Raw != b.Raw;
 
         public IEnumerable<int> SetBits()
         {
@@ -50,5 +55,9 @@ namespace BossMod
         }
 
         private ulong MaskForBit(int index) => (uint)index < 64 ? (1ul << index) : 0;
+
+        public override bool Equals(object? obj) => obj is BitMask other && this == other;
+        public override int GetHashCode() => Raw.GetHashCode();
+        public override string ToString() => $"{Raw:X}";
     }
 }

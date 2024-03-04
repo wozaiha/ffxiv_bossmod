@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace BossMod.Endwalker.Savage.P12S2PallasAthena
@@ -18,12 +17,9 @@ namespace BossMod.Endwalker.Savage.P12S2PallasAthena
     class MissingLink : Components.CastCounter
     {
         public bool TethersAssigned { get; private set; }
-        private int[] _partner = new int[PartyState.MaxPartySize];
+        private int[] _partner = Utils.MakeArray(PartyState.MaxPartySize, -1);
 
-        public MissingLink() : base(ActionID.MakeSpell(AID.MissingLink))
-        {
-            Array.Fill(_partner, -1);
-        }
+        public MissingLink() : base(ActionID.MakeSpell(AID.MissingLink)) { }
 
         public override void AddHints(BossModule module, int slot, Actor actor, TextHints hints, MovementHints? movementHints)
         {
@@ -93,20 +89,20 @@ namespace BossMod.Endwalker.Savage.P12S2PallasAthena
             switch ((AID)spell.Action.ID)
             {
                 case AID.GeocentrismV:
-                    _aoes.Add(new(_shapeLine, new(95, 83), default, spell.FinishAt.AddSeconds(0.6f)));
-                    _aoes.Add(new(_shapeLine, new(100, 83), default, spell.FinishAt.AddSeconds(0.6f)));
-                    _aoes.Add(new(_shapeLine, new(105, 83), default, spell.FinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(95, 83), default, spell.NPCFinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(100, 83), default, spell.NPCFinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(105, 83), default, spell.NPCFinishAt.AddSeconds(0.6f)));
                     NumConcurrentAOEs = 3;
                     break;
                 case AID.GeocentrismC:
-                    _aoes.Add(new(_shapeCircle, new(100, 90), default, spell.FinishAt.AddSeconds(0.6f)));
-                    _aoes.Add(new(_shapeDonut, new(100, 90), default, spell.FinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeCircle, new(100, 90), default, spell.NPCFinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeDonut, new(100, 90), default, spell.NPCFinishAt.AddSeconds(0.6f)));
                     NumConcurrentAOEs = 2;
                     break;
                 case AID.GeocentrismH:
-                    _aoes.Add(new(_shapeLine, new(93, 85), 90.Degrees(), spell.FinishAt.AddSeconds(0.6f)));
-                    _aoes.Add(new(_shapeLine, new(93, 90), 90.Degrees(), spell.FinishAt.AddSeconds(0.6f)));
-                    _aoes.Add(new(_shapeLine, new(93, 95), 90.Degrees(), spell.FinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(93, 85), 90.Degrees(), spell.NPCFinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(93, 90), 90.Degrees(), spell.NPCFinishAt.AddSeconds(0.6f)));
+                    _aoes.Add(new(_shapeLine, new(93, 95), 90.Degrees(), spell.NPCFinishAt.AddSeconds(0.6f)));
                     NumConcurrentAOEs = 3;
                     break;
             }
@@ -140,10 +136,10 @@ namespace BossMod.Endwalker.Savage.P12S2PallasAthena
     {
         public bool Finished { get; private set; }
 
-        public override void OnEventEnvControl(BossModule module, uint directorID, byte index, uint state)
+        public override void OnEventEnvControl(BossModule module, byte index, uint state)
         {
             // note: there are 3 env controls happening at the same time, not sure which is the actual trigger: .9=02000001, .11=00800001, .12=00080004
-            if (directorID == 0x800375B5 && index == 9 && state == 0x02000001)
+            if (index == 9 && state == 0x02000001)
                 Finished = true;
         }
     }

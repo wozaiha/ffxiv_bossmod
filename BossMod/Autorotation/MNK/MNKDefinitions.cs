@@ -82,21 +82,21 @@ namespace BossMod.MNK
 
     public enum CDGroup : int
     {
-        SteelPeak = 0, // 1.0 max, shared by Steel Peak, Howling Fist, Forbidden Chakra, Enlightenment
+        SteelPeak = 0, // 1.0 max, shared by Steel Peak, Howling Fist, the Forbidden Chakra, Enlightenment
         Thunderclap = 9, // 2*30.0 max
         PerfectBalance = 10, // 2*40.0 max
         RiddleOfFire = 11, // 60.0 max
         Anatman = 12, // 60.0 max
-        RiddleOfEarth = 14, // 3*30.0 max
+        RiddleOfEarth = 14, // 120.0 max
         Mantra = 15, // 90.0 max
         RiddleOfWind = 16, // 90.0 max
         Brotherhood = 19, // 120.0 max
-        SecondWind = 40, // 120.0 max
         LegSweep = 41, // 40.0 max
-        Bloodbath = 42, // 90.0 max
-        Feint = 43, // 90.0 max
-        TrueNorth = 44, // 2*45.0 max
-        ArmsLength = 46, // 120.0 max
+        TrueNorth = 45, // 2*45.0 max
+        Bloodbath = 46, // 90.0 max
+        Feint = 47, // 90.0 max
+        ArmsLength = 48, // 120.0 max
+        SecondWind = 49, // 120.0 max
     }
 
     public enum SID : uint
@@ -105,6 +105,8 @@ namespace BossMod.MNK
         OpoOpoForm = 107, // applied by Snap Punch to self
         RaptorForm = 108, // applied by Bootshine, Arm of the Destroyer to self
         CoeurlForm = 109, // applied by True Strike, Twin Snakes to self
+        RiddleOfFire = 1181, // applied by Riddle of Fire to self
+        RiddleOfWind = 2687, // applied by Riddle of Wind to self
         LeadenFist = 1861, // applied by Dragon Kick to self
         DisciplinedFist = 3001, // applied by Twin Snakes to self, damage buff
         PerfectBalance = 110, // applied by Perfect Balance to self, ignore form requirements
@@ -114,6 +116,8 @@ namespace BossMod.MNK
         Mantra = 102, // applied by Mantra to targets, +10% healing taken
         TrueNorth = 1250, // applied by True North to self, ignore positionals
         Stun = 2, // applied by Leg Sweep to target
+        FormlessFist = 2513, // applied by Form Shift to self
+        SixSidedStar = 2514, // applied by Six-Sided Star to self
     }
 
     public static class Definitions
@@ -218,14 +222,14 @@ namespace BossMod.MNK
             SupportedActions.OGCD(AID.Brotherhood, 0, CDGroup.Brotherhood, 120.0f);
             SupportedActions.OGCD(AID.RiddleOfWind, 0, CDGroup.RiddleOfWind, 90.0f);
             SupportedActions.OGCD(AID.SecondWind, 0, CDGroup.SecondWind, 120.0f);
-            SupportedActions.OGCD(AID.Mantra, 0, CDGroup.Mantra, 90.0f);
-            SupportedActions.OGCDWithCharges(AID.RiddleOfEarth, 0, CDGroup.RiddleOfEarth, 30.0f, 3);
+            SupportedActions.OGCD(AID.Mantra, 0, CDGroup.Mantra, 90.0f).EffectDuration = 15;
+            SupportedActions.OGCD(AID.RiddleOfEarth, 0, CDGroup.RiddleOfEarth, 120.0f).EffectDuration = 10;
             SupportedActions.OGCD(AID.Bloodbath, 0, CDGroup.Bloodbath, 90.0f);
             SupportedActions.OGCD(AID.Feint, 10, CDGroup.Feint, 90.0f).EffectDuration = 10;
             SupportedActions.OGCD(AID.ArmsLength, 0, CDGroup.ArmsLength, 120.0f).EffectDuration = 6;
             SupportedActions.GCD(AID.Meditation, 0);
             SupportedActions.OGCDWithCharges(AID.TrueNorth, 0, CDGroup.TrueNorth, 45.0f, 2);
-            SupportedActions.OGCDWithCharges(AID.Thunderclap, 20, CDGroup.Thunderclap, 30.0f, 2);
+            SupportedActions.OGCDWithCharges(AID.Thunderclap, 20, CDGroup.Thunderclap, 30.0f, 3);
             SupportedActions.GCD(AID.FormShift, 0);
             SupportedActions.OGCD(AID.Anatman, 0, CDGroup.Anatman, 60.0f);
             SupportedActions.OGCD(AID.LegSweep, 3, CDGroup.LegSweep, 40.0f);

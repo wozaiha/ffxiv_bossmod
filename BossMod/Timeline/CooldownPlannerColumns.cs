@@ -13,11 +13,13 @@ namespace BossMod
         private Action _onModified;
         private StateMachineTree _tree;
         private List<int> _phaseBranches;
+        private ModuleRegistry.Info? _moduleInfo;
         private bool _syncTimings;
         private string _name = "";
         private StateMachineTimings _timings = new();
         private List<ColumnPlannerTrackCooldown> _colCooldowns = new();
         private List<ColumnPlannerTrackStrategy> _colStrategy = new();
+        private ColumnPlannerTrackTarget _colTarget;
         private Dictionary<ActionID, int> _aidToColCooldown = new();
 
         private float _trackWidth = 50;
@@ -31,6 +33,7 @@ namespace BossMod
             _onModified = onModified;
             _tree = tree;
             _phaseBranches = phaseBranches;
+            _moduleInfo = moduleInfo;
             _syncTimings = syncTimings;
             var classDef = PlanDefinitions.Classes[plan.Class];
             foreach (var track in classDef.CooldownTracks)
@@ -58,6 +61,10 @@ namespace BossMod
                 col.NotifyModified = onModified;
                 _colStrategy.Add(col);
             }
+
+            _colTarget = Add(new ColumnPlannerTrackTarget(timeline, tree, phaseBranches, moduleInfo));
+            _colTarget.Width = _trackWidth;
+            _colTarget.NotifyModified = onModified;
 
             ExtractPlanData(plan);
         }
@@ -127,27 +134,48 @@ namespace BossMod
             _plan.Timings = plan.Timings;
             _plan.Actions = plan.Actions;
             _plan.StrategyOverrides = plan.StrategyOverrides;
+            _plan.TargetOverrides = plan.TargetOverrides;
         }
 
         public void ExportToClipboard()
         {
-            ImGui.SetClipboardText(JObject.FromObject(BuildPlan()).ToString());
+            if (_moduleInfo == null)
+            {
+                Service.Log($"Failed to export plan, module info unavailable");
+                return;
+            }
+
+            var json = BuildPlan().ToJSON(Serialization.BuildSerializer());
+            json["Class"] = _plan.Class.ToString();
+            json["Encounter"] = _moduleInfo.ModuleType.FullName;
+            ImGui.SetClipboardText(json.ToString());
         }
 
         public void ImportFromClipboard()
         {
             try
             {
-                var plan = JObject.Parse(ImGui.GetClipboardText()).ToObject<CooldownPlan>();
-                if (plan != null && plan.Class == _plan.Class)
+                var json = JObject.Parse(ImGui.GetClipboardText());
+                var cls = Enum.Parse<Class>(json?["Class"]?.ToString() ?? "None");
+                if (cls != _plan.Class)
                 {
-                    ExtractPlanData(plan);
-                    _onModified();
+                    Service.Log($"Failed to import: plan belongs to {cls} instead of {_plan.Class}");
+                    return;
                 }
-                else
+                var module = json?["Encounter"]?.ToString() ?? "";
+                if (module != _moduleInfo?.ModuleType.FullName)
                 {
-                    Service.Log($"Failed to import: plan belong to {plan?.Class} instead of {_plan.Class}");
+                    Service.Log($"Failed to import: plan belongs to {module} instead of {_moduleInfo?.ModuleType.FullName}");
+                    return;
                 }
+                var plan = CooldownPlan.FromJSON(cls, _plan.Level, json, Serialization.BuildSerializer());
+                if (plan == null)
+                {
+                    Service.Log($"Failed to import: some error occured");
+                    return;
+                }
+                ExtractPlanData(plan);
+                _onModified();
             }
             catch (Exception ex)
             {
@@ -195,6 +223,17 @@ namespace BossMod
                     }
                 }
             }
+
+            while (_colTarget.Elements.Count > 0)
+                _colTarget.RemoveElement(0);
+            foreach (var o in plan.TargetOverrides)
+            {
+                var state = _tree.Nodes.GetValueOrDefault(o.StateID);
+                if (state != null)
+                {
+                    _colTarget.AddElement(state, o.TimeSinceActivation, o.WindowLength, o.OID, o.Comment);
+                }
+            }
         }
 
         private CooldownPlan BuildPlan()
@@ -216,6 +255,11 @@ namespace BossMod
                     var cast = (ColumnPlannerTrackStrategy.OverrideElement)e;
                     overrides.Add(new(cast.Value, e.Window.AttachNode.State.ID, e.Window.Delay, e.Window.Duration, cast.Comment));
                 }
+            }
+            foreach (var e in _colTarget.Elements)
+            {
+                var cast = (ColumnPlannerTrackTarget.OverrideElement)e;
+                res.TargetOverrides.Add(new(cast.OID, e.Window.AttachNode.State.ID, e.Window.Delay, e.Window.Duration, cast.Comment));
             }
             return res;
         }

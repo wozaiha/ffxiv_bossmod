@@ -101,7 +101,7 @@ namespace BossMod
                             StartPlanEditor(plan);
                         }
                         ImGui.SameLine();
-                        if (ImGui.Button($"删除"))
+                        if (UIMisc.DangerousButton($"删除"))
                         {
                             if (plans.SelectedIndex == i)
                                 plans.SelectedIndex = -1;

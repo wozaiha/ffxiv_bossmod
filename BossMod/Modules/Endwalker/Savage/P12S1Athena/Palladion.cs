@@ -98,8 +98,14 @@ namespace BossMod.Endwalker.Savage.P12S1Athena
         {
             _palladion = module.FindComponent<Palladion>();
             _origin = module.PrimaryActor.Position; // note: assumed to be activated when cast starts, so boss is in initial jump position; PATE 1E43 happens 1s earlier, but icons only appear right before cast start
-            _activation = module.PrimaryActor.CastInfo?.FinishAt.AddSeconds(0.3f) ?? default;
+            _activation = module.PrimaryActor.CastInfo?.NPCFinishAt.AddSeconds(0.3f) ?? default;
+        }
 
+        public override void AddHints(BossModule module, int slot, Actor actor, TextHints hints, MovementHints? movementHints)
+        {
+            base.AddHints(module, slot, actor, hints, movementHints);
+            if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && (target == actor || target == _palladion.Partners[NumCasts]) && actor.Position.InCircle(_origin, 23))
+                hints.Add("Too close!");
         }
 
         public override void DrawArenaForeground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
@@ -137,7 +143,7 @@ namespace BossMod.Endwalker.Savage.P12S1Athena
         public override void Init(BossModule module)
         {
             _palladion = module.FindComponent<Palladion>();
-            UpdateStack(module, module.PrimaryActor.CastInfo?.FinishAt.AddSeconds(0.3f) ?? default);
+            UpdateStack(module, module.PrimaryActor.CastInfo?.NPCFinishAt.AddSeconds(0.3f) ?? default);
         }
 
         public override PlayerPriority CalcPriority(BossModule module, int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)

@@ -11,10 +11,10 @@ namespace BossMod.Endwalker.Savage.P10SPandaemonium
 
     class JadePassage : Components.GenericAOEs
     {
-        private List<Actor> _spheres = new();
+        private IReadOnlyList<Actor> _spheres = ActorEnumeration.EmptyList;
         private DateTime _activation;
 
-        private static AOEShapeRect _shape = new(80, 1);
+        private static AOEShapeRect _shape = new(40, 1, 40);
 
         public JadePassage() : base(ActionID.MakeSpell(AID.JadePassage)) { }
 
@@ -26,7 +26,7 @@ namespace BossMod.Endwalker.Savage.P10SPandaemonium
 
         public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
         {
-            return _spheres.Where(s => !s.IsDead).Select(s => new AOEInstance(_shape, s.Position, s.Rotation, s.CastInfo?.FinishAt ?? _activation));
+            return _spheres.Where(s => !s.IsDead).Select(s => new AOEInstance(_shape, s.Position, s.Rotation, s.CastInfo?.NPCFinishAt ?? _activation));
         }
     }
 }
