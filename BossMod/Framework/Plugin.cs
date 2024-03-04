@@ -21,7 +21,7 @@ namespace BossMod
         // private Autorotation _autorotation;
         // private AI.AIManager _ai;
         // private AI.Broadcast _broadcast;
-        private IPCProvider _ipc;
+        // private IPCProvider _ipc;
         private TimeSpan _prevUpdateTime;
 
         // windows
@@ -64,7 +64,7 @@ namespace BossMod
             // _autorotation = new(_bossmod);
             // _ai = new(_autorotation);
             // _broadcast = new();
-            _ipc = new(_autorotation);
+            // _ipc = new(_autorotation);
 
             _wndBossmod = new(_bossmod);
             _wndBossmodPlan = new(_bossmod);
@@ -85,7 +85,7 @@ namespace BossMod
             _wndBossmodHints.Dispose();
             _wndBossmodPlan.Dispose();
             _wndBossmod.Dispose();
-            _ipc.Dispose();
+            // _ipc.Dispose();
             _bossmod.Dispose();
             _network.Dispose();
             // _ai.Dispose();
