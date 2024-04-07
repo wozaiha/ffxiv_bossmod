@@ -6,13 +6,13 @@ class AIConfig : ConfigNode
     [PropertyDisplay("启用 AI")]
     public bool Enabled = false;
     
-    [PropertyDisplay("Draw UI")]
+    [PropertyDisplay("渲染 UI")]
     public bool DrawUI = true;
 
-    [PropertyDisplay("Follow Leader")]
+    [PropertyDisplay("跟随队长")]
     public bool FollowLeader = true;
 
-    [PropertyDisplay("Focus Target Leader")]
+    [PropertyDisplay("聚焦目标队长")]
     public bool FocusTargetLeader = true;
 
     [PropertyDisplay("广播按键到其他窗口")]

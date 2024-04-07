@@ -63,9 +63,8 @@ class Autorotation : IDisposable
 
         _useActionHook = Service.Hook.HookFromSignature<UseActionDelegate>("E8 ?? ?? ?? ?? EB 64 B1 01", UseActionDetour);
             
-            if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
-            _useActionHook.Enable();
-
+        if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
+        _useActionHook.Enable();
     }
 
     public void Dispose()
@@ -75,7 +74,7 @@ class Autorotation : IDisposable
 
         _ui.Dispose();
 
-            if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
+        if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
             _useActionHook.Dispose();
 
         _classActions?.Dispose();

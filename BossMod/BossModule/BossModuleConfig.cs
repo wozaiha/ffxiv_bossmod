@@ -28,7 +28,7 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("显示方向")]
     public bool ShowCardinals = false;
 
-    [PropertyDisplay("Cardinal direction font size")]
+    [PropertyDisplay("指南针字体大小")]
     [PropertySlider(0.1f, 100, Speed = 1)]
     public float CardinalsFontSize = 17;
 
@@ -65,9 +65,9 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("总是显示所有活着的队伍成员")]
     public bool ShowIrrelevantPlayers = false;
 
-    [PropertyDisplay("Show outlines and shadows on various radar markings")]
+    [PropertyDisplay("在各式小地图标记显示描边和阴影")]
     public bool ShowOutlinesAndShadows = false;
 
-    [PropertyDisplay("Minimal maturity for the module to be loaded")]
+    [PropertyDisplay("要加载的模块的最低完成度")]
     public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
 }
