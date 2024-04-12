@@ -1,4 +1,5 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Group;
+﻿using Dalamud.Game.ClientState.Conditions;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
 
 namespace BossMod;
 
@@ -7,7 +8,7 @@ class PartyAlliance
 {
     public static int MaxAllianceMembers = 20;
 
-    private unsafe GroupManager* _groupManager => GroupManager.Instance()->GetNextInstance();
+    private unsafe GroupManager* _groupManager => GroupManager.Instance()->GetNextInstance(Service.Condition[ConditionFlag.DutyRecorderPlayback]);
 
     public unsafe int NumPartyMembers => _groupManager->MemberCount;
     public unsafe bool IsAlliance => (_groupManager->AllianceFlags & 1) != 0;
