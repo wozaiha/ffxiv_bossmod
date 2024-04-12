@@ -56,12 +56,12 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
         WDir safeCornerOffset = default;
         foreach (var m in Mines)
             safeCornerOffset -= m.Origin - Module.Bounds.Center;
-        var relSouth = (safeCornerOffset + safeCornerOffset.OrthoL()) / 16;
+        var relSouth = (safeCornerOffset + safeCornerOffset.OrthoR()) / 16;
         var relWest = relSouth.OrthoR();
-        var off1 = 5 * relSouth + 13 * relWest;
-        var off2a = 3 * relSouth + 13 * relWest;
-        var off2b = -8 * relSouth + 16 * relWest;
-        var off3 = 13 * relSouth - 8 * relWest;
+        var off1 = 5 * relSouth - 13 * relWest;
+        var off2a = 3 * relSouth - 13 * relWest;
+        var off2b = -8 * relSouth - 16 * relWest;
+        var off3 = 13 * relSouth + 8 * relWest;
         var sumStacks = Players.Sum(p => p.StackTarget ? p.SubtractiveStacks : 0); // can be 3 (1+2), 4 (2+2 or 1+3) or 5 (2+3)
         foreach (ref var p in Players.AsSpan())
         {
