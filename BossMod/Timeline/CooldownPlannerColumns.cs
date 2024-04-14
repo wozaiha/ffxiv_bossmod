@@ -75,14 +75,14 @@ public class CooldownPlannerColumns : Timeline.ColumnGroup
 
     public void DrawCommonControls()
     {
-        if (ImGui.Button("Export to clipboard"))
+        if (ImGui.Button("导出至剪切板"))
             ExportToClipboard();
         ImGui.SameLine();
-        if (ImGui.Button("Import from clipboard"))
+        if (ImGui.Button("从剪切板导入"))
             ImportFromClipboard();
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
-        if (ImGui.InputText("Name", ref _name, 255))
+        if (ImGui.InputText("名称", ref _name, 255))
             _onModified();
     }
 
@@ -91,7 +91,7 @@ public class CooldownPlannerColumns : Timeline.ColumnGroup
         if (ImGui.Button("<##Phase") && selectedPhase > 0)
             --selectedPhase;
         ImGui.SameLine();
-        ImGui.TextUnformatted($"Current phase: {selectedPhase + 1}/{_tree.Phases.Count}");
+        ImGui.TextUnformatted($"当前阶段: {selectedPhase + 1}/{_tree.Phases.Count}");
         ImGui.SameLine();
         if (ImGui.Button(">##Phase") && selectedPhase < _tree.Phases.Count - 1)
             ++selectedPhase;
@@ -110,7 +110,7 @@ public class CooldownPlannerColumns : Timeline.ColumnGroup
         if (ImGui.Button("<##Branch") && _phaseBranches[selectedPhase] > 0)
             --_phaseBranches[selectedPhase];
         ImGui.SameLine();
-        ImGui.TextUnformatted($"Current branch: {_phaseBranches[selectedPhase] + 1}/{selPhase.StartingNode.NumBranches}");
+        ImGui.TextUnformatted($"当前分支: {_phaseBranches[selectedPhase] + 1}/{selPhase.StartingNode.NumBranches}");
         ImGui.SameLine();
         if (ImGui.Button(">##Branch") && _phaseBranches[selectedPhase] < selPhase.StartingNode.NumBranches - 1)
             ++_phaseBranches[selectedPhase];

@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -130,7 +130,7 @@ class WorldStateGame : WorldState, IDisposable
 
             if (obj != null && (obj.ObjectId & 0xFF000000) == 0xFF000000)
             {
-                //Service.Log($"[WorldState] Skipping bad object #{i} with id {obj.ObjectId:X}");
+                // Service.Log($"[WorldState] Skipping bad object #{i} with id {obj.ObjectId:X}");
                 obj = null;
             }
 

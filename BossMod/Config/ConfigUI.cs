@@ -64,10 +64,10 @@ public class ConfigUI : IDisposable
         using var tabs = ImRaii.TabBar("Tabs");
         if (tabs)
         {
-            using (var tab = ImRaii.TabItem("Configs"))
+            using (var tab = ImRaii.TabItem("配置"))
                 if (tab)
                     DrawNodes(_roots);
-            using (var tab = ImRaii.TabItem("Modules"))
+            using (var tab = ImRaii.TabItem("模块"))
                 if (tab)
                     _mv.Draw(_tree);
         }

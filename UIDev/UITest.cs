@@ -148,6 +148,7 @@ class UITest
                 }
             }
         }
-        return "D:\\installed\\SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack";
+
+        return "F:\\FFXIV\\game\\sqpack";
     }
 }

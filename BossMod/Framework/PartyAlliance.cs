@@ -1,5 +1,9 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
+using FFXIVClientStructs.Interop.Attributes;
+using System;
+using System.Runtime.InteropServices;
 
 namespace BossMod;
 

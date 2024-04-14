@@ -17,10 +17,10 @@ public sealed class Plugin : IDalamudPlugin
     private Network.Logger _network;
     private WorldStateGame _ws;
     private BossModuleManager _bossmod;
-    private Autorotation _autorotation;
-    private AI.AIManager _ai;
-    private AI.Broadcast _broadcast;
-    private IPCProvider _ipc;
+    // private Autorotation _autorotation;
+    // private AI.AIManager _ai;
+    // private AI.Broadcast _broadcast;
+    // private IPCProvider _ipc;
     private TimeSpan _prevUpdateTime;
 
     // windows
@@ -45,7 +45,6 @@ public sealed class Plugin : IDalamudPlugin
         Service.WindowSystem = new("vbm");
         //Service.Device = pluginInterface.UiBuilder.Device;
         Service.Condition.ConditionChange += OnConditionChanged;
-        MultiboxUnlock.Exec();
         Network.IDScramble.Initialize();
         Camera.Instance = new();
 
@@ -62,16 +61,16 @@ public sealed class Plugin : IDalamudPlugin
         _network = new(dalamud.ConfigDirectory);
         _ws = new(dalamudStartInfo?.GameVersion?.ToString() ?? "unknown");
         _bossmod = new(_ws);
-        _autorotation = new(_bossmod);
-        _ai = new(_autorotation);
-        _broadcast = new();
-        _ipc = new(_autorotation);
+        // _autorotation = new(_bossmod);
+        // _ai = new(_autorotation);
+        // _broadcast = new();
+        // _ipc = new(_autorotation);
 
         _wndBossmod = new(_bossmod);
         _wndBossmodPlan = new(_bossmod);
         _wndBossmodHints = new(_bossmod);
         _wndReplay = new(_ws, new(dalamud.ConfigDirectory.FullName +  "/replays"));
-        _wndDebug = new(_ws, _autorotation);
+        _wndDebug = new(_ws, null);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
@@ -86,11 +85,11 @@ public sealed class Plugin : IDalamudPlugin
         _wndBossmodHints.Dispose();
         _wndBossmodPlan.Dispose();
         _wndBossmod.Dispose();
-        _ipc.Dispose();
+        // _ipc.Dispose();
         _bossmod.Dispose();
         _network.Dispose();
-        _ai.Dispose();
-        _autorotation.Dispose();
+        // _ai.Dispose();
+        // _autorotation.Dispose();
         _ws.Dispose();
         ActionManagerEx.Instance?.Dispose();
         BozjaInterop.Instance?.Dispose();
@@ -141,9 +140,9 @@ public sealed class Plugin : IDalamudPlugin
         Camera.Instance?.Update();
         _ws.Update(_prevUpdateTime);
         _bossmod.Update();
-        _autorotation.Update();
-        _ai.Update();
-        _broadcast.Update();
+        // _autorotation.Update();
+        // _ai.Update();
+        // _broadcast.Update();
 
         bool uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
         if (!uiHidden)

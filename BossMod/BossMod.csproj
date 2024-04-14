@@ -20,10 +20,6 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
-<!--  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>$(AppData)\XIVLauncher\devPlugins\BossMod\</OutputPath>
-  </PropertyGroup>-->
-
   <ItemGroup>
     <Content Include="BossMod.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -39,7 +35,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+    <DalamudLibPath>..\..\DalamudDep\</DalamudLibPath>
   </PropertyGroup>
   
    <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">

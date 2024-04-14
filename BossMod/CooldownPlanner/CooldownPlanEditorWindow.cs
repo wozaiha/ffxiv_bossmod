@@ -28,7 +28,7 @@ public class CooldownPlanEditorWindow : UIWindow
 
     public override void Draw()
     {
-        if (ImGui.Button(_modified ? "Save" : "No changes") && _modified)
+        if (ImGui.Button(_modified ? "保存" : "无更改") && _modified)
             Save();
         ImGui.SameLine();
         _planner.DrawCommonControls();

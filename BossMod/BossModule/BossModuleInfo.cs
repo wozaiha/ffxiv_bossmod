@@ -4,13 +4,13 @@ public static class BossModuleInfo
 {
     public enum Maturity
     {
-        [PropertyDisplay("Work in progress; might be incomplete or have severe bugs")]
+        [PropertyDisplay("使用尚在开发中的模块; 可能会不完整或存在致命BUG")]
         WIP,
 
-        [PropertyDisplay("Third-party contributed module that wasn't verified by the plugin author; might be working fine, might have any sorts of inconsistencies with other modules - YMMV")]
+        [PropertyDisplay("使用第三方尚未被作者验证过的模块; 也许可以正常使用, 可能会与其他模块有不一致性 - YMMV")]
         Contributed,
 
-        [PropertyDisplay("First-party module created by the plugin author, or a third-party contributed module that was thoroughly verified and effectively taken over by the plugin author")]
+        [PropertyDisplay("使用作者制作的第一方模块, 或经由插件作者验证过的第三方制作的模块")]
         Verified
     }
 

@@ -62,6 +62,8 @@ class Autorotation : IDisposable
         WorldState.Actors.CastEvent += OnCastEvent;
 
         _useActionHook = Service.Hook.HookFromSignature<UseActionDelegate>("E8 ?? ?? ?? ?? EB 64 B1 01", UseActionDetour);
+            
+        if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
         _useActionHook.Enable();
     }
 
@@ -71,7 +73,10 @@ class Autorotation : IDisposable
         WorldState.Actors.CastEvent -= OnCastEvent;
 
         _ui.Dispose();
-        _useActionHook.Dispose();
+
+        if (!Service.Config.Get<AutorotationConfig>().Disable_Hook)
+            _useActionHook.Dispose();
+
         _classActions?.Dispose();
         _autoHints.Dispose();
     }

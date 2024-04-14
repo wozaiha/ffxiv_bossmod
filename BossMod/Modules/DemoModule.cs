@@ -2,36 +2,34 @@
 
 public class DemoModule : BossModule
 {
-    private class DemoComponent(BossModule module) : BossComponent(module)
+    private class DemoComponent : BossComponent
     {
-        public override void AddHints(int slot, Actor actor, TextHints hints)
+        public override void AddHints(BossModule module, int slot, Actor actor, TextHints hints, MovementHints? movementHints)
         {
-            hints.Add("Hint", false);
-            hints.Add("Risk");
+            hints.Add("提示", false);
+            hints.Add("警告");
+            if (movementHints != null)
+                movementHints.Add(actor.Position, actor.Position + new WDir(10, 10), ArenaColor.Danger);
         }
 
-        public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
+        public override void AddGlobalHints(BossModule module, GlobalHints hints)
         {
-            movementHints.Add(actor.Position, actor.Position + new WDir(10, 10), ArenaColor.Danger);
+            hints.Add("全局提示");
         }
 
-        public override void AddGlobalHints(GlobalHints hints)
+        public override void DrawArenaBackground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
         {
-            hints.Add("Global");
+            arena.ZoneCircle(module.Bounds.Center, 10, ArenaColor.AOE);
         }
 
-        public override void DrawArenaBackground(int pcSlot, Actor pc)
+        public override void DrawArenaForeground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
         {
-            Arena.ZoneCircle(Module.Bounds.Center, 10, ArenaColor.AOE);
-        }
-
-        public override void DrawArenaForeground(int pcSlot, Actor pc)
-        {
-            Arena.Actor(Module.Bounds.Center, 0.Degrees(), ArenaColor.PC);
+            arena.Actor(module.Bounds.Center, 0.Degrees(), ArenaColor.PC);
         }
     }
 
-    public DemoModule(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(100, 100), 20))
+    public DemoModule(WorldState ws, Actor primary)
+        : base(ws, primary, new ArenaBoundsSquare(new(100, 100), 20))
     {
         ActivateComponent<DemoComponent>();
     }

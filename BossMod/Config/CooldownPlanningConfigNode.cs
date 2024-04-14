@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+using Dalamud.Logging;
+using ImGuiNET;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -41,7 +42,7 @@ public abstract class CooldownPlanningConfigNode : ConfigNode
             NotifyModified();
         }
         ImGui.SameLine();
-        if (ImGui.Button(plans.SelectedIndex >= 0 ? "Edit plan" : "Create new plan"))
+        if (ImGui.Button(plans.SelectedIndex >= 0 ? "编辑计划" : "创建新计划"))
         {
             if (plans.SelectedIndex < 0)
             {
@@ -76,19 +77,19 @@ public abstract class CooldownPlanningConfigNode : ConfigNode
 
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        foreach (var _ in tree.Node("Cooldown plans"))
+        foreach (var _ in tree.Node("冷却计划"))
         {
             foreach (var (c, plans) in CooldownPlans)
             {
                 for (int i = 0; i < plans.Available.Count; ++i)
                 {
                     ImGui.PushID($"{c}/{i}");
-                    if (ImGui.Button($"Edit"))
+                    if (ImGui.Button($"编辑"))
                     {
                         StartPlanEditor(plans.Available[i]);
                     }
                     ImGui.SameLine();
-                    if (ImGui.Button($"Copy"))
+                    if (ImGui.Button($"创建副本"))
                     {
                         var plan = plans.Available[i].Clone();
                         plan.Name += " Copy";
@@ -97,7 +98,7 @@ public abstract class CooldownPlanningConfigNode : ConfigNode
                         StartPlanEditor(plan);
                     }
                     ImGui.SameLine();
-                    if (UIMisc.DangerousButton($"Delete"))
+                    if (UIMisc.DangerousButton($"删除"))
                     {
                         if (plans.SelectedIndex == i)
                             plans.SelectedIndex = -1;
@@ -117,7 +118,7 @@ public abstract class CooldownPlanningConfigNode : ConfigNode
                     ImGui.PopID();
                 }
             }
-            ImGui.TextUnformatted("Add new plan:");
+            ImGui.TextUnformatted("添加新计划:");
             foreach (var (c, plans) in CooldownPlans)
             {
                 ImGui.SameLine();

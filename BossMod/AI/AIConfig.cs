@@ -1,20 +1,20 @@
 ﻿namespace BossMod.AI;
 
-[ConfigDisplay(Name = "AI settings (very experimental!!!)", Order = 6)]
+[ConfigDisplay(Name = "AI设置 (非常实验性!!!)", Order = 6)]
 class AIConfig : ConfigNode
 {
-    [PropertyDisplay("Enable AI")]
+    [PropertyDisplay("启用 AI")]
     public bool Enabled = false;
     
-    [PropertyDisplay("Draw UI")]
+    [PropertyDisplay("渲染 UI")]
     public bool DrawUI = true;
 
-    [PropertyDisplay("Follow Leader")]
+    [PropertyDisplay("跟随队长")]
     public bool FollowLeader = true;
 
-    [PropertyDisplay("Focus Target Leader")]
+    [PropertyDisplay("聚焦目标队长")]
     public bool FocusTargetLeader = true;
 
-    [PropertyDisplay("Broadcast keypresses to other windows")]
+    [PropertyDisplay("广播按键到其他窗口")]
     public bool BroadcastToSlaves = false;
 }
