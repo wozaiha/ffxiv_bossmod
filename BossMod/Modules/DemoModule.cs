@@ -2,27 +2,25 @@
 
 public class DemoModule : BossModule
 {
-    private class DemoComponent : BossComponent
+    private class DemoComponent(BossModule module) : BossComponent(module)
     {
-        public override void AddHints(BossModule module, int slot, Actor actor, TextHints hints, MovementHints? movementHints)
+        public override void AddHints(int slot, Actor actor, TextHints hints)
         {
-            hints.Add("提示", false);
-            hints.Add("警告");
-            if (movementHints != null)
-                movementHints.Add(actor.Position, actor.Position + new WDir(10, 10), ArenaColor.Danger);
+            hints.Add("Hint", false);
+            hints.Add("Risk");
         }
 
-        public override void AddGlobalHints(BossModule module, GlobalHints hints)
+        public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
         {
-            hints.Add("全局提示");
+            movementHints.Add(actor.Position, actor.Position + new WDir(10, 10), ArenaColor.Danger);
         }
 
-        public override void DrawArenaBackground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
+        public override void AddGlobalHints(GlobalHints hints)
         {
-            arena.ZoneCircle(module.Bounds.Center, 10, ArenaColor.AOE);
+            hints.Add("Global");
         }
 
-        public override void DrawArenaForeground(BossModule module, int pcSlot, Actor pc, MiniArena arena)
+        public override void DrawArenaBackground(int pcSlot, Actor pc)
         {
             Arena.ZoneCircle(Module.Center, 10, ArenaColor.AOE);
         }

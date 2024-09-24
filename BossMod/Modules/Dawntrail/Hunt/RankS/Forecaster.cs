@@ -62,6 +62,7 @@ class Forecast(BossModule module) : Components.GenericAOEs(module)
             yield return new(_shapes[0], Module.PrimaryActor.Position, _rotation, _activation);
     }
 
+#pragma warning disable IDE0055
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (_shapes.Count > 0)
@@ -75,6 +76,7 @@ class Forecast(BossModule module) : Components.GenericAOEs(module)
             }))}");
         }
     }
+#pragma warning restore IDE0055
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
