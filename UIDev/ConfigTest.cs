@@ -6,16 +6,17 @@ namespace UIDev;
 class ConfigTest : TestWindow
 {
     private string _command = "";
-    private ConfigUI _ui;
+    private readonly ConfigUI _ui;
 
     public ConfigTest() : base("Config", new(400, 400), ImGuiWindowFlags.None)
     {
-        _ui = new(Service.Config, new(TimeSpan.TicksPerSecond, "fake"));
+        _ui = new(Service.Config, new(TimeSpan.TicksPerSecond, "fake"), null, null);
     }
 
     protected override void Dispose(bool disposing)
     {
         _ui.Dispose();
+        base.Dispose(disposing);
     }
 
     public override void Draw()

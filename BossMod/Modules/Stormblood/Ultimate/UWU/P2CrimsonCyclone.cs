@@ -7,9 +7,9 @@
 // p4 predation is a single awakened charge along intercardinal
 class CrimsonCyclone(BossModule module, float predictionDelay) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone))
 {
-    private float _predictionDelay = predictionDelay;
-    private List<(AOEShape shape, WPos pos, Angle rot, DateTime activation)> _predicted = new(); // note: there could be 1/2/4 predicted normal charges and 0 or 2 'cross' charges
-    private List<Actor> _casters = new();
+    private readonly float _predictionDelay = predictionDelay;
+    private readonly List<(AOEShape shape, WPos pos, Angle rot, DateTime activation)> _predicted = []; // note: there could be 1/2/4 predicted normal charges and 0 or 2 'cross' charges
+    private readonly List<Actor> _casters = [];
 
     private static readonly AOEShapeRect _shapeMain = new(49, 9, 5);
     private static readonly AOEShapeRect _shapeCross = new(44.5f, 5, 0.5f);
@@ -22,7 +22,7 @@ class CrimsonCyclone(BossModule module, float predictionDelay) : Components.Gene
             foreach (var p in _predicted)
                 yield return new(p.shape, p.pos, p.rot, p.activation);
         foreach (var c in _casters)
-            yield return new(_shapeMain, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+            yield return new(_shapeMain, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -48,8 +48,8 @@ class CrimsonCyclone(BossModule module, float predictionDelay) : Components.Gene
             _casters.Remove(caster);
             if (caster == ((UWU)Module).Ifrit() && caster.FindStatus(SID.Woken) != null)
             {
-                _predicted.Add((_shapeCross, Module.Bounds.Center - 19.5f * (spell.Rotation + 45.Degrees()).ToDirection(), spell.Rotation + 45.Degrees(), WorldState.FutureTime(2.2f)));
-                _predicted.Add((_shapeCross, Module.Bounds.Center - 19.5f * (spell.Rotation - 45.Degrees()).ToDirection(), spell.Rotation - 45.Degrees(), WorldState.FutureTime(2.2f)));
+                _predicted.Add((_shapeCross, Module.Center - 19.5f * (spell.Rotation + 45.Degrees()).ToDirection(), spell.Rotation + 45.Degrees(), WorldState.FutureTime(2.2f)));
+                _predicted.Add((_shapeCross, Module.Center - 19.5f * (spell.Rotation - 45.Degrees()).ToDirection(), spell.Rotation - 45.Degrees(), WorldState.FutureTime(2.2f)));
             }
         }
     }

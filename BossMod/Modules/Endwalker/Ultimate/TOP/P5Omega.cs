@@ -2,7 +2,7 @@
 
 class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
+    public List<AOEInstance> AOEs = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -49,7 +49,7 @@ class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
 
 class P5OmegaDiffuseWaveCannon(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCone _shape = new(100, 60.Degrees());
 
@@ -60,10 +60,10 @@ class P5OmegaDiffuseWaveCannon(BossModule module) : Components.GenericAOEs(modul
         if ((AID)spell.Action.ID is AID.OmegaDiffuseWaveCannonFront or AID.OmegaDiffuseWaveCannonSides)
         {
             var first = spell.Rotation + ((AID)spell.Action.ID == AID.OmegaDiffuseWaveCannonFront ? 0 : 90).Degrees();
-            _aoes.Add(new(_shape, caster.Position, first, spell.NPCFinishAt.AddSeconds(1.1f)));
-            _aoes.Add(new(_shape, caster.Position, first + 180.Degrees(), spell.NPCFinishAt.AddSeconds(1.1f)));
-            _aoes.Add(new(_shape, caster.Position, first + 90.Degrees(), spell.NPCFinishAt.AddSeconds(5.2f)));
-            _aoes.Add(new(_shape, caster.Position, first - 90.Degrees(), spell.NPCFinishAt.AddSeconds(5.2f)));
+            _aoes.Add(new(_shape, caster.Position, first, Module.CastFinishAt(spell, 1.1f)));
+            _aoes.Add(new(_shape, caster.Position, first + 180.Degrees(), Module.CastFinishAt(spell, 1.1f)));
+            _aoes.Add(new(_shape, caster.Position, first + 90.Degrees(), Module.CastFinishAt(spell, 5.2f)));
+            _aoes.Add(new(_shape, caster.Position, first - 90.Degrees(), Module.CastFinishAt(spell, 5.2f)));
         }
     }
 
@@ -118,7 +118,7 @@ class P5OmegaNearDistantWorld(BossModule module) : P5NearDistantWorld(module)
 // TODO: assign soakers
 class P5OmegaOversampledWaveCannon(BossModule module) : Components.UniformStackSpread(module, 0, 7)
 {
-    private P5OmegaNearDistantWorld? _ndw = module.FindComponent<P5OmegaNearDistantWorld>();
+    private readonly P5OmegaNearDistantWorld? _ndw = module.FindComponent<P5OmegaNearDistantWorld>();
     private Actor? _boss;
     private Angle _bossAngle;
 
@@ -177,21 +177,21 @@ class P5OmegaOversampledWaveCannon(BossModule module) : Components.UniformStackS
 
         if (actor == _ndw.NearWorld)
         {
-            yield return Module.Bounds.Center + 10 * (_boss.Rotation - _bossAngle).ToDirection();
+            yield return Module.Center + 10 * (_boss.Rotation - _bossAngle).ToDirection();
         }
         else if (actor == _ndw.DistantWorld)
         {
-            yield return Module.Bounds.Center + 10 * (_boss.Rotation + 2.05f * _bossAngle).ToDirection();
+            yield return Module.Center + 10 * (_boss.Rotation + 2.05f * _bossAngle).ToDirection();
         }
         else
         {
             // TODO: assignments...
-            yield return Module.Bounds.Center + 19 * (_boss.Rotation - 0.05f * _bossAngle).ToDirection(); // '1' - first distant
-            yield return Module.Bounds.Center + 19 * (_boss.Rotation - 0.95f * _bossAngle).ToDirection(); // '2' - first near
-            yield return Module.Bounds.Center + 19 * (_boss.Rotation - 1.05f * _bossAngle).ToDirection(); // '3' - second near
-            yield return Module.Bounds.Center + 19 * (_boss.Rotation - 1.95f * _bossAngle).ToDirection(); // '4' - second distant
-            yield return Module.Bounds.Center + 15 * (_boss.Rotation + 0.50f * _bossAngle).ToDirection(); // first soaker
-            yield return Module.Bounds.Center + 15 * (_boss.Rotation + 1.50f * _bossAngle).ToDirection(); // second soaker
+            yield return Module.Center + 19 * (_boss.Rotation - 0.05f * _bossAngle).ToDirection(); // '1' - first distant
+            yield return Module.Center + 19 * (_boss.Rotation - 0.95f * _bossAngle).ToDirection(); // '2' - first near
+            yield return Module.Center + 19 * (_boss.Rotation - 1.05f * _bossAngle).ToDirection(); // '3' - second near
+            yield return Module.Center + 19 * (_boss.Rotation - 1.95f * _bossAngle).ToDirection(); // '4' - second distant
+            yield return Module.Center + 15 * (_boss.Rotation + 0.50f * _bossAngle).ToDirection(); // first soaker
+            yield return Module.Center + 15 * (_boss.Rotation + 1.50f * _bossAngle).ToDirection(); // second soaker
         }
     }
 }
@@ -199,7 +199,7 @@ class P5OmegaOversampledWaveCannon(BossModule module) : Components.UniformStackS
 // TODO: assign soakers
 class P5OmegaBlaster : Components.BaitAwayTethers
 {
-    private P5OmegaNearDistantWorld? _ndw;
+    private readonly P5OmegaNearDistantWorld? _ndw;
 
     public P5OmegaBlaster(BossModule module) : base(module, new AOEShapeCircle(15), (uint)TetherID.Blaster, ActionID.MakeSpell(AID.OmegaBlasterAOE))
     {
@@ -226,30 +226,30 @@ class P5OmegaBlaster : Components.BaitAwayTethers
         if (_ndw == null || CurrentBaits.Count == 0)
             yield break;
 
-        var toBoss = (CurrentBaits.First().Source.Position - Module.Bounds.Center).Normalized();
+        var toBoss = (CurrentBaits[0].Source.Position - Module.Center).Normalized();
         if (actor == _ndw.NearWorld)
         {
-            yield return Module.Bounds.Center - 10 * toBoss;
+            yield return Module.Center - 10 * toBoss;
         }
         else if (actor == _ndw.DistantWorld)
         {
             // TODO: select one of the spots...
-            yield return Module.Bounds.Center + 10 * toBoss.OrthoL();
-            yield return Module.Bounds.Center + 10 * toBoss.OrthoR();
+            yield return Module.Center + 10 * toBoss.OrthoL();
+            yield return Module.Center + 10 * toBoss.OrthoR();
         }
         else if (CurrentBaits.Any(b => b.Target == actor))
         {
-            var p = Module.Bounds.Center + 16 * toBoss;
+            var p = Module.Center + 16 * toBoss;
             yield return p + 10 * toBoss.OrthoL();
             yield return p + 10 * toBoss.OrthoR();
         }
         else
         {
             // TODO: assignments...
-            yield return Module.Bounds.Center + 19 * toBoss.OrthoL(); // '1' - first distant
-            yield return Module.Bounds.Center - 18 * toBoss + 5 * toBoss.OrthoL(); // '2' - first near
-            yield return Module.Bounds.Center - 18 * toBoss + 5 * toBoss.OrthoR(); // '3' - second near
-            yield return Module.Bounds.Center + 19 * toBoss.OrthoR(); // '4' - second distant
+            yield return Module.Center + 19 * toBoss.OrthoL(); // '1' - first distant
+            yield return Module.Center - 18 * toBoss + 5 * toBoss.OrthoL(); // '2' - first near
+            yield return Module.Center - 18 * toBoss + 5 * toBoss.OrthoR(); // '3' - second near
+            yield return Module.Center + 19 * toBoss.OrthoR(); // '4' - second distant
         }
     }
 }

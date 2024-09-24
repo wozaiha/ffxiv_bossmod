@@ -6,7 +6,7 @@ class SFightingSpirits(BossModule module) : FightingSpirits(module, AID.SFightin
 
 class WorldlyPursuitBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
-    private int[] _order = { -1, -1, -1, -1 };
+    private readonly int[] _order = [-1, -1, -1, -1];
 
     private static readonly AOEShapeCross _shape = new(60, 10);
 
@@ -60,13 +60,13 @@ class WorldlyPursuitBait(BossModule module) : Components.GenericBaitAway(module,
 
 class WorldlyPursuitLast(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _activation = module.WorldState.FutureTime(3.1f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(3.1f);
 
     private static readonly AOEShapeCross _shape = new(60, 10);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(_shape, Module.Bounds.Center, Angle.FromDirection(Module.Bounds.Center - Module.PrimaryActor.Position), _activation);
+        yield return new(_shape, Module.Center, Angle.FromDirection(Module.Center - Module.PrimaryActor.Position), _activation);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

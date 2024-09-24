@@ -7,18 +7,18 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack_SanctifiedScathe = 17439, // 298A->player, no cast, single-target
-    LeftCheek = 17446, // 298A->self, 5,0s cast, range 60 180-degree cone
+    AutoAttackSanctifiedScathe = 17439, // 298A->player, no cast, single-target
+    LeftCheek = 17446, // 298A->self, 5.0s cast, range 60 180-degree cone
     LeftCheek2 = 17447, // 298A->self, no cast, range 60 180-degree cone
-    RightCheek = 17448, // 298A->self, 5,0s cast, range 60 180-degree cone
+    RightCheek = 17448, // 298A->self, 5.0s cast, range 60 180-degree cone
     RightCheek2 = 17449, // 298A->self, no cast, range 60 180-degree cone
-    TerrifyingGlance = 17955, // 298A->self, 3,0s cast, range 50 circle, gaze
-    TheStake = 17443, // 298A->self, 4,0s cast, range 18 circle
-    SecondCircle = 17441, // 298A->self, 3,0s cast, range 40 width 8 rect
-    CleansingFire = 17442, // 298A->self, 4,0s cast, range 40 circle
-    FeveredFlagellation = 17440, // 298A->players, 4,0s cast, range 15 90-degree cone, tankbuster
+    TerrifyingGlance = 17955, // 298A->self, 3.0s cast, range 50 circle, gaze
+    TheStake = 17443, // 298A->self, 4.0s cast, range 18 circle
+    SecondCircle = 17441, // 298A->self, 3.0s cast, range 40 width 8 rect
+    CleansingFire = 17442, // 298A->self, 4.0s cast, range 40 circle
+    FeveredFlagellation = 17440, // 298A->players, 4.0s cast, range 15 90-degree cone, tankbuster
     SanctifiedShock = 17900, // 298A->player, no cast, single-target, stuns target before WitchHunt
-    WitchHunt = 17444, // 298A->players, 3,0s cast, width 10 rect charge
+    WitchHunt = 17444, // 298A->players, 3.0s cast, width 10 rect charge
     WitchHunt2 = 17445, // 298A->players, no cast, width 10 rect charge, targets main tank
 }
 
@@ -47,7 +47,7 @@ class LeftRightCheek(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID is AID.LeftCheek or AID.RightCheek)
         {
             _rotation = spell.Rotation;
-            _activation = spell.NPCFinishAt;
+            _activation = Module.CastFinishAt(spell);
         }
     }
 
@@ -86,13 +86,21 @@ class FeveredFlagellationHint(BossModule module) : Components.SingleTargetCast(m
 
 class WitchHunt(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect = new AOEShapeRect(0, 5);
+    private static readonly AOEShapeRect rect = new(0, 5);
     private bool witchHunt1done;
 
     public override void Update()
     {
-        foreach (var b in CurrentBaits)
-            ((AOEShapeRect)b.Shape).LengthFront = (b.Target.Position - b.Source.Position).Length();
+        foreach (ref var b in CurrentBaits.AsSpan())
+        {
+            if (b.Shape is AOEShapeRect shape)
+            {
+                var len = (b.Target.Position - b.Source.Position).Length();
+                if (shape.LengthFront != len)
+                    b.Shape = shape with { LengthFront = len };
+            }
+        }
+
         if (CurrentBaits.Count > 0 && witchHunt1done) //updating WitchHunt2 target incase of sudden tank swap
         {
             var Target = CurrentBaits[0];

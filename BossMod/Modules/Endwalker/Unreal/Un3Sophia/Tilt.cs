@@ -2,8 +2,8 @@
 
 class Tilt(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.QuasarTilt))
 {
-    public static readonly float DistanceShort = 28;
-    public static readonly float DistanceLong = 37;
+    public const float DistanceShort = 28;
+    public const float DistanceLong = 37;
 
     public float Distance;
     public Angle Direction;
@@ -81,7 +81,7 @@ class Quasar(BossModule module) : Tilt(module)
                 _ => DistanceLong
             };
             Direction = (WeightLeft > WeightRight ? -90 : 90).Degrees();
-            Activation = spell.NPCFinishAt.AddSeconds(0.7f);
+            Activation = Module.CastFinishAt(spell, 0.7f);
         }
     }
 }

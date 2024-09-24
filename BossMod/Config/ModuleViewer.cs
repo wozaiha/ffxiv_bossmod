@@ -1,5 +1,5 @@
-﻿using Dalamud.Interface;
-using Dalamud.Interface.Internal;
+﻿using BossMod.Autorotation;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
@@ -10,36 +10,43 @@ using System.Text;
 
 namespace BossMod;
 
-public class ModuleViewer : IDisposable
+public sealed class ModuleViewer : IDisposable
 {
     private record struct ModuleInfo(ModuleRegistry.Info Info, string Name, int SortOrder);
-    private record struct ModuleGroupInfo(string Name, uint Id, uint SortOrder, IDalamudTextureWrap? Icon = null);
+    private record struct ModuleGroupInfo(string Name, uint Id, uint SortOrder, uint Icon = 0);
     private record struct ModuleGroup(ModuleGroupInfo Info, List<ModuleInfo> Modules);
+
+    private readonly PlanDatabase? _planDB;
+    private readonly WorldState _ws; // TODO: reconsider...
 
     private BitMask _filterExpansions;
     private BitMask _filterCategories;
 
-    private (string name, IDalamudTextureWrap? icon)[] _expansions;
-    private (string name, IDalamudTextureWrap? icon)[] _categories;
-    private IDalamudTextureWrap? _iconFATE;
-    private IDalamudTextureWrap? _iconHunt;
-    private List<ModuleGroup>[,] _groups;
-    private Vector2 _iconSize = new(30, 30);
+    private readonly (string name, uint icon)[] _expansions;
+    private readonly (string name, uint icon)[] _categories;
+    private readonly uint _iconFATE;
+    private readonly uint _iconHunt;
+    private readonly List<ModuleGroup>[,] _groups;
+    private readonly Vector2 _iconSize = new(30, 30);
 
-    public ModuleViewer()
+    public ModuleViewer(PlanDatabase? planDB, WorldState ws)
     {
-        var defaultIcon = GetIcon(61762);
+        _planDB = planDB;
+        _ws = ws;
+
+        uint defaultIcon = 61762;
         _expansions = Enum.GetNames<BossModuleInfo.Expansion>().Take((int)BossModuleInfo.Expansion.Count).Select(n => (n, defaultIcon)).ToArray();
         _categories = Enum.GetNames<BossModuleInfo.Category>().Take((int)BossModuleInfo.Category.Count).Select(n => (n, defaultIcon)).ToArray();
 
-        var exVersion = Service.LuminaGameData?.GetExcelSheet<ExVersion>();
+        var exVersion = Service.LuminaSheet<ExVersion>();
         Customize(BossModuleInfo.Expansion.RealmReborn, 61875, exVersion?.GetRow(0)?.Name);
         Customize(BossModuleInfo.Expansion.Heavensward, 61876, exVersion?.GetRow(1)?.Name);
         Customize(BossModuleInfo.Expansion.Stormblood, 61877, exVersion?.GetRow(2)?.Name);
         Customize(BossModuleInfo.Expansion.Shadowbringers, 61878, exVersion?.GetRow(3)?.Name);
         Customize(BossModuleInfo.Expansion.Endwalker, 61879, exVersion?.GetRow(4)?.Name);
+        Customize(BossModuleInfo.Expansion.Dawntrail, 61880, exVersion?.GetRow(5)?.Name);
 
-        var contentType = Service.LuminaGameData?.GetExcelSheet<ContentType>();
+        var contentType = Service.LuminaSheet<ContentType>();
         Customize(BossModuleInfo.Category.Dungeon, contentType?.GetRow(2));
         Customize(BossModuleInfo.Category.Trial, contentType?.GetRow(4));
         Customize(BossModuleInfo.Category.Raid, contentType?.GetRow(5));
@@ -52,7 +59,7 @@ public class ModuleViewer : IDisposable
         Customize(BossModuleInfo.Category.Ultimate, contentType?.GetRow(28));
         Customize(BossModuleInfo.Category.Criterion, contentType?.GetRow(30));
 
-        var playStyle = Service.LuminaGameData?.GetExcelSheet<CharaCardPlayStyle>();
+        var playStyle = Service.LuminaSheet<CharaCardPlayStyle>();
         Customize(BossModuleInfo.Category.Foray, playStyle?.GetRow(6));
         Customize(BossModuleInfo.Category.MaskedCarnivale, playStyle?.GetRow(8));
         Customize(BossModuleInfo.Category.Hunt, playStyle?.GetRow(10));
@@ -67,13 +74,13 @@ public class ModuleViewer : IDisposable
         _categories[(int)BossModuleInfo.Category.Alliance].name = "团队任务";
         //_categories[(int)BossModuleInfo.Category.Event].icon = GetIcon(61757);
 
-        _iconFATE = GetIcon(contentType?.GetRow(8)?.Icon ?? 0);
-        _iconHunt = GetIcon((uint)(playStyle?.GetRow(10)?.Icon ?? 0));
+        _iconFATE = contentType?.GetRow(8)?.Icon ?? 0;
+        _iconHunt = (uint)(playStyle?.GetRow(10)?.Icon ?? 0);
 
         _groups = new List<ModuleGroup>[(int)BossModuleInfo.Expansion.Count, (int)BossModuleInfo.Category.Count];
         for (int i = 0; i < (int)BossModuleInfo.Expansion.Count; ++i)
             for (int j = 0; j < (int)BossModuleInfo.Category.Count; ++j)
-                _groups[i, j] = new();
+                _groups[i, j] = [];
 
         foreach (var info in ModuleRegistry.RegisteredModules.Values)
         {
@@ -83,7 +90,7 @@ public class ModuleViewer : IDisposable
             if (groupIndex < 0)
             {
                 groupIndex = groups.Count;
-                groups.Add(new(groupInfo, new()));
+                groups.Add(new(groupInfo, []));
             }
             else if (groups[groupIndex].Info != groupInfo)
             {
@@ -111,21 +118,15 @@ public class ModuleViewer : IDisposable
 
     public void Dispose()
     {
-        foreach (var e in _expansions)
-            e.icon?.Dispose();
-        foreach (var c in _categories)
-            c.icon?.Dispose();
-        _iconFATE?.Dispose();
-        _iconHunt?.Dispose();
     }
 
-    public void Draw(UITree _tree)
+    public void Draw(UITree tree, WorldState ws)
     {
         using (var group = ImRaii.Group())
             DrawFilters();
         ImGui.SameLine();
         using (var group = ImRaii.Group())
-            DrawModules(_tree);
+            DrawModules(tree, ws);
     }
 
     private void DrawFilters()
@@ -154,7 +155,7 @@ public class ModuleViewer : IDisposable
         for (var e = BossModuleInfo.Expansion.RealmReborn; e < BossModuleInfo.Expansion.Count; ++e)
         {
             ref var expansion = ref _expansions[(int)e];
-            UIMisc.ImageToggleButton(expansion.icon, _iconSize, !_filterExpansions[(int)e], expansion.name);
+            UIMisc.ImageToggleButton(Service.Texture?.GetFromGameIcon(expansion.icon), _iconSize, !_filterExpansions[(int)e], expansion.name);
             if (ImGui.IsItemClicked())
             {
                 _filterExpansions.Toggle((int)e);
@@ -172,7 +173,7 @@ public class ModuleViewer : IDisposable
         for (var c = BossModuleInfo.Category.Uncategorized; c < BossModuleInfo.Category.Count; ++c)
         {
             ref var category = ref _categories[(int)c];
-            UIMisc.ImageToggleButton(category.icon, _iconSize, !_filterCategories[(int)c], category.name);
+            UIMisc.ImageToggleButton(Service.Texture?.GetFromGameIcon(category.icon), _iconSize, !_filterCategories[(int)c], category.name);
             if (ImGui.IsItemClicked())
             {
                 _filterCategories.Toggle((int)c);
@@ -185,7 +186,7 @@ public class ModuleViewer : IDisposable
         }
     }
 
-    private void DrawModules(UITree _tree)
+    private void DrawModules(UITree tree, WorldState ws)
     {
         using var table = ImRaii.Table("ModulesTable", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.BordersV | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.ScrollX | ImGuiTableFlags.NoHostExtendX);
         if (!table)
@@ -204,28 +205,37 @@ public class ModuleViewer : IDisposable
                 {
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
-                    UIMisc.Image(_expansions[i].icon, new(36));
+                    UIMisc.Image(Service.Texture?.GetFromGameIcon(_expansions[i].icon), new(36));
                     ImGui.SameLine();
-                    UIMisc.Image(group.Info.Icon ?? _categories[j].icon, new(36));
+                    UIMisc.Image(Service.Texture?.GetFromGameIcon(group.Info.Icon != 0 ? group.Info.Icon : _categories[j].icon), new(36));
                     ImGui.TableNextColumn();
 
-                    foreach (var _ in _tree.Node($"{group.Info.Name}###{i}/{j}/{group.Info.Id}"))
+                    foreach (var ng in tree.Node($"{group.Info.Name}###{i}/{j}/{group.Info.Id}"))
                     {
                         foreach (var mod in group.Modules)
                         {
                             using (ImRaii.Disabled(mod.Info.ConfigType == null))
-                                if (UIMisc.IconButton(FontAwesomeIcon.Cog, "cfg", $"###{mod.Info.ModuleType.FullName}"))
-                                    new BossModuleConfigWindow(mod.Info, new(TimeSpan.TicksPerSecond, "fake"));
+                                if (UIMisc.IconButton(FontAwesomeIcon.Cog, "cfg", $"###{mod.Info.ModuleType.FullName}_cfg"))
+                                    _ = new BossModuleConfigWindow(mod.Info, ws);
+                            ImGui.SameLine();
+                            using (ImRaii.Disabled(mod.Info.PlanLevel == 0))
+                                if (UIMisc.IconButton(FontAwesomeIcon.ClipboardList, "plan", $"###{mod.Info.ModuleType.FullName}_plans"))
+                                    ImGui.OpenPopup($"{mod.Info.ModuleType.FullName}_popup");
                             ImGui.SameLine();
                             UIMisc.HelpMarker(() => ModuleHelpText(mod));
                             ImGui.SameLine();
-                            using var color = ImRaii.PushColor(ImGuiCol.Text, mod.Info.Maturity switch
+                            var textColor = mod.Info.Maturity switch
                             {
                                 BossModuleInfo.Maturity.WIP => 0xff0000ff,
                                 BossModuleInfo.Maturity.Verified => 0xff00ff00,
                                 _ => 0xffffffff
-                            });
-                            ImGui.TextUnformatted($"{mod.Name} [{mod.Info.ModuleType.Name}]");
+                            };
+                            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+                                ImGui.TextUnformatted($"{mod.Name} [{mod.Info.ModuleType.Name}]");
+
+                            using (var popup = ImRaii.Popup($"{mod.Info.ModuleType.FullName}_popup"))
+                                if (popup)
+                                    ModulePlansPopup(mod.Info);
                         }
                     }
                 }
@@ -233,11 +243,9 @@ public class ModuleViewer : IDisposable
         }
     }
 
-    private void Customize((string name, IDalamudTextureWrap? icon)[] array, int element, uint iconId, SeString? name)
+    private void Customize((string name, uint icon)[] array, int element, uint iconId, SeString? name)
     {
-        var icon = GetIcon(iconId);
-        if (icon != null)
-            array[element].icon = icon;
+        array[element].icon = iconId;
         if (name != null)
             array[element].name = name;
     }
@@ -246,7 +254,7 @@ public class ModuleViewer : IDisposable
     private void Customize(BossModuleInfo.Category category, ContentType? ct) => Customize(category, ct?.Icon ?? 0, ct?.Name);
     private void Customize(BossModuleInfo.Category category, CharaCardPlayStyle? ps) => Customize(category, (uint)(ps?.Icon ?? 0), ps?.Name);
 
-    private static IDalamudTextureWrap? GetIcon(uint iconId) => iconId != 0 ? Service.Texture?.GetIcon(iconId, Dalamud.Plugin.Services.ITextureProvider.IconFlags.HiRes) : null;
+    //private static IDalamudTextureWrap? GetIcon(uint iconId) => iconId != 0 ? Service.Texture?.GetIcon(iconId, Dalamud.Plugin.Services.ITextureProvider.IconFlags.HiRes) : null;
     private static string FixCase(SeString? str) => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(str ?? "");
     private static string BNpcName(uint id) => FixCase(Service.LuminaRow<BNpcName>(id)?.Singular);
 
@@ -264,7 +272,7 @@ public class ModuleViewer : IDisposable
             case BossModuleInfo.GroupType.MaskedCarnivale:
                 groupId |= module.GroupID;
                 var mcRow = Service.LuminaRow<ContentFinderCondition>(module.GroupID);
-                var mcSort = uint.Parse((mcRow?.ShortCode ?? "").Substring(3)); // 'aozNNN'
+                var mcSort = uint.Parse((mcRow?.ShortCode ?? "").AsSpan(3), CultureInfo.InvariantCulture); // 'aozNNN'
                 var mcName = $"Stage {mcSort}: {FixCase(mcRow?.Name)}";
                 return (new(mcName, groupId, mcSort), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.RemovedUnreal:
@@ -298,9 +306,39 @@ public class ModuleViewer : IDisposable
     private string ModuleHelpText(ModuleInfo info)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"Cooldown planning: {(info.Info.CooldownPlanningSupported ? "supported!" : "not supported")}");
+        sb.AppendLine(CultureInfo.CurrentCulture, $"Cooldown planning: {(info.Info.PlanLevel > 0 ? $"L{info.Info.PlanLevel}" : "not supported")}");
         if (info.Info.Contributors.Length > 0)
-            sb.AppendLine($"Contributors: {info.Info.Contributors}");
+            sb.AppendLine(CultureInfo.CurrentCulture, $"Contributors: {info.Info.Contributors}");
         return sb.ToString();
+    }
+
+    private void ModulePlansPopup(ModuleRegistry.Info info)
+    {
+        if (_planDB == null)
+            return;
+
+        var mplans = _planDB.Plans.GetOrAdd(info.ModuleType);
+        foreach (var (cls, plans) in mplans)
+        {
+            foreach (var plan in plans.Plans)
+            {
+                if (ImGui.Selectable($"Edit {cls} '{plan.Name}' ({plan.Guid})"))
+                {
+                    UIPlanDatabaseEditor.StartPlanEditor(_planDB, plan);
+                }
+            }
+        }
+
+        var player = _ws.Party.Player();
+        if (player != null)
+        {
+            if (ImGui.Selectable($"New plan for {player.Class}..."))
+            {
+                var plans = mplans.GetOrAdd(player.Class);
+                var plan = new Plan($"New {plans.Plans.Count + 1}", info.ModuleType) { Guid = Guid.NewGuid().ToString(), Class = player.Class, Level = info.PlanLevel };
+                _planDB.ModifyPlan(null, plan);
+                UIPlanDatabaseEditor.StartPlanEditor(_planDB, plan);
+            }
+        }
     }
 }

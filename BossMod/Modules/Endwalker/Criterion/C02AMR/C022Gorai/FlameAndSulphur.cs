@@ -2,7 +2,7 @@
 
 class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shapeFlameExpand = new(46, 5);
     private static readonly AOEShapeRect _shapeFlameSplit = new(46, 2.5f);
@@ -17,19 +17,19 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
         {
             case AID.BrazenBalladExpanding:
                 foreach (var a in Module.Enemies(OID.FlameAndSulphurFlame))
-                    _aoes.Add(new(_shapeFlameExpand, a.Position, a.Rotation, spell.NPCFinishAt.AddSeconds(3.1f)));
+                    _aoes.Add(new(_shapeFlameExpand, a.Position, a.Rotation, Module.CastFinishAt(spell, 3.1f)));
                 foreach (var a in Module.Enemies(OID.FlameAndSulphurRock))
-                    _aoes.Add(new(_shapeRockExpand, a.Position, a.Rotation, spell.NPCFinishAt.AddSeconds(3.1f)));
+                    _aoes.Add(new(_shapeRockExpand, a.Position, a.Rotation, Module.CastFinishAt(spell, 3.1f)));
                 break;
             case AID.BrazenBalladSplitting:
                 foreach (var a in Module.Enemies(OID.FlameAndSulphurFlame))
                 {
                     var offset = a.Rotation.ToDirection().OrthoL() * 7.5f;
-                    _aoes.Add(new(_shapeFlameSplit, a.Position + offset, a.Rotation, spell.NPCFinishAt.AddSeconds(3.1f)));
-                    _aoes.Add(new(_shapeFlameSplit, a.Position - offset, a.Rotation, spell.NPCFinishAt.AddSeconds(3.1f)));
+                    _aoes.Add(new(_shapeFlameSplit, a.Position + offset, a.Rotation, Module.CastFinishAt(spell, 3.1f)));
+                    _aoes.Add(new(_shapeFlameSplit, a.Position - offset, a.Rotation, Module.CastFinishAt(spell, 3.1f)));
                 }
                 foreach (var a in Module.Enemies(OID.FlameAndSulphurRock))
-                    _aoes.Add(new(_shapeRockSplit, a.Position, a.Rotation, spell.NPCFinishAt.AddSeconds(3.1f)));
+                    _aoes.Add(new(_shapeRockSplit, a.Position, a.Rotation, Module.CastFinishAt(spell, 3.1f)));
                 break;
         }
     }

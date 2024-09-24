@@ -22,7 +22,7 @@ class Upwell(BossModule module) : Components.GenericAOEs(module)
         public AOEShapeRect? NextShape; // wide for first line, null for first line mirror, narrow for remaining lines
     }
 
-    private List<LineSequence> _lines = new();
+    private readonly List<LineSequence> _lines = [];
 
     private static readonly AOEShapeRect _shapeWide = new(30, 5, 30);
     private static readonly AOEShapeRect _shapeNarrow = new(30, 2.5f, 30);
@@ -41,8 +41,8 @@ class Upwell(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID is AID.NUpwellFirst or AID.SUpwellFirst)
         {
             var advance = spell.Rotation.ToDirection().OrthoR() * 5;
-            _lines.Add(new() { NextOrigin = caster.Position, Advance = advance, Rotation = spell.Rotation, NextActivation = spell.NPCFinishAt, NextShape = _shapeWide });
-            _lines.Add(new() { NextOrigin = caster.Position, Advance = -advance, Rotation = (spell.Rotation + 180.Degrees()).Normalized(), NextActivation = spell.NPCFinishAt });
+            _lines.Add(new() { NextOrigin = caster.Position, Advance = advance, Rotation = spell.Rotation, NextActivation = Module.CastFinishAt(spell), NextShape = _shapeWide });
+            _lines.Add(new() { NextOrigin = caster.Position, Advance = -advance, Rotation = (spell.Rotation + 180.Degrees()).Normalized(), NextActivation = Module.CastFinishAt(spell) });
         }
     }
 
@@ -85,7 +85,7 @@ class Upwell(BossModule module) : Components.GenericAOEs(module)
     {
         line.NextOrigin += line.Advance;
         line.NextActivation = WorldState.FutureTime(2);
-        var offset = (line.NextOrigin - Module.Bounds.Center).Abs();
+        var offset = (line.NextOrigin - Module.Center).Abs();
         line.NextShape = offset.X < 19 && offset.Z < 19 ? _shapeNarrow : null;
     }
 }

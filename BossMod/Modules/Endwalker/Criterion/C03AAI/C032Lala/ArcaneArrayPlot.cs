@@ -2,8 +2,8 @@
 
 class ArcaneArrayPlot : Components.GenericAOEs
 {
-    public List<AOEInstance> AOEs = new();
-    public List<WPos> SafeZoneCenters = new();
+    public List<AOEInstance> AOEs = [];
+    public List<WPos> SafeZoneCenters = [];
 
     public static readonly AOEShapeRect Shape = new(4, 4, 4);
 
@@ -11,7 +11,7 @@ class ArcaneArrayPlot : Components.GenericAOEs
     {
         for (int z = -16; z <= 16; z += 8)
             for (int x = -16; x <= 16; x += 8)
-                SafeZoneCenters.Add(Module.Bounds.Center + new WDir(x, z));
+                SafeZoneCenters.Add(Module.Center + new WDir(x, z));
     }
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
@@ -50,7 +50,7 @@ class ArcaneArray(BossModule module) : ArcaneArrayPlot(module)
                 Advance(ref pos, ref activation, offset);
             }
             pos -= offset;
-            pos += Module.Bounds.Contains(pos + offset.OrthoL()) ? offset.OrthoL() : offset.OrthoR();
+            pos += Module.InBounds(pos + offset.OrthoL()) ? offset.OrthoL() : offset.OrthoR();
             for (int i = 0; i < 5; ++i)
             {
                 Advance(ref pos, ref activation, -offset);
@@ -88,7 +88,7 @@ class ArcanePlot(BossModule module) : ArcaneArrayPlot(module)
         {
             Advance(ref pos, ref activation, offset);
         }
-        while (Module.Bounds.Contains(pos));
+        while (Module.InBounds(pos));
 
         AOEs.SortBy(aoe => aoe.Activation);
     }

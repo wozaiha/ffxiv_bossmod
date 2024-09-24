@@ -3,7 +3,7 @@
 abstract class SpiralThrust(BossModule module, float predictionDelay) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SpiralThrust))
 {
     private float _predictionDelay = predictionDelay;
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shape = new(54.2f, 6);
 
@@ -18,7 +18,7 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
                 _predictionDelay = 0;
                 _aoes.Clear();
             }
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 
@@ -27,10 +27,10 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
         switch ((AID)spell.Action.ID)
         {
             case AID.KnightAppear:
-                if ((OID)caster.OID is OID.Vellguine or OID.Paulecrain or OID.Ignasse && (caster.Position - Module.Bounds.Center).LengthSq() > 25 * 25)
+                if ((OID)caster.OID is OID.Vellguine or OID.Paulecrain or OID.Ignasse && (caster.Position - Module.Center).LengthSq() > 25 * 25)
                 {
                     // prediction
-                    _aoes.Add(new(_shape, caster.Position, Angle.FromDirection(Module.Bounds.Center - caster.Position), WorldState.FutureTime(_predictionDelay), Risky: false));
+                    _aoes.Add(new(_shape, caster.Position, Angle.FromDirection(Module.Center - caster.Position), WorldState.FutureTime(_predictionDelay), Risky: false));
                 }
                 break;
             case AID.SpiralThrust:

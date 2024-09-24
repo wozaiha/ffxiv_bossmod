@@ -9,14 +9,14 @@ class DevastatingBoltInner(BossModule module) : Components.SelfTargetedAOEs(modu
 class Electrocution(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Electrocution), 3);
 
 // TODO: ManaFlame component - show reflect hints
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9759)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9759, PlanLevel = 80)]
 public class DRS7 : BossModule
 {
-    private IReadOnlyList<Actor> _monks;
-    private IReadOnlyList<Actor> _ballsEarth;
-    private IReadOnlyList<Actor> _ballsFire;
+    private readonly IReadOnlyList<Actor> _monks;
+    private readonly IReadOnlyList<Actor> _ballsEarth;
+    private readonly IReadOnlyList<Actor> _ballsFire;
 
-    public DRS7(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-416, -184), 35))
+    public DRS7(WorldState ws, Actor primary) : base(ws, primary, new(-416, -184), new ArenaBoundsCircle(35))
     {
         _monks = Enemies(OID.StygimolochMonk);
         _ballsEarth = Enemies(OID.BallOfEarth);

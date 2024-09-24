@@ -4,14 +4,14 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
 {
     public int[] BaitOrder = new int[PartyState.MaxPartySize];
     public int NumBaitsAssigned;
-    public List<Actor> Casters = new();
-    private List<(Actor actor, int position)> _dragons = new(); // position 0 is N, then CW
+    public List<Actor> Casters = [];
+    private readonly List<(Actor actor, int position)> _dragons = []; // position 0 is N, then CW
 
     private static readonly AOEShapeRect _shape = new(52, 10);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt));
+        return Casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -38,7 +38,7 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
     {
         if ((OID)actor.OID is OID.Firehorn or OID.Iceclaw or OID.Thunderwing or OID.TailOfDarkness or OID.FangOfLight)
         {
-            var dir = 180.Degrees() - Angle.FromDirection(actor.Position - Module.Bounds.Center);
+            var dir = 180.Degrees() - Angle.FromDirection(actor.Position - Module.Center);
             var pos = (int)MathF.Round(dir.Deg / 45) & 7;
             _dragons.Add((actor, pos));
             if (_dragons.Count == 5)

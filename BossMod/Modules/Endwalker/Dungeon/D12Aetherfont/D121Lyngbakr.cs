@@ -45,12 +45,12 @@ class Frequencies(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID == AID.ResonantFrequency)
         {
-            _activation1 = spell.NPCFinishAt;
+            _activation1 = Module.CastFinishAt(spell);
             _smallcrystals.Add(caster);
         }
         if ((AID)spell.Action.ID == AID.ExplosiveFrequency)
         {
-            _activation2 = spell.NPCFinishAt;
+            _activation2 = Module.CastFinishAt(spell);
             _bigcrystals.Add(caster);
         }
     }
@@ -88,4 +88,4 @@ class D121LyngbakrStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12336)]
-public class D121Lyngbakr(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-322, 120), 20));
+public class D121Lyngbakr(WorldState ws, Actor primary) : BossModule(ws, primary, new(-322, 120), new ArenaBoundsCircle(20));

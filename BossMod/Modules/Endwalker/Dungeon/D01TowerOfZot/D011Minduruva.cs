@@ -9,25 +9,25 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
-    ManusyaBio = 25248, // Boss->player, 4,0s cast, single-target
+    ManusyaBio = 25248, // Boss->player, 4.0s cast, single-target
     Teleport = 25241, // Boss->location, no cast, single-target
-    ManusyaBlizzardIII1 = 25234, // Boss->self, 4,0s cast, single-target
-    ManusyaBlizzardIII2 = 25238, // Helper->self, 4,0s cast, range 40+R 20-degree cone
-    ManusyaFireIII1 = 25233, // Boss->self, 4,0s cast, single-target
-    ManusyaFireIII2 = 25237, // Helper->self, 4,0s cast, range 5-40 donut
-    ManusyaThunderIII1 = 25235, // Boss->self, 4,0s cast, single-target
-    ManusyaThunderIII2 = 25239, // Helper->self, 4,0s cast, range 3 circle
-    ManusyaBioIII1 = 25236, // Boss->self, 4,0s cast, single-target
-    ManusyaBioIII2 = 25240, // Helper->self, 4,0s cast, range 40+R 180-degree cone
-    TransmuteFireIII = 25242, // Boss->self, 2,7s cast, single-target
-    Unknown = 25243, // Helper->Boss, 3,6s cast, single-target
-    ManusyaFire2 = 25699, // Boss->player, 2,0s cast, single-target
-    Dhrupad = 25244, // Boss->self, 4,0s cast, single-target, after this each of the non-tank players get hit once by a single-target spell (ManusyaBlizzard, ManusyaFire1, ManusyaThunder)
+    ManusyaBlizzardIII1 = 25234, // Boss->self, 4.0s cast, single-target
+    ManusyaBlizzardIII2 = 25238, // Helper->self, 4.0s cast, range 40+R 20-degree cone
+    ManusyaFireIII1 = 25233, // Boss->self, 4.0s cast, single-target
+    ManusyaFireIII2 = 25237, // Helper->self, 4.0s cast, range 5-40 donut
+    ManusyaThunderIII1 = 25235, // Boss->self, 4.0s cast, single-target
+    ManusyaThunderIII2 = 25239, // Helper->self, 4.0s cast, range 3 circle
+    ManusyaBioIII1 = 25236, // Boss->self, 4.0s cast, single-target
+    ManusyaBioIII2 = 25240, // Helper->self, 4.0s cast, range 40+R 180-degree cone
+    TransmuteFireIII = 25242, // Boss->self, 2.7s cast, single-target
+    Unknown = 25243, // Helper->Boss, 3.6s cast, single-target
+    ManusyaFire2 = 25699, // Boss->player, 2.0s cast, single-target
+    Dhrupad = 25244, // Boss->self, 4.0s cast, single-target, after this each of the non-tank players get hit once by a single-target spell (ManusyaBlizzard, ManusyaFire1, ManusyaThunder)
     ManusyaFire1 = 25245, // Boss->player, no cast, single-target
     ManusyaBlizzard = 25246, // Boss->player, no cast, single-target
     ManusyaThunder = 25247, // Boss->player, no cast, single-target
-    TransmuteBlizzardIII = 25371, // Boss->self, 2,7s cast, single-target
-    TransmuteThunderIII = 25372, // Boss->self, 2,7s cast, single-target
+    TransmuteBlizzardIII = 25371, // Boss->self, 2.7s cast, single-target
+    TransmuteThunderIII = 25372, // Boss->self, 2.7s cast, single-target
 }
 
 public enum SID : uint
@@ -77,9 +77,9 @@ class Poison(BossModule module) : BossComponent(module)
         foreach (var c in _poisoned)
         {
             if (_poisoned.Count > 0 && actor.Role == Role.Healer)
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Esuna), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
             if (_poisoned.Count > 0 && actor.Class == Class.BRD)
-                hints.PlannedActions.Add((ActionID.MakeSpell(BRD.AID.WardensPaean), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
         }
     }
 }
@@ -136,4 +136,4 @@ class D011MinduruvaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10256)]
-public class D011Minduruva(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(68, -124), 19.5f));
+public class D011Minduruva(WorldState ws, Actor primary) : BossModule(ws, primary, new(68, -124), new ArenaBoundsCircle(19.5f));

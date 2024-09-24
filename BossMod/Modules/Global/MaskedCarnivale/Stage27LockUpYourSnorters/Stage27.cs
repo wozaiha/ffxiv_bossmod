@@ -13,9 +13,9 @@ public enum AID : uint
     BombsSpawn = 19260, // Boss->self, no cast, single-target
     Fungah = 19256, // Boss->self, no cast, range 8+R 90-degree cone, knockback 15 away from source
     Explosion = 19259, // 2CF9->self, no cast, range 8 circle, wipe if in range
-    Fireball = 19258, // Boss->location, 4,0s cast, range 8 circle
+    Fireball = 19258, // Boss->location, 4.0s cast, range 8 circle
     Fungahhh = 19257, // Boss->self, no cast, range 8+R 90-degree cone, knockback 15 away from source
-    Snort = 19266, // Boss->self, 10,0s cast, range 60+R circle, knockback 15 away from source
+    Snort = 19266, // Boss->self, 10.0s cast, range 60+R circle, knockback 15 away from source
     MassiveExplosion = 19261, // 2CEC->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
 }
 
@@ -25,7 +25,7 @@ class Snort(BossModule module) : Components.KnockbackFromCastTarget(module, Acti
 class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
 {
     private DateTime _activation;
-    private List<Actor> _bombs = new();
+    private readonly List<Actor> _bombs = [];
     private bool otherpatterns;
     private static readonly AOEShapeCone cone = new(12.5f, 45.Degrees());
 
@@ -65,8 +65,8 @@ class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
 
 class Explosion(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<Actor> _bombs = new();
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _bombs = [];
+    private List<Actor> _casters = [];
     private static readonly AOEShapeCircle circle = new(8);
     private DateTime _activation;
     private DateTime _snortingeffectends;
@@ -78,7 +78,7 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
                 yield return new(circle, c.Position, default, _activation);
         if (_casters.Count > 0 && _snortingeffectends > WorldState.CurrentTime)
             foreach (var c in _casters)
-                yield return new(circle, c.Position + Math.Min(15, Module.Bounds.IntersectRay(c.Position, (c.Position - Module.PrimaryActor.Position).Normalized()) - c.HitboxRadius / 2) * (c.Position - Module.PrimaryActor.Position).Normalized(), Activation: _activation);
+                yield return new(circle, c.Position + Math.Min(15, Module.Arena.IntersectRayBounds(c.Position, (c.Position - Module.PrimaryActor.Position).Normalized()) - c.HitboxRadius / 2) * (c.Position - Module.PrimaryActor.Position).Normalized(), Activation: _activation);
     }
 
     public override void Update()
@@ -114,7 +114,7 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Snort)
-            _snortingeffectends = spell.NPCFinishAt.AddSeconds(2.5f);
+            _snortingeffectends = Module.CastFinishAt(spell, 2.5f);
     }
 }
 
@@ -166,7 +166,7 @@ class Stage27States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 696, NameID = 3046)]
 public class Stage27 : BossModule
 {
-    public Stage27(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage27(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }
@@ -180,9 +180,8 @@ public class Stage27 : BossModule
             Arena.Actor(s, ArenaColor.Vulnerable);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

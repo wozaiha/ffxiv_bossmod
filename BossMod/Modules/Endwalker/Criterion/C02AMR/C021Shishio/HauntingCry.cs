@@ -2,13 +2,13 @@
 
 class HauntingCrySwipes(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
 
     private static readonly AOEShapeCone _shape = new(40, 90.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _casters.Take(4).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt));
+        return _casters.Take(4).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -29,7 +29,7 @@ class HauntingCrySwipes(BossModule module) : Components.GenericAOEs(module)
 
 class HauntingCryReisho(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<Actor> _ghosts = new();
+    private readonly List<Actor> _ghosts = [];
     private DateTime _activation;
     private DateTime _ignoreBefore;
 

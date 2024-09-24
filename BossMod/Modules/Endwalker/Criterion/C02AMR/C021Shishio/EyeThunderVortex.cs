@@ -2,7 +2,7 @@
 
 class EyeThunderVortex(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeCircle = new(15);
     private static readonly AOEShapeDonut _shapeDonut = new(8, 30);
@@ -15,13 +15,13 @@ class EyeThunderVortex(BossModule module) : Components.GenericAOEs(module)
         {
             case AID.NEyeOfTheThunderVortexFirst:
             case AID.SEyeOfTheThunderVortexFirst:
-                _aoes.Add(new(_shapeCircle, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(_shapeDonut, caster.Position, default, spell.NPCFinishAt.AddSeconds(4)));
+                _aoes.Add(new(_shapeCircle, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(_shapeDonut, caster.Position, default, Module.CastFinishAt(spell, 4)));
                 break;
             case AID.NVortexOfTheThunderEyeFirst:
             case AID.SVortexOfTheThunderEyeFirst:
-                _aoes.Add(new(_shapeDonut, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(_shapeCircle, caster.Position, default, spell.NPCFinishAt.AddSeconds(4)));
+                _aoes.Add(new(_shapeDonut, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(_shapeCircle, caster.Position, default, Module.CastFinishAt(spell, 4)));
                 break;
         }
     }

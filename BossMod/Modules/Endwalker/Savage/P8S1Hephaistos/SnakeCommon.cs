@@ -17,7 +17,7 @@ abstract class PetrifactionCommon(BossModule module) : Components.GenericGaze(mo
     public int NumBloodCasts { get; private set; }
     public int NumCrownCasts { get; private set; }
     public int NumBreathCasts { get; private set; }
-    protected List<(Actor caster, DateTime activation, int priority)> ActiveGorgons = new();
+    protected List<(Actor caster, DateTime activation, int priority)> ActiveGorgons = [];
 
     public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
     {
@@ -40,9 +40,9 @@ abstract class PetrifactionCommon(BossModule module) : Components.GenericGaze(mo
     {
         if ((AID)spell.Action.ID == AID.Petrifaction)
         {
-            var dir = Angle.FromDirection(caster.Position - Module.Bounds.Center);
+            var dir = Angle.FromDirection(caster.Position - Module.Center);
             var priority = (int)MathF.Round((180 - dir.Deg) / 45) % 8;
-            ActiveGorgons.Add((caster, spell.NPCFinishAt.AddSeconds(1.1f), priority));
+            ActiveGorgons.Add((caster, Module.CastFinishAt(spell, 1.1f), priority));
         }
     }
 

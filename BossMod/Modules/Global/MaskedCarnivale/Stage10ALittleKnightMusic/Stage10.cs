@@ -7,17 +7,17 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    IronJustice1 = 14725, // Boss->self, 2,5s cast, range 8+R 120-degree cone
+    IronJustice1 = 14725, // Boss->self, 2.5s cast, range 8+R 120-degree cone
     AutoAttack = 6497, // Boss->player, no cast, single-target
-    Cloudcover1 = 14722, // Boss->location, 3,0s cast, range 6 circle
-    KingsWill = 14719, // Boss->self, 6,0s cast, single-target, interruptible buff
-    IronJustice2 = 14726, // Boss->self, 2,5s cast, range 8+R 120-degree cone
-    KingsWill2 = 14720, // Boss->self, 6,0s cast, single-target, interruptible buff
-    IronJustice3 = 14727, // Boss->self, 2,5s cast, range 8+R 120-degree cone
-    KingsWill3 = 14721, // Boss->self, 6,0s cast, single-target, interruptible buff
-    IronJustice4 = 14728, // Boss->self, 2,5s cast, range 8+R 120-degree cone
+    Cloudcover1 = 14722, // Boss->location, 3.0s cast, range 6 circle
+    KingsWill = 14719, // Boss->self, 6.0s cast, single-target, interruptible buff
+    IronJustice2 = 14726, // Boss->self, 2.5s cast, range 8+R 120-degree cone
+    KingsWill2 = 14720, // Boss->self, 6.0s cast, single-target, interruptible buff
+    IronJustice3 = 14727, // Boss->self, 2.5s cast, range 8+R 120-degree cone
+    KingsWill3 = 14721, // Boss->self, 6.0s cast, single-target, interruptible buff
+    IronJustice4 = 14728, // Boss->self, 2.5s cast, range 8+R 120-degree cone
     Cloudcover2 = 14723, // Boss->player, no cast, range 6 circle
-    BlackNebula = 14724, // Boss->self, 6,0s cast, range 50+R circle, interruptible enrage after 3 King's Will casts
+    BlackNebula = 14724, // Boss->self, 6.0s cast, range 50+R circle, interruptible enrage after 3 King's Will casts
 }
 
 class IronJustice1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice1), new AOEShapeCone(9, 60.Degrees()));
@@ -64,7 +64,7 @@ class Stage10States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 620, NameID = 8100)]
 public class Stage10 : BossModule
 {
-    public Stage10(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage10(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

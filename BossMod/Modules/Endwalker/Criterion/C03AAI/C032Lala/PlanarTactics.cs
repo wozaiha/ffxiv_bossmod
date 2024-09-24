@@ -9,7 +9,7 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
         public WDir[]? StartingOffsets;
     }
 
-    public List<AOEInstance> Mines = new();
+    public List<AOEInstance> Mines = [];
     public PlayerState[] Players = new PlayerState[4];
 
     private static readonly AOEShapeRect _shape = new(4, 4, 4);
@@ -21,7 +21,7 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
         ref var p = ref Players[pcSlot];
         if (p.StartingOffsets != null)
             foreach (var off in p.StartingOffsets)
-                Arena.AddCircle(Module.Bounds.Center + off, 1, ArenaColor.Safe);
+                Arena.AddCircle(Module.Center + off, 1, ArenaColor.Safe);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -43,7 +43,7 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.NArcaneMineAOE or AID.SArcaneMineAOE)
         {
-            Mines.Add(new(_shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            Mines.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
             if (Mines.Count == 8)
             {
                 InitSafespots();
@@ -55,13 +55,13 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
     {
         WDir safeCornerOffset = default;
         foreach (var m in Mines)
-            safeCornerOffset -= m.Origin - Module.Bounds.Center;
-        var relSouth = (safeCornerOffset + safeCornerOffset.OrthoR()) / 16;
+            safeCornerOffset -= m.Origin - Module.Center;
+        var relSouth = (safeCornerOffset + safeCornerOffset.OrthoL()) / 16;
         var relWest = relSouth.OrthoR();
-        var off1 = 5 * relSouth - 13 * relWest;
-        var off2a = 3 * relSouth - 13 * relWest;
-        var off2b = -8 * relSouth - 16 * relWest;
-        var off3 = 13 * relSouth + 8 * relWest;
+        var off1 = 5 * relSouth + 13 * relWest;
+        var off2a = 3 * relSouth + 13 * relWest;
+        var off2b = -8 * relSouth + 16 * relWest;
+        var off3 = 13 * relSouth - 8 * relWest;
         var sumStacks = Players.Sum(p => p.StackTarget ? p.SubtractiveStacks : 0); // can be 3 (1+2), 4 (2+2 or 1+3) or 5 (2+3)
         foreach (ref var p in Players.AsSpan())
         {
@@ -80,8 +80,8 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
 
 class PlanarTacticsForcedMarch : Components.GenericForcedMarch
 {
-    private int[] _rotationCount = new int[4];
-    private Angle[] _rotation = new Angle[4];
+    private readonly int[] _rotationCount = new int[4];
+    private readonly Angle[] _rotation = new Angle[4];
     private DateTime _activation;
 
     public PlanarTacticsForcedMarch(BossModule module) : base(module)

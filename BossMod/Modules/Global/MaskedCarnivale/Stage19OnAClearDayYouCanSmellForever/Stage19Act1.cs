@@ -8,11 +8,11 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Reflect = 15073, // 2727->self, 3,0s cast, single-target, boss starts reflecting all melee attacks
+    Reflect = 15073, // 2727->self, 3.0s cast, single-target, boss starts reflecting all melee attacks
     AutoAttack = 6499, // 2727->player, no cast, single-target
-    BadBreath = 15074, // 2727->self, 3,5s cast, range 12+R 120-degree cone
-    VineProbe = 15075, // 2727->self, 2,5s cast, range 6+R width 8 rect
-    OffalBreath = 15076, // 2727->location, 3,5s cast, range 6 circle, interruptible, voidzone
+    BadBreath = 15074, // 2727->self, 3.5s cast, range 12+R 120-degree cone
+    VineProbe = 15075, // 2727->self, 2.5s cast, range 6+R width 8 rect
+    OffalBreath = 15076, // 2727->location, 3.5s cast, range 6 circle, interruptible, voidzone
 }
 
 public enum SID : uint
@@ -87,7 +87,7 @@ class Stage19Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 629, NameID = 8117, SortOrder = 1)]
 public class Stage19Act1 : BossModule
 {
-    public Stage19Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))
+    public Stage19Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
     {
         ActivateComponent<Hints>();
     }

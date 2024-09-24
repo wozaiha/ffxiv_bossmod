@@ -97,10 +97,10 @@ class SoulPurge(BossModule module) : Components.GenericAOEs(module)
                 _dualcast = true;
                 break;
             case AID.SoulPurgeCircle:
-                SetupImminentAOEs(_shapeCircle, _shapeDonut, caster.Position, spell.NPCFinishAt);
+                SetupImminentAOEs(_shapeCircle, _shapeDonut, caster.Position, Module.CastFinishAt(spell));
                 break;
             case AID.SoulPurgeDonut:
-                SetupImminentAOEs(_shapeDonut, _shapeCircle, caster.Position, spell.NPCFinishAt);
+                SetupImminentAOEs(_shapeDonut, _shapeCircle, caster.Position, Module.CastFinishAt(spell));
                 break;
         }
     }
@@ -163,7 +163,7 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)] // bnpcname=9931
-public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-60, 800), 30))
+public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, new(-60, 800), new ArenaBoundsCircle(30))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

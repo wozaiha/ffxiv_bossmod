@@ -3,8 +3,8 @@
 // state related to normal and fourfold shackles
 class Shackles(BossModule module) : BossComponent(module)
 {
-    public int NumExpiredDebuffs { get; private set; } = 0;
-    private bool _active = false;
+    public int NumExpiredDebuffs { get; private set; }
+    private bool _active;
     private BitMask _debuffsBlueImminent;
     private BitMask _debuffsBlueFuture;
     private BitMask _debuffsRedImminent;
@@ -13,10 +13,10 @@ class Shackles(BossModule module) : BossComponent(module)
     private BitMatrix _redTetherMatrix; // bit (8*i+j) is set if there is a tether from j to i; bit [i,i] is always set
     private BitMatrix _blueExplosionMatrix;
     private BitMatrix _redExplosionMatrix; // bit (8*i+j) is set if player i is inside explosion of player j; bit [i,i] is never set
-    private WPos[] _preferredPositions = new WPos[8];
+    private readonly WPos[] _preferredPositions = new WPos[8];
 
-    private static readonly float _blueExplosionRadius = 4;
-    private static readonly float _redExplosionRadius = 8;
+    private const float _blueExplosionRadius = 4;
+    private const float _redExplosionRadius = 8;
     private static uint TetherColor(bool blue, bool red) => blue ? (red ? 0xff00ffff : 0xffff0080) : (red ? 0xff8080ff : 0xff808080);
 
     public override void Update()
@@ -202,15 +202,15 @@ class Shackles(BossModule module) : BossComponent(module)
 
     private void AssignOrder(Actor actor, int order, bool far)
     {
-        var way1 = WorldState.Waymarks[(Waymark)((int)Waymark.A + order)];
-        var way2 = WorldState.Waymarks[(Waymark)((int)Waymark.N1 + order)];
+        var way1 = WorldState.Waymarks[(int)Waymark.A + order];
+        var way2 = WorldState.Waymarks[(int)Waymark.N1 + order];
         if (way1 == null || way2 == null)
             return;
 
         var w1 = new WPos(way1.Value.XZ());
         var w2 = new WPos(way2.Value.XZ());
-        var d1 = (w1 - Module.Bounds.Center).LengthSq();
-        var d2 = (w2 - Module.Bounds.Center).LengthSq();
+        var d1 = (w1 - Module.Center).LengthSq();
+        var d2 = (w2 - Module.Center).LengthSq();
         bool use1 = far ? d1 > d2 : d1 < d2;
         int slot = Raid.FindSlot(actor.InstanceID);
         if (slot >= 0)

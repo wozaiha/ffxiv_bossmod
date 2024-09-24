@@ -100,11 +100,11 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
         public DateTime NextActivation;
     }
 
-    public List<Sequence> Sequences = new();
+    public List<Sequence> Sequences = [];
     private Angle _rotation;
 
     private static readonly AOEShapeRect _shape = new(20, 2.5f, -8);
-    private static readonly int _maxShownExplosions = 3;
+    private const int _maxShownExplosions = 3;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -116,7 +116,7 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
             var max = Math.Min(s.RemainingExplosions, _maxShownExplosions);
             for (int i = 1; i < max; ++i)
             {
-                yield return new(_shape, Module.Bounds.Center, rot, act);
+                yield return new(_shape, Module.Center, rot, act);
                 rot += _rotation;
                 act = act.AddSeconds(1.1f);
             }
@@ -127,7 +127,7 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
         {
             if (s.RemainingExplosions > 0)
             {
-                yield return new(_shape, Module.Bounds.Center, s.NextRotation, s.NextActivation, ArenaColor.Danger);
+                yield return new(_shape, Module.Center, s.NextRotation, s.NextActivation, ArenaColor.Danger);
             }
         }
     }
@@ -147,7 +147,7 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.NFireSpreadFirst or AID.SFireSpreadFirst)
-            Sequences.Add(new() { NextRotation = spell.Rotation, RemainingExplosions = 12, NextActivation = spell.NPCFinishAt });
+            Sequences.Add(new() { NextRotation = spell.Rotation, RemainingExplosions = 12, NextActivation = Module.CastFinishAt(spell) });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -180,11 +180,11 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
 // TODO: assign spread safespots based on initial missile position
 class Fireworks1Hints(BossModule module) : BossComponent(module)
 {
-    private RingARingOExplosions? _bombs = module.FindComponent<RingARingOExplosions>();
-    private Fireworks? _fireworks = module.FindComponent<Fireworks>();
+    private readonly RingARingOExplosions? _bombs = module.FindComponent<RingARingOExplosions>();
+    private readonly Fireworks? _fireworks = module.FindComponent<Fireworks>();
     private BitMask _pattern;
-    private List<WPos> _safeSpotsClaw = new();
-    private List<WPos> _safeSpotsMissile = new();
+    private readonly List<WPos> _safeSpotsClaw = [];
+    private readonly List<WPos> _safeSpotsMissile = [];
 
     public override void Update()
     {
@@ -200,7 +200,7 @@ class Fireworks1Hints(BossModule module) : BossComponent(module)
         // staffs are always in cardinals at radius 8
         foreach (var b in _bombs.ActiveBombs)
         {
-            var offset = b.Position - Module.Bounds.Center;
+            var offset = b.Position - Module.Center;
             if (offset.Z < -14)
                 _pattern.Set(0); // N
             else if (offset.Z < -4)
@@ -280,15 +280,15 @@ class Fireworks1Hints(BossModule module) : BossComponent(module)
         }
     }
 
-    private void AddSafeSpot(List<WPos> list, Angle angle) => list.Add(Module.Bounds.Center + 19 * angle.ToDirection());
+    private void AddSafeSpot(List<WPos> list, Angle angle) => list.Add(Module.Center + 19 * angle.ToDirection());
 }
 
-// TODO: currently this assumes that DD always go rel-west, supports rel-east
 class Fireworks2Hints(BossModule module) : BossComponent(module)
 {
-    private Fireworks? _fireworks = module.FindComponent<Fireworks>();
-    private Dartboard? _dartboard = module.FindComponent<Dartboard>();
-    private FireSpread? _fireSpread = module.FindComponent<FireSpread>();
+    private readonly C033SStaticeConfig _config = Service.Config.Get<C033SStaticeConfig>();
+    private readonly Fireworks? _fireworks = module.FindComponent<Fireworks>();
+    private readonly Dartboard? _dartboard = module.FindComponent<Dartboard>();
+    private readonly FireSpread? _fireSpread = module.FindComponent<FireSpread>();
     private Angle? _relNorth;
 
     public override void Update()
@@ -305,12 +305,12 @@ class Fireworks2Hints(BossModule module) : BossComponent(module)
         if (_fireworks?.Spreads.Count > 0)
         {
             foreach (var dir in SafeSpots(pcSlot, pc))
-                Arena.AddCircle(Module.Bounds.Center + 19 * dir.ToDirection(), 1, ArenaColor.Safe);
+                Arena.AddCircle(Module.Center + 19 * dir.ToDirection(), 1, ArenaColor.Safe);
         }
         else if (_relNorth != null)
         {
             // show rel north before assignments are done
-            Arena.AddCircle(Module.Bounds.Center + 19 * _relNorth.Value.ToDirection(), 1, ArenaColor.Enemy);
+            Arena.AddCircle(Module.Center + 19 * _relNorth.Value.ToDirection(), 1, ArenaColor.Enemy);
         }
     }
 
@@ -321,7 +321,7 @@ class Fireworks2Hints(BossModule module) : BossComponent(module)
             if (_fireworks.IsSpreadTarget(actor))
             {
                 // spreads always go slightly S of rel E/W
-                bool west = actor.Class.IsDD(); // note: this is arbitrary
+                bool west = ShouldGoWest(actor);
                 yield return _relNorth.Value + (west ? 95 : -95).Degrees();
             }
             else if (!_dartboard.Bullseye[slot])
@@ -331,11 +331,13 @@ class Fireworks2Hints(BossModule module) : BossComponent(module)
             }
             else if (Raid[_dartboard.Bullseye.WithoutBit(slot).LowestSetBit()] is var partner && partner != null)
             {
-                bool west = actor.Class.IsDD(); // note: this is arbitrary
-                if (_fireworks.IsSpreadTarget(partner) && partner.Class.IsDD() == west)
+                bool west = ShouldGoWest(actor);
+                if (_fireworks.IsSpreadTarget(partner) && ShouldGoWest(partner) == west)
                     west = !west; // adjust to opposite color
                 yield return _relNorth.Value + (west ? 5 : -5).Degrees();
             }
         }
     }
+
+    private bool ShouldGoWest(Actor actor) => _config.Fireworks2Invert ? actor.Class.IsSupport() : actor.Class.IsDD();
 }

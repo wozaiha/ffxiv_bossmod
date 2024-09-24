@@ -3,7 +3,7 @@
 // state related to exoterikos, trimorphos exoterikos and triple esoteric ray mechanics
 class Exoterikos(BossModule module) : BossComponent(module)
 {
-    private List<(Actor, AOEShape)> _sources= new();
+    private readonly List<(Actor, AOEShape)> _sources = [];
 
     private static readonly AOEShapeRect _aoeSquare = new(21, 21);
     private static readonly AOEShapeCone _aoeTriangle = new(47, 30.Degrees());
@@ -64,7 +64,7 @@ class Exoterikos(BossModule module) : BossComponent(module)
         DateTime lastRay = new(); // we only show first rays, otherwise triple rays would cover whole arena and be useless
         foreach (var (actor, shape) in _sources)
         {
-            if (shape == _aoeSquare && MathF.Abs(actor.Position.X - Module.Bounds.Center.X) > 10)
+            if (shape == _aoeSquare && MathF.Abs(actor.Position.X - Module.Center.X) > 10)
             {
                 if (hadSideSquare)
                     continue;
@@ -72,9 +72,9 @@ class Exoterikos(BossModule module) : BossComponent(module)
             }
             else if (shape == _aoeRay)
             {
-                if (lastRay != default && (actor.CastInfo == null || (actor.CastInfo.NPCFinishAt - lastRay).TotalSeconds > 2))
+                if (lastRay != default && (actor.CastInfo == null || (Module.CastFinishAt(actor.CastInfo) - lastRay).TotalSeconds > 2))
                     continue;
-                lastRay = actor.CastInfo?.NPCFinishAt ?? new();
+                lastRay = Module.CastFinishAt(actor.CastInfo);
             }
             yield return (actor, shape);
         }

@@ -2,7 +2,7 @@
 
 class DestructiveCharge(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
+    public List<AOEInstance> AOEs = [];
 
     private static readonly AOEShapeCone _shape = new(25, 45.Degrees());
 
@@ -23,8 +23,8 @@ class DestructiveCharge(BossModule module) : Components.GenericAOEs(module)
         };
         if (dir != default)
         {
-            AOEs.Add(new(_shape, Module.Bounds.Center, dir, WorldState.FutureTime(16.1f)));
-            AOEs.Add(new(_shape, Module.Bounds.Center, dir + 180.Degrees(), WorldState.FutureTime(16.1f)));
+            AOEs.Add(new(_shape, Module.Center, dir, WorldState.FutureTime(16.1f)));
+            AOEs.Add(new(_shape, Module.Center, dir + 180.Degrees(), WorldState.FutureTime(16.1f)));
         }
     }
 

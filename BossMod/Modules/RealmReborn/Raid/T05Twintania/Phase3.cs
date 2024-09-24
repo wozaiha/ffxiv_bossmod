@@ -16,7 +16,7 @@ class P3Divebomb(BossModule module) : Components.GenericAOEs(module)
             if (Module.PrimaryActor.CastInfo == null)
                 yield return new(_shape, Module.PrimaryActor.Position, Angle.FromDirection(Target.Value - Module.PrimaryActor.Position), HitAt);
             else
-                yield return new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo.Rotation, Module.PrimaryActor.CastInfo.NPCFinishAt);
+                yield return new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
         }
     }
 
@@ -38,7 +38,7 @@ class P3Divebomb(BossModule module) : Components.GenericAOEs(module)
 
 class P3Adds(BossModule module) : BossComponent(module)
 {
-    private IReadOnlyList<Actor> _hygieia = module.Enemies(OID.Hygieia);
+    private readonly IReadOnlyList<Actor> _hygieia = module.Enemies(OID.Hygieia);
     public IReadOnlyList<Actor> Asclepius { get; private set; } = module.Enemies(OID.Asclepius);
     public IEnumerable<Actor> ActiveHygieia => _hygieia.Where(a => !a.IsDead);
 
@@ -54,13 +54,13 @@ class P3Adds(BossModule module) : BossComponent(module)
             switch ((OID)e.Actor.OID)
             {
                 case OID.Hygieia:
-                    var predictedHP = e.Actor.HP.Cur + WorldState.PendingEffects.PendingHPDifference(e.Actor.InstanceID);
-                    e.Priority = e.Actor.HP.Cur == 1 ? 0
+                    var predictedHP = e.Actor.HPMP.CurHP + WorldState.PendingEffects.PendingHPDifference(e.Actor.InstanceID);
+                    e.Priority = e.Actor.HPMP.CurHP == 1 ? 0
                         : killHygieia && e.Actor == nextHygieia ? 2
-                        : predictedHP < 0.3f * e.Actor.HP.Max ? -1
+                        : predictedHP < 0.3f * e.Actor.HPMP.MaxHP ? -1
                         : 1;
                     e.ShouldBeTanked = assignment == PartyRolesConfig.Assignment.OT;
-                    bool gtfo = predictedHP <= (e.ShouldBeTanked ? 1 : 0.1f * e.Actor.HP.Max);
+                    bool gtfo = predictedHP <= (e.ShouldBeTanked ? 1 : 0.1f * e.Actor.HPMP.MaxHP);
                     if (gtfo)
                         hints.AddForbiddenZone(ShapeDistance.Circle(e.Actor.Position, 9));
                     break;
@@ -93,7 +93,7 @@ class P3Adds(BossModule module) : BossComponent(module)
 
 class P3AethericProfusion(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.AethericProfusion))
 {
-    private DateTime _activation = module.WorldState.FutureTime(6.7f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(6.7f);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -116,7 +116,7 @@ class P3AethericProfusion(BossModule module) : Components.CastCounter(module, Ac
         // mitigate heavy raidwide
         hints.PredictedDamage.Add((Raid.WithSlot().Mask(), _activation));
         if (actor.Role == Role.Ranged)
-            hints.PlannedActions.Add((ActionID.MakeSpell(BLM.AID.Addle), Module.PrimaryActor, (float)(_activation - WorldState.CurrentTime).TotalSeconds, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Addle), Module.PrimaryActor, ActionQueue.Priority.High, (float)(_activation - WorldState.CurrentTime).TotalSeconds);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)

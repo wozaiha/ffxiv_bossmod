@@ -11,7 +11,7 @@ class SpreadingFire(BossModule module) : Components.ConcentricAOEs(module, _shap
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.SpreadingFire1st)
-            AddSequence(caster.Position, spell.NPCFinishAt);
+            AddSequence(caster.Position, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -50,7 +50,7 @@ class FireRampageCleave(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.FieryRampageCleaveReal or AID.FieryRampageCleaveReal2)
         {
-            _castersunsorted.Add((caster.Position, spell.Rotation, spell.NPCFinishAt, spell.Action.ID)); //casters appear in random order in raw ops
+            _castersunsorted.Add((caster.Position, spell.Rotation, Module.CastFinishAt(spell), spell.Action.ID)); //casters appear in random order in raw ops
             _casters = _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.rotation, x.activation)).ToList();
         }
     }
@@ -88,7 +88,7 @@ class CrimsonStreak(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID == AID.CrimsonStreakReal)
         {
             var dir = spell.LocXZ - caster.Position;
-            _casters.Add((caster.Position, new AOEShapeRect(dir.Length(), 10), Angle.FromDirection(dir), spell.NPCFinishAt));
+            _casters.Add((caster.Position, new AOEShapeRect(dir.Length(), 10), Angle.FromDirection(dir), Module.CastFinishAt(spell)));
         }
     }
 
@@ -133,7 +133,7 @@ class Eruption2(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.EruptionReal2 or AID.EruptionReal3 or AID.EruptionReal4)
         {
-            _castersunsorted.Add((spell.LocXZ, spell.NPCFinishAt, spell.Action.ID));
+            _castersunsorted.Add((spell.LocXZ, Module.CastFinishAt(spell), spell.Action.ID));
             _casters = _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.activation)).ToList();
         }
     }
@@ -162,14 +162,14 @@ class BurningStrike(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        var defendtargetable = Module.Enemies(OID.DefendClive).Where(x => x.IsTargetable).FirstOrDefault();
+        var defendtargetable = Module.Enemies(OID.DefendClive).FirstOrDefault(x => x.IsTargetable);
         if (defendtargetable != null && casting)
             casting = false;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var defendtargetable = Module.Enemies(OID.DefendClive).Where(x => x.IsTargetable).FirstOrDefault();
+        var defendtargetable = Module.Enemies(OID.DefendClive).FirstOrDefault(x => x.IsTargetable);
         if (casting && defendtargetable == null)
             hints.Add("Prepare to defend Clive!");
         if (defendtargetable != null)
@@ -178,7 +178,7 @@ class BurningStrike(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        var defendtargetable = Module.Enemies(OID.DefendClive).Where(x => x.IsTargetable).FirstOrDefault();
+        var defendtargetable = Module.Enemies(OID.DefendClive).FirstOrDefault(x => x.IsTargetable);
         if (defendtargetable != null)
             Arena.AddCircle(defendtargetable.Position, 1.4f, ArenaColor.Safe);
     }
@@ -213,9 +213,8 @@ class SearingStomp(BossModule module) : BossComponent(module)
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70334, NameID = 12564)] // also: CFC 959
-public class InfernalShadow : BossModule
+public class InfernalShadow(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
 {
-    public InfernalShadow(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 20)) { }
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor, ArenaColor.Enemy);

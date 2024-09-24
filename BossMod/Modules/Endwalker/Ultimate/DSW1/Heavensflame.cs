@@ -4,12 +4,12 @@ class HeavensflameAOE(BossModule module) : Components.CastCounter(module, Action
 
 class HeavensflameKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FaithUnmoving), 16)
 {
-    private WPos[] _playerAdjustedPositions = new WPos[PartyState.MaxPartySize];
-    private int[] _playerIcons = new int[PartyState.MaxPartySize]; // 0 = unassigned, 1 = circle/red, 2 = triangle/green, 3 = cross/blue, 4 = square/purple
+    private readonly WPos[] _playerAdjustedPositions = new WPos[PartyState.MaxPartySize];
+    private readonly int[] _playerIcons = new int[PartyState.MaxPartySize]; // 0 = unassigned, 1 = circle/red, 2 = triangle/green, 3 = cross/blue, 4 = square/purple
     private BitMask _brokenTethers;
 
-    private static readonly float _aoeRadius = 10;
-    private static readonly float _tetherBreakDistance = 32; // TODO: verify...
+    private const float _aoeRadius = 10;
+    private const float _tetherBreakDistance = 32; // TODO: verify...
 
     public override void Update()
     {
@@ -26,7 +26,7 @@ class HeavensflameKnockback(BossModule module) : Components.KnockbackFromCastTar
             hints.Add("Cancel knockback immunity!");
 
         var actorAdjPos = _playerAdjustedPositions[slot];
-        if (!Module.Bounds.Contains(actorAdjPos))
+        if (!Module.InBounds(actorAdjPos))
             hints.Add("About to be knocked into wall!");
 
         if (Raid.WithSlot().Exclude(actor).WhereSlot(s => _playerAdjustedPositions[s].InCircle(actorAdjPos, _aoeRadius)).Any())
@@ -54,7 +54,7 @@ class HeavensflameKnockback(BossModule module) : Components.KnockbackFromCastTar
             Arena.AddCircle(hint, 1, ArenaColor.Safe);
             //var dir = Vector3.Normalize(pos.Value - _knockbackSource.Position);
             //var adjPos = Arena.ClampToBounds(_knockbackSource.Position + 50 * dir);
-            //Arena.AddLine(Module.Bounds.Center, adjPos, ArenaColor.Safe);
+            //Arena.AddLine(Module.Center, adjPos, ArenaColor.Safe);
         }
 
         int partner = FindTetheredPartner(pcSlot);
@@ -113,9 +113,9 @@ class HeavensflameKnockback(BossModule module) : Components.KnockbackFromCastTar
         {
             case DSW1Config.HeavensflameHints.Waymarks:
                 {
-                    if (WorldState.Waymarks[(Waymark)((int)Waymark.A + (icon - 1))] is var alt1 && alt1 != null)
+                    if (WorldState.Waymarks[(int)Waymark.A + (icon - 1)] is var alt1 && alt1 != null)
                         yield return new(alt1.Value.XZ());
-                    if (WorldState.Waymarks[(Waymark)((int)Waymark.N1 + (icon - 1))] is var alt2 && alt2 != null)
+                    if (WorldState.Waymarks[(int)Waymark.N1 + (icon - 1)] is var alt2 && alt2 != null)
                         yield return new(alt2.Value.XZ());
                 }
                 break;
@@ -126,21 +126,21 @@ class HeavensflameKnockback(BossModule module) : Components.KnockbackFromCastTar
                     switch (icon)
                     {
                         case 1: // circle - both on DPS, show both E and W and let players adjust
-                            yield return Module.Bounds.Center + offset;
-                            yield return Module.Bounds.Center - offset;
+                            yield return Module.Center + offset;
+                            yield return Module.Center - offset;
                             break;
                         case 2: // triangle - healer SE, dps NW
                         case 3: // cross - healer S, tank N
                             if (Raid[slot]?.Role == Role.Healer)
-                                yield return Module.Bounds.Center + offset;
+                                yield return Module.Center + offset;
                             else
-                                yield return Module.Bounds.Center - offset;
+                                yield return Module.Center - offset;
                             break;
                         case 4: // square - tank NE, dps SW
                             if (Raid[slot]?.Role == Role.Tank)
-                                yield return Module.Bounds.Center - offset;
+                                yield return Module.Center - offset;
                             else
-                                yield return Module.Bounds.Center + offset;
+                                yield return Module.Center + offset;
                             break;
                     }
                 }

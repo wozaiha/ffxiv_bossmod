@@ -43,14 +43,14 @@ class FarFlungFire(BossModule module) : Components.GenericWildCharge(module, 3, 
 class DeepestPit(BossModule module) : Components.GenericAOEs(module, default, "GTFO from puddle!")
 {
     private bool _real;
-    private List<Actor> _targets = new();
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _targets = [];
+    private readonly List<Actor> _casters = [];
 
     public bool Active => _casters.Count > 0;
 
     private static readonly AOEShapeCircle _shape = new(6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.CastInfo!.LocXZ, default, c.CastInfo.NPCFinishAt));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.CastInfo!.LocXZ, default, Module.CastFinishAt(c.CastInfo)));
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => _real && _targets.Contains(player) ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
 

@@ -55,7 +55,7 @@ class Stormcall(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
     {
         if ((SID)status.ID == SID.OrbMovement)
         {
-            var dest = Module.Bounds.Center + 29 * (actor.Position - Module.Bounds.Center).Normalized();
+            var dest = Module.Center + 29 * (actor.Position - Module.Center).Normalized();
             _sources.Add((actor, dest, WorldState.FutureTime(status.Extra == 0x1E ? 9.7f : 19.9f)));
             _sources.SortBy(e => e.activation);
         }
@@ -64,7 +64,7 @@ class Stormcall(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction && _sources.FindIndex(e => e.source == caster) is var index && index >= 0)
-            _sources[index] = (caster, caster.Position, spell.NPCFinishAt);
+            _sources[index] = (caster, caster.Position, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -81,7 +81,7 @@ class Fantod(BossModule module) : Components.LocationTargetedAOEs(module, Action
 class Foreshadowing(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEShape? _bossAOE;
-    private List<(Actor caster, AOEShape? shape)> _addAOEs = []; // shape is null if add starts cast slightly before boss
+    private readonly List<(Actor caster, AOEShape? shape)> _addAOEs = []; // shape is null if add starts cast slightly before boss
     private DateTime _addActivation;
 
     private static readonly AOEShapeDonut _shapePulse = new(8, 25);
@@ -91,12 +91,12 @@ class Foreshadowing(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_bossAOE != null)
-            yield return new(_bossAOE, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.PrimaryActor.CastInfo.NPCFinishAt);
+            yield return new(_bossAOE, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
 
         if (_addActivation != default)
             foreach (var add in _addAOEs)
                 if (add.shape != null)
-                    yield return new(add.shape, add.caster.Position, add.caster.CastInfo?.Rotation ?? add.caster.Rotation, add.caster.CastInfo?.NPCFinishAt ?? _addActivation);
+                    yield return new(add.shape, add.caster.Position, add.caster.CastInfo?.Rotation ?? add.caster.Rotation, Module.CastFinishAt(add.caster.CastInfo, 0, _addActivation));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -161,4 +161,4 @@ class CE63WornToShadowStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 28)] // bnpcname=9973
-public class CE63WornToShadow(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-480, -690), 30));
+public class CE63WornToShadow(WorldState ws, Actor primary) : BossModule(ws, primary, new(-480, -690), new ArenaBoundsCircle(30));

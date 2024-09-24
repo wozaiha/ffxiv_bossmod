@@ -10,31 +10,31 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
-    ArcaneEdge = 35010, // Boss->player, 5,0s cast, single-target
-    OldMagic = 35011, // Boss->self, 5,0s cast, range 60 circle
+    ArcaneEdge = 35010, // Boss->player, 5.0s cast, single-target
+    OldMagic = 35011, // Boss->self, 5.0s cast, range 60 circle
     Teleport = 34991, // Boss->location, no cast, single-target
-    DuplicitousBatteryTelegraph = 36058, // Helper->location, 3,5s cast, range 5 circle
-    DuplicitousBattery = 36057, // Boss->self, 6,0s cast, single-target
+    DuplicitousBatteryTelegraph = 36058, // Helper->location, 3.5s cast, range 5 circle
+    DuplicitousBattery = 36057, // Boss->self, 6.0s cast, single-target
     DuplicitousBattery2 = 34994, // Helper->location, no cast, range 5 circle
-    ForsakenFount = 35003, // Boss->self, 3,0s cast, single-target
-    Explosion = 35006, // 4043->self, 5,0s cast, range 11 circle
-    Explosion2 = 35005, // Helper->self, 12,0s cast, range 9 circle
-    FallenGrace = 35882, // Helper->player, 5,0s cast, range 6 circle
-    Contrapasso = 35905, // Boss->self, 3,0s cast, range 60 circle
+    ForsakenFount = 35003, // Boss->self, 3.0s cast, single-target
+    Explosion = 35006, // 4043->self, 5.0s cast, range 11 circle
+    Explosion2 = 35005, // Helper->self, 12.0s cast, range 9 circle
+    FallenGrace = 35882, // Helper->player, 5.0s cast, range 6 circle
+    Contrapasso = 35905, // Boss->self, 3.0s cast, range 60 circle
     Splinter = 35004, // 4043->self, no cast, single-target
     AntipodalAssaultMarker = 14588, // Helper->player, no cast, single-target
-    AntipodalAssault = 35007, // Boss->self, 5,0s cast, single-target, line stack
+    AntipodalAssault = 35007, // Boss->self, 5.0s cast, single-target, line stack
     AntipodalAssault2 = 35008, // Boss->location, no cast, width 8 rect charge
-    HardSlash = 35009, // Boss->self, 5,0s cast, range 50 90-degree cone
-    TwilightPhase = 36055, // Boss->self, 6,0s cast, single-target
+    HardSlash = 35009, // Boss->self, 5.0s cast, range 50 90-degree cone
+    TwilightPhase = 36055, // Boss->self, 6.0s cast, single-target
     TwilightPhaseA = 34997, // Boss->self, no cast, single-target
     TwilightPhaseB = 34998, // Boss->self, no cast, single-target
-    TwilightPhase2 = 36056, // Helper->self, 7,3s cast, range 60 width 20 rect
-    DarkImpact = 35001, // Boss->location, 7,0s cast, single-target
-    DarkImpact2 = 35002, // Helper->self, 8,0s cast, range 25 circle
-    DeathsJourney = 34995, // Boss->self, 6,0s cast, range 8 circle
-    DeathsJourney2 = 34996, // Helper->self, 6,5s cast, range 30 30-degree cone, this does the damage
-    DeathsJourney3 = 35872, // Helper->self, 6,5s cast, range 30 30-degree cone, visual
+    TwilightPhase2 = 36056, // Helper->self, 7.3s cast, range 60 width 20 rect
+    DarkImpact = 35001, // Boss->location, 7.0s cast, single-target
+    DarkImpact2 = 35002, // Helper->self, 8.0s cast, range 25 circle
+    DeathsJourney = 34995, // Boss->self, 6.0s cast, range 8 circle
+    DeathsJourney2 = 34996, // Helper->self, 6.5s cast, range 30 30-degree cone, this does the damage
+    DeathsJourney3 = 35872, // Helper->self, 6.5s cast, range 30 30-degree cone, visual
 }
 
 class Voidzone(BossModule module) : BossComponent(module)
@@ -42,7 +42,7 @@ class Voidzone(BossModule module) : BossComponent(module)
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001 && index == 0x0A)
-            Module.Arena.Bounds = new ArenaBoundsCircle(new(0, -422), 20);
+            Module.Arena.Bounds = new ArenaBoundsCircle(20);
     }
 }
 
@@ -52,7 +52,7 @@ class Contrapasso(BossModule module) : Components.RaidwideCast(module, ActionID.
 
 class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(WPos source, DateTime activation)> _casters = new();
+    private readonly List<(WPos source, DateTime activation)> _casters = [];
     private static readonly AOEShapeCircle circle = new(5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -154,4 +154,4 @@ class D133DuranteStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12584)]
-class D133Durante(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(0, -422), 23));
+class D133Durante(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -422), new ArenaBoundsCircle(23));

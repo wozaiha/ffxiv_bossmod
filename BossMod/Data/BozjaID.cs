@@ -112,17 +112,17 @@ public enum BozjaHolsterID : uint
 // holster -> action id mapping
 public static class BozjaActionID
 {
-    public static ActionID SlotFromHolsterAction = new(ActionType.Spell, 21023);
+    public static readonly ActionID SlotFromHolsterAction = new(ActionType.Spell, 21023);
 
-    private static ActionID[] _normalActions = new ActionID[(int)BozjaHolsterID.Count];
-    private static ActionID[] _holsterActions = new ActionID[(int)BozjaHolsterID.Count];
+    private static readonly ActionID[] _normalActions = new ActionID[(int)BozjaHolsterID.Count];
+    private static readonly ActionID[] _holsterActions = new ActionID[(int)BozjaHolsterID.Count];
 
     public static ActionID GetNormal(BozjaHolsterID id) => _normalActions[(int)id];
     public static ActionID GetHolster(BozjaHolsterID id) => _holsterActions[(int)id];
 
     static BozjaActionID()
     {
-        var sheet = Service.LuminaGameData?.GetExcelSheet<MYCTemporaryItem>();
+        var sheet = Service.LuminaSheet<MYCTemporaryItem>();
         for (int i = 0; i < _normalActions.Length; i++)
         {
             var row = sheet?.GetRow((uint)i);

@@ -63,7 +63,7 @@ class DeathSentence(BossModule module) : Components.CastCounter(module, ActionID
         boss.PreferProvoking = true;
         if (Module.PrimaryActor.CastInfo?.Action == WatchedAction)
         {
-            var cooldownWindowEnd = (float)(Module.PrimaryActor.CastInfo.NPCFinishAt - WorldState.CurrentTime).TotalSeconds;
+            var cooldownWindowEnd = Module.PrimaryActor.CastInfo.NPCRemainingTime;
             switch (assignment)
             {
                 case PartyRolesConfig.Assignment.MT:
@@ -76,25 +76,25 @@ class DeathSentence(BossModule module) : Components.CastCounter(module, ActionID
                             case Class.WAR:
                                 if (useFirstCooldowns)
                                 {
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Vengeance), actor, cooldownWindowEnd, false));
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(WAR.AID.Vengeance), actor, ActionQueue.Priority.High, cooldownWindowEnd);
                                 }
                                 else
                                 {
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Rampart), actor, cooldownWindowEnd, false));
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Reprisal), actor, cooldownWindowEnd, false));
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.ThrillOfBattle), actor, cooldownWindowEnd, false));
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Rampart), actor, ActionQueue.Priority.High, cooldownWindowEnd);
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Reprisal), actor, ActionQueue.Priority.High, cooldownWindowEnd);
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(WAR.AID.ThrillOfBattle), actor, ActionQueue.Priority.High, cooldownWindowEnd);
                                 }
                                 break;
                             case Class.PLD:
-                                hints.PlannedActions.Add((ActionID.MakeSpell(PLD.AID.Sheltron), actor, cooldownWindowEnd, false));
+                                hints.ActionsToExecute.Push(ActionID.MakeSpell(PLD.AID.Sheltron), actor, ActionQueue.Priority.High, cooldownWindowEnd);
                                 if (useFirstCooldowns)
                                 {
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(PLD.AID.Sentinel), actor, cooldownWindowEnd, false));
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(PLD.AID.Sentinel), actor, ActionQueue.Priority.High, cooldownWindowEnd);
                                 }
                                 else
                                 {
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Rampart), actor, cooldownWindowEnd, false));
-                                    hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Reprisal), actor, cooldownWindowEnd, false));
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Rampart), actor, ActionQueue.Priority.High, cooldownWindowEnd);
+                                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Reprisal), actor, ActionQueue.Priority.High, cooldownWindowEnd);
                                 }
                                 break;
                         }
@@ -103,20 +103,20 @@ class DeathSentence(BossModule module) : Components.CastCounter(module, ActionID
                 case PartyRolesConfig.Assignment.M1:
                     if (NumCasts % 3 == 0)
                     {
-                        hints.PlannedActions.Add((ActionID.MakeSpell(DRG.AID.Feint), Module.PrimaryActor, cooldownWindowEnd, false));
+                        hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Feint), Module.PrimaryActor, ActionQueue.Priority.High, cooldownWindowEnd);
                     }
                     break;
                 case PartyRolesConfig.Assignment.M2:
                     if (NumCasts % 3 == 1)
                     {
-                        hints.PlannedActions.Add((ActionID.MakeSpell(DRG.AID.Feint), Module.PrimaryActor, cooldownWindowEnd, false));
+                        hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Feint), Module.PrimaryActor, ActionQueue.Priority.High, cooldownWindowEnd);
                     }
                     break;
                 case PartyRolesConfig.Assignment.R1:
                 case PartyRolesConfig.Assignment.R2:
                     if (NumCasts % 3 == 2)
                     {
-                        hints.PlannedActions.Add((ActionID.MakeSpell(BLM.AID.Addle), Module.PrimaryActor, cooldownWindowEnd, false));
+                        hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Addle), Module.PrimaryActor, ActionQueue.Priority.High, cooldownWindowEnd);
                     }
                     break;
             }

@@ -1,26 +1,22 @@
-﻿namespace BossMod;
+﻿using BossMod.Autorotation;
 
-class DebugAutorotation
+namespace BossMod;
+
+class DebugAutorotation(RotationModuleManager autorot)
 {
-    private Autorotation _autorot;
-    private UITree _tree = new();
-
-    public DebugAutorotation(Autorotation autorot)
-    {
-        _autorot = autorot;
-    }
+    private readonly UITree _tree = new();
 
     public void Draw()
     {
-        if (_autorot.ClassActions == null)
+        var player = autorot.Bossmods.WorldState.Party[autorot.PlayerSlot];
+        if (player == null)
             return;
-
-        _tree.LeafNode($"Primary target: {_autorot.PrimaryTarget}");
-        _tree.LeafNode($"Secondary target: {_autorot.SecondaryTarget}");
-        new AIHintsVisualizer(_autorot.Hints, _autorot.WorldState, _autorot.ClassActions.Player, _autorot.PrimaryTarget?.InstanceID ?? 0, e =>
+        new AIHintsVisualizer(autorot.Hints, autorot.Bossmods.WorldState, player, player.TargetID, e =>
         {
-            var t = e != null ? _autorot.ClassActions.SelectBetterTarget(e) : new();
-            return (t.Target, t.PreferredRange, t.PreferredPosition, t.PreferTanking);
+            // TODO: ...
+            return (e, 3, Positional.Any, false);
+            //var t = e != null ? autorot.ClassActions.SelectBetterTarget(e) : new();
+            //return (t.Target, t.PreferredRange, t.PreferredPosition, t.PreferTanking);
         }).Draw(_tree);
     }
 }

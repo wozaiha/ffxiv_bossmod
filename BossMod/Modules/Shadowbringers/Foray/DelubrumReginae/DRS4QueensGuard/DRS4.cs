@@ -13,12 +13,12 @@ class IcyPortent(BossModule module) : Components.CastHint(module, ActionID.MakeS
 class PawnOff(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PawnOffReal), new AOEShapeCircle(20));
 class Fracture(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Fracture)); // TODO: consider showing reflect hints
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9838)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9838, PlanLevel = 80)]
 public class DRS4 : BossModule
 {
-    private IReadOnlyList<Actor> _warrior;
-    private IReadOnlyList<Actor> _soldier;
-    private IReadOnlyList<Actor> _gunner;
+    private readonly IReadOnlyList<Actor> _warrior;
+    private readonly IReadOnlyList<Actor> _soldier;
+    private readonly IReadOnlyList<Actor> _gunner;
 
     public Actor? Knight() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? Warrior() => _warrior.FirstOrDefault();
@@ -28,7 +28,7 @@ public class DRS4 : BossModule
     public IReadOnlyList<Actor> AuraSpheres;
     public IReadOnlyList<Actor> SpiritualSpheres;
 
-    public DRS4(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(244, -162), 25))
+    public DRS4(WorldState ws, Actor primary) : base(ws, primary, new(244, -162), new ArenaBoundsCircle(25))
     {
         _warrior = Enemies(OID.Warrior);
         _soldier = Enemies(OID.Soldier);

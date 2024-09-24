@@ -2,7 +2,7 @@
 
 class P2BroadSwing(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.BroadSwingAOE))
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCone _aoe = new(40, 60.Degrees());
 
@@ -18,9 +18,9 @@ class P2BroadSwing(BossModule module) : Components.GenericAOEs(module, ActionID.
         };
         if (rot != default)
         {
-            _aoes.Add(new(_aoe, caster.Position, spell.Rotation + rot, spell.NPCFinishAt.AddSeconds(0.8f), ArenaColor.Danger));
-            _aoes.Add(new(_aoe, caster.Position, spell.Rotation - rot, spell.NPCFinishAt.AddSeconds(1.8f)));
-            _aoes.Add(new(_aoe, caster.Position, spell.Rotation + 180.Degrees(), spell.NPCFinishAt.AddSeconds(2.8f)));
+            _aoes.Add(new(_aoe, caster.Position, spell.Rotation + rot, Module.CastFinishAt(spell, 0.8f), ArenaColor.Danger));
+            _aoes.Add(new(_aoe, caster.Position, spell.Rotation - rot, Module.CastFinishAt(spell, 1.8f)));
+            _aoes.Add(new(_aoe, caster.Position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.8f)));
         }
     }
 

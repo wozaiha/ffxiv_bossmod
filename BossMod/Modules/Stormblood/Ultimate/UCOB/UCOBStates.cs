@@ -4,7 +4,7 @@ class P2BlockTransition(BossModule module) : BossComponent(module);
 
 class UCOBStates : StateMachineBuilder
 {
-    private UCOB _module;
+    private readonly UCOB _module;
 
     public UCOBStates(UCOB module) : base(module)
     {
@@ -19,7 +19,7 @@ class UCOBStates : StateMachineBuilder
         SimplePhase(2, Phase1Twintania3, "P1: Twintania pre neurolink 3 (44%-0%)")
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !Module.PrimaryActor.IsTargetable;
         SimplePhase(3, Phase2, "P2: Nael")
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || _module.Nael() is var nael && nael != null && !nael.IsTargetable && nael.HP.Cur <= 1 && Module.FindComponent<P2BlockTransition>() == null;
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || _module.Nael() is var nael && nael != null && !nael.IsTargetable && nael.HPMP.CurHP <= 1 && Module.FindComponent<P2BlockTransition>() == null;
         SimplePhase(4, Phase34, "P3-4: Bahamut + Adds")
             .DeactivateOnExit<Hatch>()
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.IsDead && _module.Nael() is var nael && nael != null && nael.IsDead;
@@ -159,7 +159,7 @@ class UCOBStates : StateMachineBuilder
 
     private void P1FireballResolve(uint id, float delay)
     {
-        ComponentCondition<P1Fireball>(id, delay, comp => comp.ActiveStacks.Count() == 0, "Stack", 1, delay - 0.2f) // note that if target dies, fireball won't happen
+        ComponentCondition<P1Fireball>(id, delay, comp => !comp.ActiveStacks.Any(), "Stack", 1, delay - 0.2f) // note that if target dies, fireball won't happen
             .DeactivateOnExit<P1Fireball>();
     }
 

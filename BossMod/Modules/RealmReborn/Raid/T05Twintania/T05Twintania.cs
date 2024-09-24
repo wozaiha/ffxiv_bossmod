@@ -61,7 +61,7 @@ public enum SID : uint
 // the only thing that is well timed is P3 (divebombs phase)
 class T05TwintaniaStates : StateMachineBuilder
 {
-    private T05Twintania _module;
+    private readonly T05Twintania _module;
 
     public T05TwintaniaStates(T05Twintania module) : base(module)
     {
@@ -146,7 +146,7 @@ public class T05Twintania : BossModule
     public IReadOnlyList<Actor> ScourgeOfMeracydia;
     public IReadOnlyList<Actor> Neurolinks;
 
-    public T05Twintania(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-3, -6.5f), 31))
+    public T05Twintania(WorldState ws, Actor primary) : base(ws, primary, new(-3, -6.5f), new ArenaBoundsCircle(31))
     {
         ScourgeOfMeracydia = Enemies(OID.ScourgeOfMeracydia);
         Neurolinks = Enemies(OID.Neurolink);

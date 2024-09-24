@@ -4,20 +4,12 @@ class RightArmRayNormal(BossModule module) : Components.SelfTargetedAOEs(module,
 
 class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
 {
-    public class SphereState
+    public class SphereState(Actor sphere, Angle increment)
     {
-        public Actor Sphere;
-        public Angle RotNext;
-        public Angle RotIncrement;
-        public int NumCastsLeft;
-
-        public SphereState(Actor sphere, Angle increment)
-        {
-            Sphere = sphere;
-            RotNext = sphere.Rotation;
-            RotIncrement = increment;
-            NumCastsLeft = 11;
-        }
+        public Actor Sphere = sphere;
+        public Angle RotNext = sphere.Rotation;
+        public Angle RotIncrement = increment;
+        public int NumCastsLeft = 11;
     }
 
     private readonly List<SphereState> _spheres = [];
@@ -44,17 +36,17 @@ class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
             // show positioning hint: find a pair of nearby spheres with opposite rotations, such that CCW is to the left of midpoint (if facing center)
             foreach (var ccwSphere in _spheres.Where(s => s.RotIncrement.Rad > 0))
             {
-                var ccwOffset = ccwSphere.Sphere.Position - Module.Bounds.Center;
+                var ccwOffset = ccwSphere.Sphere.Position - Module.Center;
                 foreach (var cwSphere in _spheres.Where(s => s.RotIncrement.Rad < 0))
                 {
                     // nearby spheres have distance ~20
-                    var cwOffset = cwSphere.Sphere.Position - Module.Bounds.Center;
+                    var cwOffset = cwSphere.Sphere.Position - Module.Center;
                     if ((ccwOffset - cwOffset).LengthSq() < 500)
                     {
                         var midpointOffset = (ccwOffset + cwOffset) * 0.5f;
                         if (midpointOffset.OrthoL().Dot(ccwOffset) < 0)
                         {
-                            Arena.AddCircle(Module.Bounds.Center + midpointOffset, 1, ArenaColor.Safe);
+                            Arena.AddCircle(Module.Center + midpointOffset, 1, ArenaColor.Safe);
                         }
                     }
                 }
@@ -65,7 +57,7 @@ class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.RightArmRayAOEFirst)
-            _activation = spell.NPCFinishAt;
+            _activation = Module.CastFinishAt(spell);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

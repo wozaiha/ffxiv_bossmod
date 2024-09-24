@@ -52,7 +52,7 @@ class LightningBoltDistantClap(BossModule module) : Components.GenericAOEs(modul
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.LightningBoltAOE)
-            _aoes.Add(new(_shapeBolt, spell.LocXZ, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(_shapeBolt, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -78,7 +78,7 @@ class CloudToGround(BossModule module) : Components.Exaflare(module, 5)
     {
         if ((AID)spell.Action.ID == AID.CloudToGroundFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = spell.NPCFinishAt, TimeToMove = 1.1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
         }
     }
 
@@ -104,8 +104,8 @@ class Flame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSp
 
 class Burn(BossModule module) : Components.GenericAOEs(module)
 {
-    private IReadOnlyList<Actor> _flames = module.Enemies(OID.BallOfFire);
-    private List<(Actor actor, AOEInstance? aoe)> _casters = [];
+    private readonly IReadOnlyList<Actor> _flames = module.Enemies(OID.BallOfFire);
+    private readonly List<(Actor actor, AOEInstance? aoe)> _casters = [];
 
     private static readonly AOEShapeCircle _shape = new(8);
 
@@ -127,7 +127,7 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
     {
         foreach (var f in _flames.Where(f => f.ModelState.AnimState1 == 1 && _casters.FindIndex(c => c.actor == f) < 0))
         {
-            _casters.Add((f, new (_shape, f.Position, default, WorldState.FutureTime(5))));
+            _casters.Add((f, new(_shape, f.Position, default, WorldState.FutureTime(5))));
         }
     }
 
@@ -166,4 +166,4 @@ class CE62LooksToDieForStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)] // bnpcname=9925
-public class CE62LooksToDieFor(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-200, -580), 20));
+public class CE62LooksToDieFor(WorldState ws, Actor primary) : BossModule(ws, primary, new(-200, -580), new ArenaBoundsCircle(20));

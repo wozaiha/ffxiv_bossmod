@@ -2,7 +2,7 @@
 
 class Ex3TitanStates : StateMachineBuilder
 {
-    Ex3Titan _module;
+    readonly Ex3Titan _module;
 
     public Ex3TitanStates(Ex3Titan module) : base(module)
     {
@@ -190,7 +190,7 @@ class Ex3TitanStates : StateMachineBuilder
             .ActivateOnEnter<Crush>();
         Cast(id + 0x10, AID.Geocrush, 3.3f, 3, "Geocrush")
             .DeactivateOnExit<Crush>()
-            .OnExit(() => Module.Arena.Bounds = new ArenaBoundsCircle(Module.Bounds.Center, newRadius), newRadius > 0);
+            .OnExit(() => Module.Arena.Bounds = new ArenaBoundsCircle(newRadius), newRadius > 0);
         Targetable(id + 0x20, true, 0.4f, "Reappear");
     }
 

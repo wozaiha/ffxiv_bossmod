@@ -1,31 +1,51 @@
 ﻿namespace BossMod;
 
-[ConfigDisplay(Name = "Boss 模块窗口设置", Order = 1)]
+[ConfigDisplay(Name = "Boss Modules and Radar", Order = 1)]
 public class BossModuleConfig : ConfigNode
 {
-    [PropertyDisplay("地图缩放")]
+    // boss module settings
+    [PropertyDisplay("Minimal maturity for the module to be loaded", tooltip: "Some modules will have the \"WIP\" status and will not automatically load unless you change this")]
+    public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
+
+    [PropertyDisplay("Allow modules to automatically use actions", tooltip: "Example: modules can automatically use anti-knockback abilities before a knockback happens")]
+    public bool AllowAutomaticActions = true;
+
+    [PropertyDisplay("Show testing radar and hint window", tooltip: "Useful for configuring your radar and hint windows without being inside of a boss encounter", separator: true)]
+    public bool ShowDemo = false;
+
+    // radar window settings
+    [PropertyDisplay("Enable radar")]
+    public bool Enable = true;
+
+    [PropertyDisplay("Lock radar and hint window movement and mouse interaction")]
+    public bool Lock = false;
+
+    [PropertyDisplay("Transparent radar window background", tooltip: "Removes the black window around the radar; this will not work if you move the radar to a different monitor")]
+    public bool TrishaMode = false;
+
+    [PropertyDisplay("Add opaque background to the arena in the radar")]
+    public bool OpaqueArenaBackground = false;
+
+    [PropertyDisplay("Show outlines and shadows on various radar markings")]
+    public bool ShowOutlinesAndShadows = false;
+
+    [PropertyDisplay("Radar arena scale factor", tooltip: "Scale of the arena inside of the radar window")]
     [PropertySlider(0.1f, 10, Speed = 0.1f, Logarithmic = true)]
     public float ArenaScale = 1;
 
-    [PropertyDisplay("启用Boss模块")]
-    public bool Enable = true;
-
-    [PropertyDisplay("锁定移动和鼠标交互")]
-    public bool Lock = false;
-
-    [PropertyDisplay("旋转地图与视角一致")]
+    [PropertyDisplay("Rotate radar to match camera orientation")]
     public bool RotateArena = true;
 
-    [PropertyDisplay("拓展为小地图保留的空间以允许自由旋转")]
+    [PropertyDisplay("Give radar extra space for rotations", tooltip: "If you are using the above setting, this gives the radar extra space on the sides before the edges are clipped in order to account for rotating your camera during an encounter")]
     public bool AddSlackForRotations = true;
 
-    [PropertyDisplay("显示边框")]
+    [PropertyDisplay("Show arena border in radar")]
     public bool ShowBorder = true;
 
-    [PropertyDisplay("如果玩家处于危险时更改边框颜色")]
+    [PropertyDisplay("Change arena border color if player is at risk", tooltip: "Changes the white border to red when you are standing somewhere you are likely to be hit by a mechanic")]
     public bool ShowBorderRisk = true;
 
-    [PropertyDisplay("显示方向")]
+    [PropertyDisplay("Show cardinal direction names on radar")]
     public bool ShowCardinals = false;
 
     [PropertyDisplay("指南针字体大小")]
@@ -35,39 +55,29 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("在雷达上显示标点")]
     public bool ShowWaymarks = false;
 
-    [PropertyDisplay("显示机制序列和计时器")]
+    [PropertyDisplay("Always show all alive party members")]
+    public bool ShowIrrelevantPlayers = false;
+
+    [PropertyDisplay("Show role-based colors on otherwise uncolored players in the radar")]
+    public bool ColorPlayersBasedOnRole = false;
+
+    [PropertyDisplay("Always show focus targeted party member", separator: true)]
+    public bool ShowFocusTargetPlayer = false;
+
+    // hint window settings
+    [PropertyDisplay("Show text hints in separate window", tooltip: "Separates the radar window from the hints window, allowing you to reposition the hints window")]
+    public bool HintsInSeparateWindow = false;
+
+    [PropertyDisplay("Show mechanic sequence and timer hints")]
     public bool ShowMechanicTimers = true;
 
     [PropertyDisplay("显示全屏AOE提示")]
     public bool ShowGlobalHints = true;
 
-    [PropertyDisplay("显示警告和提示")]
+    [PropertyDisplay("Show player hints and warnings", separator: true)]
     public bool ShowPlayerHints = true;
 
-    [PropertyDisplay("在另外一个窗口显示文字提示")]
-    public bool HintsInSeparateWindow = false;
-
-    [PropertyDisplay("透明模式: 仅雷达, 不显示窗体")]
-    public bool TrishaMode = false;
-
-    [PropertyDisplay("给地图增加不透明背景")]
-    public bool OpaqueArenaBackground = false;
-
-    [PropertyDisplay("在世界内显示移动指示")]
+    // misc. settings
+    [PropertyDisplay("Show movement hints in world", tooltip: "Not used very much, but can show you arrows in the game world to indicate where to move for certain mechanics")]
     public bool ShowWorldArrows = false;
-
-    [PropertyDisplay("在副本外显示Boss模块窗口 (可用于配置窗口)")]
-    public bool ShowDemo = false;
-
-    [PropertyDisplay("显示带有冷却计划计时器的窗口")]
-    public bool EnableTimerWindow = false;
-
-    [PropertyDisplay("总是显示所有活着的队伍成员")]
-    public bool ShowIrrelevantPlayers = false;
-
-    [PropertyDisplay("在各式小地图标记显示描边和阴影")]
-    public bool ShowOutlinesAndShadows = false;
-
-    [PropertyDisplay("要加载的模块的最低完成度")]
-    public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
 }

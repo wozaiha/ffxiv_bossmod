@@ -62,9 +62,9 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, ActionID.Make
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_outer != null)
-            yield return new(_outer, Module.Bounds.Center);
+            yield return new(_outer, Module.Center);
         if (_inner != null)
-            yield return new(_inner, Module.Bounds.Center, new(), _innerFinish);
+            yield return new(_inner, Module.Center, new(), _innerFinish);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -76,11 +76,11 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, ActionID.Make
                 1 => 23,
                 2 => 20,
                 3 => 15,
-                _ => Module.Bounds.HalfSize
+                _ => Module.Bounds.Radius
             };
-            _outer = new AOEShapeDonut(outerRadius, Module.Bounds.HalfSize);
+            _outer = new AOEShapeDonut(outerRadius, Module.Bounds.Radius);
             _inner = new AOEShapeCircle(outerRadius - 2); // TODO: check falloff...
-            _innerFinish = spell.NPCFinishAt;
+            _innerFinish = Module.CastFinishAt(spell);
         }
     }
 
@@ -101,8 +101,8 @@ class Burst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.Ma
         // pattern 2: center -> 4 cardinals at small offset ~1s later -> 4 intercardinals at bigger offset ~1s later
         // pattern 3: 3 in center line -> 3 in side line ~1.5s later -> 3 in other side line ~1.5s later
         // showing casts that end within 2.25s seems to deal with all patterns reasonably well
-        var timeLimit = Casters.FirstOrDefault()?.CastInfo?.NPCFinishAt.AddSeconds(2.25f) ?? new();
-        return Casters.TakeWhile(c => c.CastInfo!.NPCFinishAt <= timeLimit).Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+        var timeLimit = Module.CastFinishAt(Casters.FirstOrDefault()?.CastInfo, 2.25f);
+        return Casters.TakeWhile(c => Module.CastFinishAt(c.CastInfo!) <= timeLimit).Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
     }
 }
 
@@ -123,17 +123,16 @@ class T07TitanHStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 60, NameID = 1801)]
 public class T07TitanH : BossModule
 {
-    private IReadOnlyList<Actor> _heart;
+    private readonly IReadOnlyList<Actor> _heart;
     public IEnumerable<Actor> ActiveHeart => _heart.Where(h => h.IsTargetable && !h.IsDead);
 
-    public T07TitanH(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 25))
+    public T07TitanH(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(25))
     {
         _heart = Enemies(OID.TitansHeart);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var heart in ActiveHeart)
             hints.PotentialTargets.Add(new(heart, assignment == PartyRolesConfig.Assignment.MT));
         foreach (var enemy in hints.PotentialTargets)
@@ -145,7 +144,7 @@ public class T07TitanH : BossModule
                 OID.Boss => 1,
                 _ => 0
             };
-            enemy.AttackStrength = (OID)enemy.Actor.OID == OID.Boss ? enemy.Actor.HP.Cur < 0.6f * enemy.Actor.HP.Max ? 0.3f : 0.1f : 0;
+            enemy.AttackStrength = (OID)enemy.Actor.OID == OID.Boss ? enemy.Actor.HPMP.CurHP < 0.6f * enemy.Actor.HPMP.MaxHP ? 0.3f : 0.1f : 0;
         }
     }
 }

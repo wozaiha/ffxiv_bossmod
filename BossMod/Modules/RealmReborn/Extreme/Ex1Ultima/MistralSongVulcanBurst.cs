@@ -27,8 +27,8 @@ class MistralSongVulcanBurst(BossModule module) : Components.GenericAOEs(module,
         // we have custom shape before burst - we try to make it so that post-knockback position is safe
         if (_burstImminent)
         {
-            var p1 = Module.Bounds.Center + Module.Bounds.HalfSize * (_garuda!.Rotation + _shape.HalfAngle).ToDirection();
-            var p2 = Module.Bounds.Center + Module.Bounds.HalfSize * (_garuda!.Rotation - _shape.HalfAngle).ToDirection();
+            var p1 = Module.Center + Module.Bounds.Radius * (_garuda!.Rotation + _shape.HalfAngle).ToDirection();
+            var p2 = Module.Center + Module.Bounds.Radius * (_garuda!.Rotation - _shape.HalfAngle).ToDirection();
             var a1 = Angle.FromDirection(p1 - Module.PrimaryActor.Position);
             var a2 = Angle.FromDirection(p2 - Module.PrimaryActor.Position);
             if (a2.Rad > a1.Rad)
@@ -45,7 +45,7 @@ class MistralSongVulcanBurst(BossModule module) : Components.GenericAOEs(module,
     {
         base.DrawArenaForeground(pcSlot, pc);
 
-        var adjPos = _burstImminent ? Arena.Bounds.ClampToBounds(Components.Knockback.AwayFromSource(pc.Position, Module.PrimaryActor, 30)) : pc.Position;
+        var adjPos = _burstImminent ? Arena.ClampToBounds(Components.Knockback.AwayFromSource(pc.Position, Module.PrimaryActor, 30)) : pc.Position;
         Components.Knockback.DrawKnockback(pc, adjPos, Arena);
     }
 
@@ -54,7 +54,7 @@ class MistralSongVulcanBurst(BossModule module) : Components.GenericAOEs(module,
         if (spell.Action == WatchedAction)
         {
             _garuda = caster;
-            _resolve = spell.NPCFinishAt;
+            _resolve = Module.CastFinishAt(spell);
             _burstImminent = true;
         }
     }

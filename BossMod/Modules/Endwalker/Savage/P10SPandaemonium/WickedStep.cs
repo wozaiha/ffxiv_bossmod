@@ -2,15 +2,15 @@
 
 class WickedStep(BossModule module) : Components.Knockback(module, ignoreImmunes: true)
 {
-    private Actor?[] _towers = { null, null };
+    private readonly Actor?[] _towers = [null, null];
 
-    private static readonly float _towerRadius = 4;
-    private static readonly float _knockbackRadius = 36;
+    private const float _towerRadius = 4;
+    private const float _knockbackRadius = 36;
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         foreach (var s in _towers.Where(s => s?.Position.InCircle(actor.Position, _towerRadius) ?? false))
-            yield return new(s!.Position, _knockbackRadius, s!.CastInfo!.NPCFinishAt);
+            yield return new(s!.Position, _knockbackRadius, Module.CastFinishAt(s!.CastInfo));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

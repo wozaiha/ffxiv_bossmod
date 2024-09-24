@@ -23,8 +23,8 @@ public class GenericStackSpread(BossModule module, bool alwaysShowSpreads = fals
     public bool AlwaysShowSpreads = alwaysShowSpreads; // if false, we only shown own spread radius for spread targets - this reduces visual clutter
     public bool RaidwideOnResolve = raidwideOnResolve; // if true, assume even if mechanic is correctly resolved everyone will still take damage
     public bool IncludeDeadTargets = includeDeadTargets; // if false, stacks & spreads with dead targets are ignored
-    public List<Stack> Stacks = new();
-    public List<Spread> Spreads = new();
+    public List<Stack> Stacks = [];
+    public List<Spread> Spreads = [];
 
     public bool Active => Stacks.Count + Spreads.Count > 0;
     public IEnumerable<Stack> ActiveStacks => IncludeDeadTargets ? Stacks : Stacks.Where(s => !s.Target.IsDead);
@@ -89,16 +89,20 @@ public class GenericStackSpread(BossModule module, bool alwaysShowSpreads = fals
         // TODO: think how to improve this, current implementation works, but isn't particularly good - e.g. nearby players tend to move to same spot, turn around, etc.
         // ideally we should provide per-mechanic spread spots, but for simple cases we should try to let melee spread close and healers/rdd spread far from main target...
         foreach (var spreadFrom in ActiveSpreads.Where(s => s.Target != actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(spreadFrom.Target.Position, spreadFrom.Radius), spreadFrom.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(spreadFrom.Target.Position, spreadFrom.Radius + 1), spreadFrom.Activation);
 
         foreach (var avoid in ActiveStacks.Where(s => s.Target != actor && s.ForbiddenPlayers[slot]))
             hints.AddForbiddenZone(ShapeDistance.Circle(avoid.Target.Position, avoid.Radius), avoid.Activation);
 
-        if (IsStackTarget(actor))
+        if (Stacks.FirstOrDefault(s => s.Target == actor) is var actorStack && actorStack.Target != null)
         {
             // forbid standing next to other stack markers
             foreach (var stackWith in ActiveStacks.Where(s => s.Target != actor))
                 hints.AddForbiddenZone(ShapeDistance.Circle(stackWith.Target.Position, stackWith.Radius), stackWith.Activation);
+            // and try to stack with closest non-stack/spread player
+            var closest = Raid.WithoutSlot().Where(p => p != actor && !IsSpreadTarget(p) && !IsStackTarget(p)).Closest(actor.Position);
+            if (closest != null)
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(closest.Position, actorStack.Radius * 0.5f), actorStack.Activation);
         }
         else if (!IsSpreadTarget(actor))
         {
@@ -197,11 +201,11 @@ public class CastStackSpread(BossModule module, ActionID stackAID, ActionID spre
     {
         if (spell.Action == StackAction && WorldState.Actors.Find(spell.TargetID) is var stackTarget && stackTarget != null)
         {
-            AddStack(stackTarget, spell.NPCFinishAt);
+            AddStack(stackTarget, Module.CastFinishAt(spell));
         }
         else if (spell.Action == SpreadAction && WorldState.Actors.Find(spell.TargetID) is var spreadTarget && spreadTarget != null)
         {
-            AddSpread(spreadTarget, spell.NPCFinishAt);
+            AddSpread(spreadTarget, Module.CastFinishAt(spell));
         }
     }
 

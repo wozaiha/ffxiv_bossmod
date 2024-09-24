@@ -11,12 +11,12 @@ public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
     AutoAttack2 = 6499, // BossAdd->player, no cast, single-target
-    GlassyNova = 13362, // Boss->self, 3,0s cast, range 40+R width 8 rect
-    Hellstorm = 13359, // Boss->self, 3,0s cast, single-target
-    Hellstorm2 = 13363, // BossHelper->location, 3,5s cast, range 10 circle
-    Netherwind = 13741, // BossAdd->self, 3,0s cast, range 15+R width 4 rect
-    BrainFreeze = 13361, // Boss->self, 4,0s cast, range 10+R circle, turns player into Imp
-    PolarRoar = 13360, // Boss->self, 3,0s cast, range 9-40 donut
+    GlassyNova = 13362, // Boss->self, 3.0s cast, range 40+R width 8 rect
+    Hellstorm = 13359, // Boss->self, 3.0s cast, single-target
+    Hellstorm2 = 13363, // BossHelper->location, 3.5s cast, range 10 circle
+    Netherwind = 13741, // BossAdd->self, 3.0s cast, range 15+R width 4 rect
+    BrainFreeze = 13361, // Boss->self, 4.0s cast, range 10+R circle, turns player into Imp
+    PolarRoar = 13360, // Boss->self, 3.0s cast, range 9-40 donut
 }
 
 class PolarRoar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PolarRoar), new AOEShapeDonut(9, 40));
@@ -40,7 +40,7 @@ class HatiStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7590)]
-public class Hati(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+public class Hati(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -49,9 +49,8 @@ public class Hati(WorldState ws, Actor primary) : BossModule(ws, primary, new Ar
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

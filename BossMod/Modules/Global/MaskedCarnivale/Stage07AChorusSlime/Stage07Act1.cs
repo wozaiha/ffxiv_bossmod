@@ -9,7 +9,7 @@ public enum OID : uint
 public enum AID : uint
 {
     Detonation = 14696, // 2703->self, no cast, range 6+R circle
-    Blizzard = 14709, // 2702->player, 1,0s cast, single-target
+    Blizzard = 14709, // 2702->player, 1.0s cast, single-target
 }
 
 class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
@@ -61,7 +61,7 @@ class Stage07Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8094, SortOrder = 1)]
 public class Stage07Act1 : BossModule
 {
-    public Stage07Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage07Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<SlimeExplosion>();

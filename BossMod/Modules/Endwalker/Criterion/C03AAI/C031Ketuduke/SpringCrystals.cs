@@ -2,11 +2,11 @@
 
 class SpringCrystalsRect(BossModule module, bool moveCasters, bool risky, float delay) : Components.GenericAOEs(module)
 {
-    public List<WPos> SafeZoneCenters = InitialSafeZoneCenters(module.Bounds.Center);
-    private List<AOEInstance> _aoes = new();
-    private bool _moveCasters = moveCasters;
-    private bool _risky = risky;
-    private float _delay = delay;
+    public List<WPos> SafeZoneCenters = InitialSafeZoneCenters(module.Center);
+    private readonly List<AOEInstance> _aoes = [];
+    private readonly bool _moveCasters = moveCasters;
+    private readonly bool _risky = risky;
+    private readonly float _delay = delay;
 
     private static readonly AOEShapeRect _shape = new(38, 5, 38);
 
@@ -30,8 +30,8 @@ class SpringCrystalsRect(BossModule module, bool moveCasters, bool risky, float 
             {
                 // crystals are moved once or twice, but never outside arena bounds
                 // orthogonal movement always happens, movement along direction happens only for half of them - but it doesn't actually affect aoe, so we can ignore it
-                pos.X += pos.X < Module.Bounds.Center.X ? 20 : -20;
-                pos.Z += pos.Z < Module.Bounds.Center.Z ? 20 : -20;
+                pos.X += pos.X < Module.Center.X ? 20 : -20;
+                pos.Z += pos.Z < Module.Center.Z ? 20 : -20;
             }
             _aoes.Add(new(_shape, pos, actor.Rotation, WorldState.FutureTime(_delay), Risky: _risky));
             SafeZoneCenters.RemoveAll(c => _shape.Check(c, pos, actor.Rotation));
@@ -52,7 +52,7 @@ class SpringCrystalsRectStay(BossModule module) : SpringCrystalsRect(module, fal
 
 class SpringCrystalsSphere(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
     private bool _active;
 
     private static readonly AOEShapeCircle _shape = new(8);
@@ -76,7 +76,7 @@ class SpringCrystalsSphere(BossModule module) : Components.GenericAOEs(module)
             if (index >= 0)
             {
                 ref var aoe = ref _aoes.Ref(index);
-                aoe.Origin += new WDir(aoe.Origin.X < Module.Bounds.Center.X ? 20 : -20, 0);
+                aoe.Origin += new WDir(aoe.Origin.X < Module.Center.X ? 20 : -20, 0);
             }
             else
             {

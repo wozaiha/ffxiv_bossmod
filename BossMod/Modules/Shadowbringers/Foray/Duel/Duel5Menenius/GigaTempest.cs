@@ -2,8 +2,8 @@
 
 abstract class GigaTempest(BossModule module, AOEShapeRect shape, AID aidFirst, AID aidRest) : Components.Exaflare(module, shape)
 {
-    private AID _aidStart = aidFirst;
-    private AID _aidRest = aidRest;
+    private readonly AID _aidStart = aidFirst;
+    private readonly AID _aidRest = aidRest;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -15,7 +15,7 @@ abstract class GigaTempest(BossModule module, AOEShapeRect shape, AID aidFirst, 
             {
                 Next = caster.Position,
                 Advance = advance.Value,
-                NextExplosion = caster.CastInfo!.NPCFinishAt,
+                NextExplosion = Module.CastFinishAt(caster.CastInfo!),
                 TimeToMove = 0.9f,
                 ExplosionsLeft = 5,
                 MaxShownExplosions = 5,

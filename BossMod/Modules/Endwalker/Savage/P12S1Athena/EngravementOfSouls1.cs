@@ -10,9 +10,9 @@ class EngravementOfSouls1Spread(BossModule module) : Components.UniformStackSpre
         public WPos CachedSafespot;
     }
 
-    private P12S1AthenaConfig _config = Service.Config.Get<P12S1AthenaConfig>();
-    private EngravementOfSoulsTethers? _tethers = module.FindComponent<EngravementOfSoulsTethers>();
-    private PlayerState[] _states = new PlayerState[PartyState.MaxPartySize];
+    private readonly P12S1AthenaConfig _config = Service.Config.Get<P12S1AthenaConfig>();
+    private readonly EngravementOfSoulsTethers? _tethers = module.FindComponent<EngravementOfSoulsTethers>();
+    private readonly PlayerState[] _states = new PlayerState[PartyState.MaxPartySize];
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -51,11 +51,11 @@ class EngravementOfSouls1Spread(BossModule module) : Components.UniformStackSpre
             switch (_config.Engravement1Hints)
             {
                 case P12S1AthenaConfig.EngravementOfSouls1Strategy.Default:
-                    WDir[] offsets = { new(+1, -1), new(+1, +1), new(-1, +1), new(-1, -1) }; // CW from N
+                    WDir[] offsets = [new(+1, -1), new(+1, +1), new(-1, +1), new(-1, -1)]; // CW from N
                     var relevantTether = _states[slot].Debuff == DebuffType.Light ? EngravementOfSoulsTethers.TetherType.Dark : EngravementOfSoulsTethers.TetherType.Light;
                     var expectedPositions = _tethers.States.Where(s => s.Source != null).Select(s => (s.Source!.Position + 40 * s.Source.Rotation.ToDirection(), s.Tether == relevantTether)).ToList();
                     var offsetsOrdered = (Raid[slot]?.Class.IsSupport() ?? false) ? offsets.AsEnumerable() : offsets.Reverse();
-                    var positionsOrdered = offsetsOrdered.Select(d => Module.Bounds.Center + 7 * d);
+                    var positionsOrdered = offsetsOrdered.Select(d => Module.Center + 7 * d);
                     var firstMatch = positionsOrdered.First(p => expectedPositions.MinBy(ep => (ep.Item1 - p).LengthSq()).Item2);
                     _states[slot].CachedSafespot = firstMatch;
                     break;

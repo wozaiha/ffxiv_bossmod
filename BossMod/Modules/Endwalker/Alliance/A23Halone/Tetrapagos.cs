@@ -2,7 +2,7 @@
 
 class Tetrapagos(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
 
@@ -16,7 +16,7 @@ class Tetrapagos(BossModule module) : Components.GenericAOEs(module)
             _ => null
         };
         if (shape != null)
-            _aoes.Add(new(shape, caster.Position, caster.Rotation, spell.NPCFinishAt.AddSeconds(7.3f)));
+            _aoes.Add(new(shape, caster.Position, caster.Rotation, Module.CastFinishAt(spell, 7.3f)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

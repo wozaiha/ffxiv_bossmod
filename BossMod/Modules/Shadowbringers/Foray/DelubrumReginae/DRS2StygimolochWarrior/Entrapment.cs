@@ -6,13 +6,13 @@ class EntrapmentAttract(BossModule module) : Components.Knockback(module, Action
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(new(Module.Bounds.Center.X, Module.Bounds.Center.Z + Module.Bounds.HalfSize), 60, _activation, Kind: Kind.TowardsOrigin);
+        yield return new(new(Module.Center.X, Module.Center.Z + Module.Bounds.Radius), 60, _activation, Kind: Kind.TowardsOrigin);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Entrapment)
-            _activation = spell.NPCFinishAt.AddSeconds(0.8f);
+            _activation = Module.CastFinishAt(spell, 0.8f);
     }
 }
 
@@ -58,7 +58,7 @@ class Entrapment : Components.CastCounter
         if (player != null)
             for (int z = 0; z < 7; ++z)
                 for (int x = 0; x < 7; ++x)
-                    if (player.Position.InCircle(Module.Bounds.Center + CellOffset(x, z), 10))
+                    if (player.Position.InCircle(Module.Center + CellOffset(x, z), 10))
                         _uncovered.Set(IndexFromCell(x, z));
 
         // remove all patterns that have difference with current state in uncovered areas
@@ -80,7 +80,7 @@ class Entrapment : Components.CastCounter
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        hints.Add($"Matching patterns: {(_possiblePatterns.Any() ? string.Join(", ", _possiblePatterns.SetBits()): "none")}");
+        hints.Add($"Matching patterns: {(_possiblePatterns.Any() ? string.Join(", ", _possiblePatterns.SetBits()) : "none")}");
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
@@ -139,7 +139,7 @@ class Entrapment : Components.CastCounter
 
     private void AddTrap(ref BitMask mask, WPos position, bool exploded)
     {
-        var index = IndexFromOffset(position - Module.Bounds.Center);
+        var index = IndexFromOffset(position - Module.Center);
         //ReportError($"Trap @ {position} (dist={(position - Raid.Player()!.Position).Length()}) = {index}");
         mask.Set(index);
         _uncovered.Set(index);
@@ -167,7 +167,7 @@ class Entrapment : Components.CastCounter
         mask &= ~_exploded; // don't draw already exploded traps
         foreach (var index in mask.SetBits())
         {
-            var pos = Module.Bounds.Center + CellOffset(index);
+            var pos = Module.Center + CellOffset(index);
             if (background)
                 Arena.ZoneCircle(pos, 2.5f, safe ? ArenaColor.SafeFromAOE : ArenaColor.AOE);
             else
@@ -216,7 +216,7 @@ class Entrapment : Components.CastCounter
 
 class EntrapmentNormal(BossModule module) : Entrapment(module, _allowedPatterns)
 {
-    private readonly static Pattern[] _allowedPatterns = [
+    private static readonly Pattern[] _allowedPatterns = [
         new() { Normal = BuildMask( 8,  9, 10, 11, 12, 13, 18, 20, 34, 35, 36, 37, 38, 40, 42, 45) },
         new() { Normal = BuildMask( 8,  9, 11, 16, 19, 20, 21, 22, 26, 30, 32, 36, 40, 41, 42, 45) },
         new() { Normal = BuildMask( 9, 11, 12, 13, 14, 16, 17, 27, 28, 32, 33, 38, 41, 42, 43, 44) },
@@ -227,7 +227,7 @@ class EntrapmentNormal(BossModule module) : Entrapment(module, _allowedPatterns)
 
 class EntrapmentInescapable(BossModule module) : Entrapment(module, _allowedPatterns)
 {
-    private readonly static Pattern[] _allowedPatterns = [
+    private static readonly Pattern[] _allowedPatterns = [
         new() { Normal = BuildMask(3, 4,  5,  8, 20, 25, 38, 43, 46, 49, 52), Toad = BuildMask(10, 50, 54), Ice = BuildMask(40), Mini = BuildMask(29) },
         new() { Normal = BuildMask(2, 5,  8, 11, 14, 16, 25, 29, 46, 49, 51), Toad = BuildMask( 0, 4, 44),  Ice = BuildMask(50), Mini = BuildMask(34) },
         new() { Normal = BuildMask(5, 8, 11, 16, 18, 22, 24, 29, 43, 49, 53), Toad = BuildMask( 6, 33, 38), Ice = BuildMask( 4), Mini = BuildMask(48) },

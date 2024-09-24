@@ -22,7 +22,7 @@ class Sandstorm(BossModule module) : Components.Cleave(module, ActionID.MakeSpel
 // TODO: pillars teleport right before cast, so we don't show them for now...
 class Submerge(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Earthbreak))
 {
-    private AOEShapeCircle _shape = new(14.5f);
+    private readonly AOEShapeCircle _shape = new(14.5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -43,4 +43,4 @@ class D092GiantTunnelWormStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12, NameID = 1589)]
-public class D092GiantTunnelWorm(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-140, 150), 20));
+public class D092GiantTunnelWorm(WorldState ws, Actor primary) : BossModule(ws, primary, new(-140, 150), new ArenaBoundsCircle(20));

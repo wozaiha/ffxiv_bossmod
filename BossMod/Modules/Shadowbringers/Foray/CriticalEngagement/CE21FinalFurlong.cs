@@ -18,7 +18,7 @@ public enum AID : uint
     HatefulMiasma = 20125, // Helper->players, 5.0s cast, range 6 circle stack
     PoisonedWords = 20126, // Helper->location, 5.0s cast, range 6 circle puddles
     TalonedGaze = 20127, // Boss->self, 4.0s cast, single-target, visual (front/back then sides)
-    TalonedWings = 20128, // Boss->self, 4,0s cast, single-target, visual, (sides then front/back)
+    TalonedWings = 20128, // Boss->self, 4.0s cast, single-target, visual, (sides then front/back)
     CoffinNails = 20129, // Helper->self, 4.7s cast, range 60 90-degree cone aoe
     Stab = 20130, // Boss->player, 4.0s cast, single-target, tankbuster
     GripOfPoison = 20131, // Boss->self, 4.0s cast, range 60 circle, raidwide
@@ -41,7 +41,7 @@ public enum TetherID : uint
 
 class GraspingRancor : Components.LocationTargetedAOEs
 {
-    private IReadOnlyList<Actor> _hands;
+    private readonly IReadOnlyList<Actor> _hands;
 
     public GraspingRancor(BossModule module) : base(module, ActionID.MakeSpell(AID.PurifyingLight), 12)
     {
@@ -104,4 +104,4 @@ class CE21FinalFurlongStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 6)] // bnpcname=9405
-public class CE21FinalFurlong(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(644, 228), 27));
+public class CE21FinalFurlong(WorldState ws, Actor primary) : BossModule(ws, primary, new(644, 228), new ArenaBoundsCircle(27));

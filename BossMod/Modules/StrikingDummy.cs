@@ -1,19 +1,44 @@
 ﻿#if false
-namespace BossMod.StrikingDummy
+using BossMod.Autorotation;
+
+namespace BossMod.StrikingDummy;
+
+public enum OID : uint
 {
-    public enum OID : uint
+    Boss = 0x385,
+}
+
+class StrikingDummyStates : StateMachineBuilder
+{
+    public StrikingDummyStates(BossModule module) : base(module)
     {
-        Boss = 0x385,
+        TrivialPhase();
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PlanLevel = 100)]
+public class StrikingDummy(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+
+public sealed class StrikingDummyRotation(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+{
+    public enum Track { Test }
+    public enum Strategy { None, Some }
+
+    public static RotationModuleDefinition Definition()
+    {
+        var res = new RotationModuleDefinition("Custom dummy rotation", "Example encounter-specific rotation", "veyn", RotationModuleQuality.WIP, new(~1ul), 100, 1, typeof(StrikingDummy));
+        res.Define(Track.Test).As<Strategy>("Test")
+            .AddOption(Strategy.None, "None", "Do nothing")
+            .AddOption(Strategy.Some, "Some", "I have some strategy and I follow it");
+        return res;
     }
 
-    class StrikingDummyStates : StateMachineBuilder
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
-        public StrikingDummyStates(BossModule module) : base(module)
+        if (strategy.Option(Track.Test).As<Strategy>() == Strategy.Some && primaryTarget != null)
         {
-            TrivialPhase();
+            Hints.ForcedMovement = (primaryTarget.Position - Player.Position).OrthoL().ToVec3();
         }
     }
-
-    public class StrikingDummy(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
 }
 #endif

@@ -8,11 +8,11 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AquaBreath = 14713, // 272B->self, 2,5s cast, range 8+R 90-degree cone
-    Megavolt = 14714, // 272B->self, 3,0s cast, range 6+R circle
-    ImpSong = 14712, // 272B->self, 6,0s cast, range 50+R circle
-    Waterspout = 14718, // 233C->location, 2,5s cast, range 4 circle
-    LightningBolt = 14717, // 233C->location, 3,0s cast, range 3 circle
+    AquaBreath = 14713, // 272B->self, 2.5s cast, range 8+R 90-degree cone
+    Megavolt = 14714, // 272B->self, 3.0s cast, range 6+R circle
+    ImpSong = 14712, // 272B->self, 6.0s cast, range 50+R circle
+    Waterspout = 14718, // 233C->location, 2.5s cast, range 4 circle
+    LightningBolt = 14717, // 233C->location, 3.0s cast, range 3 circle
 }
 
 class AquaBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AquaBreath), new AOEShapeCone(13.1f, 45.Degrees()));
@@ -47,7 +47,7 @@ class Stage20Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 7111, SortOrder = 2)]
 public class Stage20Act2 : BossModule
 {
-    public Stage20Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))
+    public Stage20Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
     {
         ActivateComponent<Hints>();
     }

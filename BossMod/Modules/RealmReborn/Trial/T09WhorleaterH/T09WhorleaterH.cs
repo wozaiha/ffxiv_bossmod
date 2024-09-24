@@ -21,7 +21,7 @@ class T09WhorleaterHStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "taurenkey, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 72, NameID = 2505)]
-public class T09WhorleaterH(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsRect(new(-0, 0), 14.5f, 20))
+public class T09WhorleaterH(WorldState ws, Actor primary) : BossModule(ws, primary, new(-0, 0), new ArenaBoundsRect(14.5f, 20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -38,9 +38,8 @@ public class T09WhorleaterH(WorldState ws, Actor primary) : BossModule(ws, prima
             Arena.Actor(c, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         var TankMimikry = actor.FindStatus(2124); //Bluemage Tank Mimikry
         foreach (var e in hints.PotentialTargets)
         {

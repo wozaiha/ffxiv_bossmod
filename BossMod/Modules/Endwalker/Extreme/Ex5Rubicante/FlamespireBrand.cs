@@ -53,7 +53,7 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
 
         if (NumCasts == 0)
         {
-            yield return new(_first, Module.Bounds.Center, _offset, _activation);
+            yield return new(_first, Module.Center, _offset, _activation);
         }
         else
         {
@@ -61,7 +61,7 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
             for (int i = 0; i < 4; ++i)
             {
                 var dir = i * 90.Degrees() + _offset;
-                yield return new(_rest, Module.Bounds.Center + offset * dir.ToDirection(), dir, _activation);
+                yield return new(_rest, Module.Center + offset * dir.ToDirection(), dir, _activation);
             }
         }
     }
@@ -103,6 +103,7 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
         {
             switch (state)
             {
+                // 00080004 when rotation ends
                 case 0x00010001:
                 case 0x00100010:
                     _offset = 45.Degrees();
@@ -113,7 +114,6 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
                     _offset = 0.Degrees();
                     _activation = WorldState.FutureTime(8.5f);
                     break;
-                // 00080004 when rotation ends
             }
         }
     }

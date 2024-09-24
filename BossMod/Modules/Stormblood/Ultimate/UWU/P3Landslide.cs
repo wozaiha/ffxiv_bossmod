@@ -8,7 +8,7 @@ class Landslide(BossModule module) : Components.GenericAOEs(module)
     public bool Awakened { get; private set; }
     public DateTime PredictedActivation;
     protected Actor? PredictedSource;
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
 
     public static readonly AOEShapeRect ShapeBoss = new(44.55f, 3, 4.55f);
     public static readonly AOEShapeRect ShapeHelper = new(40.5f, 3, 0.5f); // difference is only in hitbox radius
@@ -27,7 +27,7 @@ class Landslide(BossModule module) : Components.GenericAOEs(module)
         }
 
         foreach (var c in _casters)
-            yield return new((OID)c.OID == OID.Titan ? ShapeBoss : ShapeHelper, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+            yield return new((OID)c.OID == OID.Titan ? ShapeBoss : ShapeHelper, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -9,8 +9,8 @@ class ReactiveMunition(BossModule module) : Components.StayMove(module)
     {
         if ((SID)status.ID is SID.AccelerationBomb)
         {
-            if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0 && slot < Requirements.Length)
-                Requirements[slot] = Requirement.Stay;
+            if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+                PlayerStates[slot] = new(Requirement.Stay, default);
         }
     }
 
@@ -18,8 +18,8 @@ class ReactiveMunition(BossModule module) : Components.StayMove(module)
     {
         if ((SID)status.ID is SID.AccelerationBomb)
         {
-            if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0 && slot < Requirements.Length)
-                Requirements[slot] = Requirement.None;
+            if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+                PlayerStates[slot] = default;
         }
     }
 }
@@ -30,8 +30,8 @@ class SenseWeakness(BossModule module) : Components.StayMove(module)
     {
         if ((AID)spell.Action.ID == AID.SenseWeakness)
         {
-            if (Raid.FindSlot(caster.TargetID) is var slot && slot >= 0 && slot < Requirements.Length)
-                Requirements[slot] = Requirement.Move;
+            if (Raid.FindSlot(caster.TargetID) is var slot && slot >= 0)
+                PlayerStates[slot] = new(Requirement.Move, default);
         }
     }
 
@@ -39,8 +39,8 @@ class SenseWeakness(BossModule module) : Components.StayMove(module)
     {
         if ((AID)spell.Action.ID == AID.SenseWeakness)
         {
-            if (Raid.FindSlot(caster.TargetID) is var slot && slot >= 0 && slot < Requirements.Length)
-                Requirements[slot] = Requirement.None;
+            if (Raid.FindSlot(caster.TargetID) is var slot && slot >= 0)
+                PlayerStates[slot] = default;
         }
     }
 }
@@ -49,4 +49,4 @@ class MagitekImpetus(BossModule module) : Components.StatusDrivenForcedMarch(mod
 class ProactiveMunition(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(6), ActionID.MakeSpell(AID.ProactiveMunitionTrackingStart), ActionID.MakeSpell(AID.ProactiveMunitionTrackingMove), 6, 1, 5);
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "SourP", GroupType = BossModuleInfo.GroupType.BozjaDuel, GroupID = 778, NameID = 23)] // bnpcname=9695
-public class Duel5Menenius(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(-810, 520 /*y=260.3*/), 20));
+public class Duel5Menenius(WorldState ws, Actor primary) : BossModule(ws, primary, new(-810, 520 /*y=260.3*/), new ArenaBoundsSquare(20));

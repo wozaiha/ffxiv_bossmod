@@ -3,7 +3,7 @@
 // TODO: cast start/end?
 class Clearout(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
+    public List<AOEInstance> AOEs = [];
 
     private static readonly AOEShapeCone _shape = new(27, 90.Degrees()); // TODO: verify range, it's definitely bigger than what table suggests... maybe origin is wrong?
 
@@ -23,10 +23,10 @@ class AccursedEdge : Components.GenericBaitAway
     public enum Mechanic { None, Far, Near }
 
     private Mechanic _curMechanic;
-    private Clearout? _clearout;
+    private readonly Clearout? _clearout;
 
     private static readonly AOEShapeCircle _shape = new(6);
-    private static readonly WDir[] _safespotDirections = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+    private static readonly WDir[] _safespotDirections = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     public AccursedEdge(BossModule module) : base(module, centerAtTarget: true)
     {
@@ -67,7 +67,7 @@ class AccursedEdge : Components.GenericBaitAway
             var baitDistance = stayClose ? 12 : 19;
             foreach (var dir in _safespotDirections)
             {
-                var potentialSafespot = Module.Bounds.Center + baitDistance * dir;
+                var potentialSafespot = Module.Center + baitDistance * dir;
                 if (!_clearout.AOEs.Any(aoe => aoe.Check(potentialSafespot)))
                     Arena.AddCircle(potentialSafespot, 1, ArenaColor.Safe);
             }

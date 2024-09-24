@@ -9,7 +9,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Caladrius/Boss->player, no cast, single-target
-    TransonicBlast = 32535, // Caladrius->self, 4,0s cast, range 9 90-degree cone
+    TransonicBlast = 32535, // Caladrius->self, 4.0s cast, range 9 90-degree cone
 }
 
 class TransonicBlast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TransonicBlast), new AOEShapeCone(9, 45.Degrees()));
@@ -25,7 +25,7 @@ class D110CaladriusMaturusStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 12078)]
-public class D110CaladriusMaturus(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsRect(new(47, -570.5f), 8.5f, 11.5f))
+public class D110CaladriusMaturus(WorldState ws, Actor primary) : BossModule(ws, primary, new(47, -570.5f), new ArenaBoundsRect(8.5f, 11.5f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

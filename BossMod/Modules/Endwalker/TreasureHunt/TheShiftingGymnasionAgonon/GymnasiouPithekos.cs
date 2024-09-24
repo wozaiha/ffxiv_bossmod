@@ -6,21 +6,21 @@ public enum OID : uint
     BallOfLevin = 0x3E90,
     BossAdd = 0x3D2C, //R=4.2
     BossHelper = 0x233C,
-    BonusAdd_Lyssa = 0x3D4E, //R=3.75, bonus loot adds
+    BonusAddLyssa = 0x3D4E, //R=3.75, bonus loot adds
 }
 
 public enum AID : uint
 {
     Attack = 872, // Boss->player, no cast, single-target
-    Thundercall = 32212, // Boss->location, 2,5s cast, range 3 circle
-    LightningBolt = 32214, // Boss->self, 3,0s cast, single-target
-    LightningBolt2 = 32215, // BossHelper->location, 3,0s cast, range 6 circle
-    ThunderIV = 32213, // BallOfLevin->self, 7,0s cast, range 18 circle
-    Spark = 32216, // Boss->self, 4,0s cast, range 14-30 donut
+    Thundercall = 32212, // Boss->location, 2.5s cast, range 3 circle
+    LightningBolt = 32214, // Boss->self, 3.0s cast, single-target
+    LightningBolt2 = 32215, // BossHelper->location, 3.0s cast, range 6 circle
+    ThunderIV = 32213, // BallOfLevin->self, 7.0s cast, range 18 circle
+    Spark = 32216, // Boss->self, 4.0s cast, range 14-30 donut
     AutoAttack2 = 870, // BossAdds->player, no cast, single-target
-    RockThrow = 32217, // BossAdds->location, 3,0s cast, range 6 circle
-    SweepingGouge = 32211, // Boss->player, 5,0s cast, single-target
-    HeavySmash = 32317, // BossAdd_Lyssa -> location 3,0s cast, range 6 circle
+    RockThrow = 32217, // BossAdds->location, 3.0s cast, range 6 circle
+    SweepingGouge = 32211, // Boss->player, 5.0s cast, single-target
+    HeavySmash = 32317, // BossAdd_Lyssa -> location 3.0s cast, range 6 circle
 }
 
 public enum IconID : uint
@@ -60,7 +60,7 @@ class Thundercall2(BossModule module) : Components.GenericBaitAway(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (target == actor && targeted)
-            hints.AddForbiddenZone(ShapeDistance.Circle(Module.Bounds.Center, 18));
+            hints.AddForbiddenZone(ShapeDistance.Circle(Module.Center, 18));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -89,30 +89,29 @@ class PithekosStates : StateMachineBuilder
             .ActivateOnEnter<SweepingGouge>()
             .ActivateOnEnter<ThunderIV>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.BossAdd).All(e => e.IsDead) && module.Enemies(OID.BonusAdd_Lyssa).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.BossAdd).All(e => e.IsDead) && module.Enemies(OID.BonusAddLyssa).All(e => e.IsDead);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12001)]
-public class Pithekos(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+public class Pithekos(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor, ArenaColor.Enemy);
         foreach (var s in Enemies(OID.BossAdd))
             Arena.Actor(s, ArenaColor.Object);
-        foreach (var s in Enemies(OID.BonusAdd_Lyssa))
+        foreach (var s in Enemies(OID.BonusAddLyssa))
             Arena.Actor(s, ArenaColor.Vulnerable);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.BonusAdd_Lyssa => 3,
+                OID.BonusAddLyssa => 3,
                 OID.BossAdd => 2,
                 OID.Boss => 1,
                 _ => 0

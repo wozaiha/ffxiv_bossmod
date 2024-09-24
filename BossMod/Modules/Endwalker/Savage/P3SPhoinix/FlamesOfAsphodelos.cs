@@ -3,7 +3,7 @@
 // state related to flames of asphodelos mechanic
 class FlamesOfAsphodelos(BossModule module) : BossComponent(module)
 {
-    private Angle?[] _directions = new Angle?[3];
+    private readonly Angle?[] _directions = new Angle?[3];
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -67,8 +67,8 @@ class FlamesOfAsphodelos(BossModule module) : BossComponent(module)
     {
         if (dir != null)
         {
-            Arena.ZoneIsoscelesTri(Arena.Bounds.Center, dir.Value, 30.Degrees(), 50, color);
-            Arena.ZoneIsoscelesTri(Arena.Bounds.Center, dir.Value + 180.Degrees(), 30.Degrees(), 50, color);
+            Arena.ZoneIsoscelesTri(Module.Center, dir.Value, 30.Degrees(), 50, color);
+            Arena.ZoneIsoscelesTri(Module.Center, dir.Value + 180.Degrees(), 30.Degrees(), 50, color);
         }
     }
 
@@ -77,7 +77,7 @@ class FlamesOfAsphodelos(BossModule module) : BossComponent(module)
         if (dir == null)
             return false;
 
-        var toPos = (pos - Module.Bounds.Center).Normalized();
+        var toPos = (pos - Module.Center).Normalized();
         return MathF.Abs(dir.Value.ToDirection().Dot(toPos)) >= MathF.Cos(MathF.PI / 6);
     }
 }

@@ -3,15 +3,15 @@
 // TODO: this is essentialy copy-paste of DRS4 component, generalize?.. the only different thing is AIDs
 class WindsOfWeight(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<Actor> _green = new();
-    private List<Actor> _purple = new();
+    private readonly List<Actor> _green = [];
+    private readonly List<Actor> _purple = [];
     private BitMask _invertedPlayers;
 
     private static readonly AOEShapeCircle _shape = new(20);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return (_invertedPlayers[slot] ? _purple : _green).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt));
+        return (_invertedPlayers[slot] ? _purple : _green).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)

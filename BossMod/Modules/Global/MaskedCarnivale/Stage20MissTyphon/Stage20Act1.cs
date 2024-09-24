@@ -8,8 +8,8 @@ public enum OID : uint
 public enum AID : uint
 {
     Fungah = 14705, // 272A->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
-    Fireball = 14706, // 272A->location, 3,5s cast, range 8 circle
-    Snort = 14704, // 272A->self, 7,0s cast, range 50+R circle, stun, knockback 30 away from source
+    Fireball = 14706, // 272A->location, 3.5s cast, range 8 circle
+    Snort = 14704, // 272A->self, 7.0s cast, range 50+R circle, stun, knockback 30 away from source
     Fireball2 = 14707, // 272A->player, no cast, range 8 circle, 3 casts after snort
 }
 
@@ -45,7 +45,7 @@ class Stage20Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 3046, SortOrder = 1)]
 public class Stage20Act1 : BossModule
 {
-    public Stage20Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage20Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

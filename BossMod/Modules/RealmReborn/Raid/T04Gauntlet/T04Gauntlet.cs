@@ -36,7 +36,7 @@ class GravityThrustPox(BossModule module) : Components.GenericAOEs(module, defau
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var c in ((T04Gauntlet)Module).Rooks.Where(a => a.CastInfo?.TargetID == actor.InstanceID))
-            yield return new(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+            yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
     }
 }
 
@@ -44,7 +44,7 @@ class EmergencyOverride(BossModule module) : Components.CastCounter(module, Acti
 
 class T04GauntletStates : StateMachineBuilder
 {
-    private T04Gauntlet _module;
+    private readonly T04Gauntlet _module;
 
     public T04GauntletStates(T04Gauntlet module) : base(module)
     {
@@ -77,7 +77,7 @@ public class T04Gauntlet : BossModule
     public IReadOnlyList<Actor> Rooks;
     public IReadOnlyList<Actor> Dreadnaughts;
 
-    public T04Gauntlet(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 25))
+    public T04Gauntlet(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(25))
     {
         P1Bugs = Enemies(OID.ClockworkBugP1);
         Bugs = Enemies(OID.ClockworkBug);
@@ -87,10 +87,8 @@ public class T04Gauntlet : BossModule
         Dreadnaughts = Enemies(OID.ClockworkDreadnaught);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
-
         // note: we don't bother checking for physical/magical defense on knights/soldiers and just have everyone aoe them down; magic reflect is very small
         // note: we try to kill dreadnaught first, since it's the only dangerous thing here
         // note: we try to offtank all bugs and not have dreadnaught eat them

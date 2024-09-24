@@ -14,24 +14,24 @@ public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
     VauthrysBlessing = 15639, // Boss->self, no cast, single-target
-    OrisonFortissimo = 15636, // Boss->self, 4,0s cast, single-target
+    OrisonFortissimo = 15636, // Boss->self, 4.0s cast, single-target
     OrisonFortissimo2 = 15637, // 233C->self, no cast, range 50 circle
-    DivineDiminuendo = 15638, // Boss->self, 4,0s cast, range 8 circle
-    DivineDiminuendo1 = 15640, // Boss->self, 4,0s cast, range 8 circle
-    DivineDiminuendo2 = 15641, // 233C->self, 4,0s cast, range 10-16 donut
-    DivineDiminuendo3 = 18025, // 233C->self, 4,0s cast, range 18-32 donut
-    DivineDiminuendo4 = 15649, // BossClones->self, 4,0s cast, range 8 circle
-    ConvictionMarcato = 15642, // Boss->self, 4,0s cast, range 40 width 5 rect
-    ConvictionMarcato2 = 15643, // 233C->self, 4,0s cast, range 40 width 5 rect
-    ConvictionMarcato3 = 15648, // BossClones->self, 4,0s cast, range 40 width 5 rect
-    unknown = 16846, // 233C->self, 4,0s cast, single-target
-    PenancePianissimo = 15644, // Boss->self, 3,0s cast, single-target, inverted circle voidzone appears
-    FeatherMarionette = 15645, // Boss->self, 3,0s cast, single-target
-    SolitaireRing = 17066, // Boss->self, 3,5s cast, single-target
+    DivineDiminuendo = 15638, // Boss->self, 4.0s cast, range 8 circle
+    DivineDiminuendo1 = 15640, // Boss->self, 4.0s cast, range 8 circle
+    DivineDiminuendo2 = 15641, // 233C->self, 4.0s cast, range 10-16 donut
+    DivineDiminuendo3 = 18025, // 233C->self, 4.0s cast, range 18-32 donut
+    DivineDiminuendo4 = 15649, // BossClones->self, 4.0s cast, range 8 circle
+    ConvictionMarcato = 15642, // Boss->self, 4.0s cast, range 40 width 5 rect
+    ConvictionMarcato2 = 15643, // 233C->self, 4.0s cast, range 40 width 5 rect
+    ConvictionMarcato3 = 15648, // BossClones->self, 4.0s cast, range 40 width 5 rect
+    unknown = 16846, // 233C->self, 4.0s cast, single-target
+    PenancePianissimo = 15644, // Boss->self, 3.0s cast, single-target, inverted circle voidzone appears
+    FeatherMarionette = 15645, // Boss->self, 3.0s cast, single-target
+    SolitaireRing = 17066, // Boss->self, 3.5s cast, single-target
     Ringsmith = 15652, // Boss->self, no cast, single-target
-    GoldChaser = 15653, // Boss->self, 4,0s cast, single-target
+    GoldChaser = 15653, // Boss->self, 4.0s cast, single-target
     VenaAmoris = 15655, // Orbs->self, no cast, range 40 width 5 rect
-    SacramentSforzando = 15634, // Boss->self, 4,0s cast, single-target
+    SacramentSforzando = 15634, // Boss->self, 4.0s cast, single-target
     SacramentSforzando2 = 15635, // 233C->player, no cast, single-target
     SanctifiedStaccato = 15654, // 233C->self, no cast, range 3 circle, sort of a voidzone around the light orbs, only triggers if you get too close
 }
@@ -191,13 +191,13 @@ class Voidzone(BossModule module) : BossComponent(module)
     {
         if (state == 0x00040008)
         {
-            Module.Arena.Bounds = new ArenaBoundsRect(new(-240, 237), 15, 20);
+            Module.Arena.Bounds = new ArenaBoundsRect(15, 20);
             active = false;
         }
         if (state == 0x00010002)
         {
             active = true;
-            Module.Arena.Bounds = new ArenaBoundsCircle(new(-240, 237), 15);
+            Module.Arena.Bounds = new ArenaBoundsCircle(15);
         }
     }
 
@@ -205,7 +205,7 @@ class Voidzone(BossModule module) : BossComponent(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (active)
-            hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Sprint), actor, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
     }
 }
 
@@ -231,7 +231,7 @@ class D055ForgivenObscenityStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8262)]
-public class D055ForgivenObscenity(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsRect(new(-240, 237), 15, 20))
+public class D055ForgivenObscenity(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240, 237), new ArenaBoundsRect(15, 20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -11,13 +11,13 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss/BossAdd->player, no cast, single-target
-    PelagicCleaver = 32230, // Boss->self, 3,5s cast, range 40 60-degree cone
-    AquaticLance = 32231, // Boss->self, 4,0s cast, range 13 circle
-    FoulWaters = 32229, // Boss->location, 3,0s cast, range 3 circle, AOE + spawns bubble
-    Riptide = 32233, // Bubble->self, 1,0s cast, range 5 circle, pulls into bubble, dist 30 between centers
+    PelagicCleaver = 32230, // Boss->self, 3.5s cast, range 40 60-degree cone
+    AquaticLance = 32231, // Boss->self, 4.0s cast, range 13 circle
+    FoulWaters = 32229, // Boss->location, 3.0s cast, range 3 circle, AOE + spawns bubble
+    Riptide = 32233, // Bubble->self, 1.0s cast, range 5 circle, pulls into bubble, dist 30 between centers
     WateryGrave = 32234, // Bubble->self, no cast, range 2 circle, voidzone, imprisons player until status runs out
     NavalRam = 32232, // BossAdd->player, no cast, single-target
-    ProtolithicPuncture = 32228, // Boss->player, 5,0s cast, single-target
+    ProtolithicPuncture = 32228, // Boss->player, 5.0s cast, single-target
 }
 
 class PelagicCleaver(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver), new AOEShapeCone(40, 30.Degrees()));
@@ -39,7 +39,7 @@ class TritonStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12006)]
-public class Triton(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+public class Triton(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -48,9 +48,8 @@ public class Triton(WorldState ws, Actor primary) : BossModule(ws, primary, new 
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

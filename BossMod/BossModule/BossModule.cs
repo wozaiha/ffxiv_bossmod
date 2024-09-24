@@ -6,37 +6,36 @@ namespace BossMod;
 // by default, module activates (transitions to phase 0) whenever "primary" actor becomes both targetable and in combat (this is how we detect 'pull') - though this can be overridden if needed
 public abstract class BossModule : IDisposable
 {
-    public WorldState WorldState { get; init; }
-    public Actor PrimaryActor { get; init; }
-    public BossModuleConfig WindowConfig { get; init; }
-    public MiniArena Arena { get; init; }
-    public StateMachine StateMachine { get; private init; }
-    public ModuleRegistry.Info? Info { get; private init; }
-    // TODO: this should be moved outside...
-    public CooldownPlanningConfigNode? PlanConfig { get; init; }
-    public CooldownPlanExecution? PlanExecution = null;
+    public readonly WorldState WorldState;
+    public readonly Actor PrimaryActor;
+    public readonly BossModuleConfig WindowConfig = Service.Config.Get<BossModuleConfig>();
+    public readonly ColorConfig ColorConfig = Service.Config.Get<ColorConfig>();
+    public readonly MiniArena Arena;
+    public readonly ModuleRegistry.Info? Info;
+    public readonly StateMachine StateMachine;
 
-    public event Action<BossModule, BossComponent?, string>? Error;
+    private readonly EventSubscriptions _subscriptions;
+
+    public Event<BossModule, BossComponent?, string> Error = new();
 
     public PartyState Raid => WorldState.Party;
+    public WPos Center => Arena.Center;
     public ArenaBounds Bounds => Arena.Bounds;
+    public bool InBounds(WPos position) => Arena.InBounds(position);
 
     // per-oid enemy lists; filled on first request
-    private Dictionary<uint, List<Actor>> _relevantEnemies = new(); // key = actor OID
+    private readonly Dictionary<uint, List<Actor>> _relevantEnemies = []; // key = actor OID
     public IReadOnlyDictionary<uint, List<Actor>> RelevantEnemies => _relevantEnemies;
     public IReadOnlyList<Actor> Enemies(uint oid)
     {
-        var entry = _relevantEnemies.GetValueOrDefault(oid);
-        if (entry == null)
-        {
-            _relevantEnemies[oid] = entry = WorldState.Actors.Where(actor => actor.OID == oid).ToList();
-        }
+        IReadOnlyList<Actor>? entry = _relevantEnemies.GetValueOrDefault(oid);
+        entry ??= _relevantEnemies[oid] = WorldState.Actors.Where(actor => actor.OID == oid).ToList();
         return entry;
     }
     public IReadOnlyList<Actor> Enemies<OID>(OID oid) where OID : Enum => Enemies((uint)(object)oid);
 
     // component management: at most one component of any given type can be active at any time
-    private List<BossComponent> _components = new();
+    private readonly List<BossComponent> _components = [];
     public IReadOnlyList<BossComponent> Components => _components;
     public T? FindComponent<T>() where T : BossComponent => _components.OfType<T>().FirstOrDefault();
 
@@ -77,37 +76,35 @@ public abstract class BossModule : IDisposable
 
     public void ClearComponents(Predicate<BossComponent> condition) => _components.RemoveAll(condition);
 
-    public BossModule(WorldState ws, Actor primary, ArenaBounds bounds)
+    protected BossModule(WorldState ws, Actor primary, WPos center, ArenaBounds bounds)
     {
         WorldState = ws;
         PrimaryActor = primary;
-        WindowConfig = Service.Config.Get<BossModuleConfig>();
-        Arena = new(WindowConfig, bounds);
-
+        Arena = new(WindowConfig, center, bounds);
         Info = ModuleRegistry.FindByOID(primary.OID);
-        StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new(new());
-        if (Info?.CooldownPlanningSupported ?? false)
-        {
-            PlanConfig = Service.Config.Get<CooldownPlanningConfigNode>(Info.ConfigType!);
-            PlanConfig.Modified += OnPlanModified;
-        }
+        StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
 
-        WorldState.Actors.Added += OnActorCreated;
-        WorldState.Actors.Removed += OnActorDestroyed;
-        WorldState.Actors.CastStarted += OnActorCastStarted;
-        WorldState.Actors.CastFinished += OnActorCastFinished;
-        WorldState.Actors.Tethered += OnActorTethered;
-        WorldState.Actors.Untethered += OnActorUntethered;
-        WorldState.Actors.StatusGain += OnActorStatusGain;
-        WorldState.Actors.StatusLose += OnActorStatusLose;
-        WorldState.Actors.IconAppeared += OnActorIcon;
-        WorldState.Actors.CastEvent += OnActorCastEvent;
-        WorldState.Actors.EventObjectStateChange += OnActorEState;
-        WorldState.Actors.EventObjectAnimation += OnActorEAnim;
-        WorldState.Actors.PlayActionTimelineEvent += OnActorPlayActionTimelineEvent;
-        WorldState.Actors.EventNpcYell += OnActorNpcYell;
-        WorldState.Actors.ModelStateChanged += OnActorModelStateChange;
-        WorldState.EnvControl += OnEnvControl;
+        _subscriptions = new
+        (
+            WorldState.Actors.Added.Subscribe(OnActorCreated),
+            WorldState.Actors.Removed.Subscribe(OnActorDestroyed),
+            WorldState.Actors.CastStarted.Subscribe(OnActorCastStarted),
+            WorldState.Actors.CastFinished.Subscribe(OnActorCastFinished),
+            WorldState.Actors.Tethered.Subscribe(OnActorTethered),
+            WorldState.Actors.Untethered.Subscribe(OnActorUntethered),
+            WorldState.Actors.StatusGain.Subscribe(OnActorStatusGain),
+            WorldState.Actors.StatusLose.Subscribe(OnActorStatusLose),
+            WorldState.Actors.IconAppeared.Subscribe(OnActorIcon),
+            WorldState.Actors.CastEvent.Subscribe(OnActorCastEvent),
+            WorldState.Actors.EventObjectStateChange.Subscribe(OnActorEState),
+            WorldState.Actors.EventObjectAnimation.Subscribe(OnActorEAnim),
+            WorldState.Actors.PlayActionTimelineEvent.Subscribe(OnActorPlayActionTimelineEvent),
+            WorldState.Actors.EventNpcYell.Subscribe(OnActorNpcYell),
+            WorldState.Actors.ModelStateChanged.Subscribe(OnActorModelStateChange),
+            WorldState.EnvControl.Subscribe(OnEnvControl),
+            WorldState.DirectorUpdate.Subscribe(OnDirectorUpdate)
+        );
+
         foreach (var v in WorldState.Actors)
             OnActorCreated(v);
     }
@@ -120,44 +117,14 @@ public abstract class BossModule : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            StateMachine.Reset();
-            ClearComponents(_ => true);
+        StateMachine.Reset();
+        ClearComponents(_ => true);
 
-            if (PlanConfig != null)
-                PlanConfig.Modified -= OnPlanModified;
-
-            WorldState.Actors.Added -= OnActorCreated;
-            WorldState.Actors.Removed -= OnActorDestroyed;
-            WorldState.Actors.CastStarted -= OnActorCastStarted;
-            WorldState.Actors.CastFinished -= OnActorCastFinished;
-            WorldState.Actors.Tethered -= OnActorTethered;
-            WorldState.Actors.Untethered -= OnActorUntethered;
-            WorldState.Actors.StatusGain -= OnActorStatusGain;
-            WorldState.Actors.StatusLose -= OnActorStatusLose;
-            WorldState.Actors.IconAppeared -= OnActorIcon;
-            WorldState.Actors.CastEvent -= OnActorCastEvent;
-            WorldState.Actors.EventObjectStateChange -= OnActorEState;
-            WorldState.Actors.EventObjectAnimation -= OnActorEAnim;
-            WorldState.Actors.PlayActionTimelineEvent -= OnActorPlayActionTimelineEvent;
-            WorldState.Actors.EventNpcYell -= OnActorNpcYell;
-            WorldState.Actors.ModelStateChanged -= OnActorModelStateChange;
-            WorldState.EnvControl -= OnEnvControl;
-        }
+        _subscriptions.Dispose();
     }
 
     public void Update()
     {
-        // update cooldown plan if needed
-        var cls = Raid.Player()?.Class ?? Class.None;
-        var plan = PlanConfig?.SelectedPlan(cls);
-        if (PlanExecution == null || PlanExecution?.Plan != plan)
-        {
-            Service.Log($"[BM] Selected plan for '{GetType()}' ({PrimaryActor.InstanceID:X}) for {cls}: '{(plan?.Name ?? "<none>")}'");
-            PlanExecution = new(StateMachine, plan);
-        }
-
         if (StateMachine.ActivePhaseIndex < 0 && CheckPull())
             StateMachine.Start(WorldState.CurrentTime);
 
@@ -172,7 +139,7 @@ public abstract class BossModule : IDisposable
         }
     }
 
-    public void Draw(float cameraAzimuth, int pcSlot, bool includeText, bool includeArena)
+    public void Draw(Angle cameraAzimuth, int pcSlot, bool includeText, bool includeArena)
     {
         var pc = Raid[pcSlot];
         if (pc == null)
@@ -228,7 +195,7 @@ public abstract class BossModule : IDisposable
 
     public BossComponent.TextHints CalculateHintsForRaidMember(int slot, Actor actor)
     {
-        BossComponent.TextHints hints = new();
+        BossComponent.TextHints hints = [];
         foreach (var comp in _components)
             comp.AddHints(slot, actor, hints);
         return hints;
@@ -236,7 +203,7 @@ public abstract class BossModule : IDisposable
 
     public BossComponent.MovementHints CalculateMovementHintsForRaidMember(int slot, Actor actor)
     {
-        BossComponent.MovementHints hints = new();
+        BossComponent.MovementHints hints = [];
         foreach (var comp in _components)
             comp.AddMovementHints(slot, actor, hints);
         return hints;
@@ -244,18 +211,21 @@ public abstract class BossModule : IDisposable
 
     public BossComponent.GlobalHints CalculateGlobalHints()
     {
-        BossComponent.GlobalHints hints = new();
+        BossComponent.GlobalHints hints = [];
         foreach (var comp in _components)
             comp.AddGlobalHints(hints);
         return hints;
     }
 
-    // TODO: should not be virtual
-    public virtual void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    public void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        hints.Center = Center;
         hints.Bounds = Bounds;
         foreach (var comp in _components)
             comp.AddAIHints(slot, actor, assignment, hints);
+        CalculateModuleAIHints(slot, actor, assignment, hints);
+        if (!WindowConfig.AllowAutomaticActions)
+            hints.ActionsToExecute.Clear();
     }
 
     public virtual bool NeedToJump(WPos from, WDir dir) => false; // if arena has complicated shape that requires jumps to navigate, module can provide this info to AI
@@ -263,8 +233,12 @@ public abstract class BossModule : IDisposable
     public void ReportError(BossComponent? comp, string message)
     {
         Service.Log($"[ModuleError] [{GetType().Name}] [{comp?.GetType().Name}] {message}");
-        Error?.Invoke(this, comp, message);
+        Error.Fire(this, comp, message);
     }
+
+    // utility to calculate expected time when cast finishes (plus an optional delay); returns fallback value if argument is null
+    // for whatever reason, npc spells have reported remaining cast time consistently 0.3s smaller than reality - this delta is added automatically, in addition to optional delay
+    public DateTime CastFinishAt(ActorCastInfo? cast, float extraDelay = 0, DateTime fallback = default) => cast != null ? WorldState.FutureTime(cast.NPCRemainingTime + extraDelay) : fallback;
 
     // called during update if module is not yet active, should return true if it is to be activated
     // default implementation activates if primary target is both targetable and in combat
@@ -273,6 +247,7 @@ public abstract class BossModule : IDisposable
     protected virtual void UpdateModule() { }
     protected virtual void DrawArenaBackground(int pcSlot, Actor pc) { } // before modules background
     protected virtual void DrawArenaForeground(int pcSlot, Actor pc) { } // after border, before modules foreground
+    protected virtual void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
 
     // called at the very end to draw important enemies, default implementation draws primary actor
     protected virtual void DrawEnemies(int pcSlot, Actor pc)
@@ -331,7 +306,9 @@ public abstract class BossModule : IDisposable
         foreach (var (slot, player) in Raid.WithSlot().Exclude(pcSlot))
         {
             var (prio, color) = CalculateHighestPriority(pcSlot, pc, slot, player);
-            if (prio == BossComponent.PlayerPriority.Irrelevant && !WindowConfig.ShowIrrelevantPlayers)
+
+            bool isFocus = WorldState.Client.FocusTargetId == player.InstanceID;
+            if (prio == BossComponent.PlayerPriority.Irrelevant && !WindowConfig.ShowIrrelevantPlayers && !(isFocus && WindowConfig.ShowFocusTargetPlayer))
                 continue;
 
             if (color == 0)
@@ -343,6 +320,27 @@ public abstract class BossModule : IDisposable
                     BossComponent.PlayerPriority.Critical => ArenaColor.Vulnerable, // TODO: select some better color...
                     _ => ArenaColor.PlayerGeneric
                 };
+
+                if (color == ArenaColor.PlayerGeneric)
+                {
+                    // optional focus/role-based overrides
+                    if (isFocus)
+                    {
+                        color = ColorConfig.ArenaPlayerGenericFocus.ABGR;
+                    }
+                    else if (WindowConfig.ColorPlayersBasedOnRole)
+                    {
+                        color = player.ClassCategory switch
+                        {
+                            ClassCategory.Tank => ColorConfig.ArenaPlayerGenericTank.ABGR,
+                            ClassCategory.Healer => ColorConfig.ArenaPlayerGenericHealer.ABGR,
+                            ClassCategory.Melee => ColorConfig.ArenaPlayerGenericMelee.ABGR,
+                            ClassCategory.Caster => ColorConfig.ArenaPlayerGenericCaster.ABGR,
+                            ClassCategory.PhysRanged => ColorConfig.ArenaPlayerGenericPhysRanged.ABGR,
+                            _ => color
+                        };
+                    }
+                }
             }
             Arena.Actor(player, color);
         }
@@ -363,12 +361,6 @@ public abstract class BossModule : IDisposable
             }
         }
         return (highestPrio, color);
-    }
-
-    private void OnPlanModified()
-    {
-        Service.Log($"[BM] Detected plan modification for '{GetType()}', resetting execution");
-        PlanExecution = null;
     }
 
     private void OnActorCreated(Actor actor)
@@ -473,5 +465,11 @@ public abstract class BossModule : IDisposable
     {
         foreach (var comp in _components)
             comp.OnEventEnvControl(op.Index, op.State);
+    }
+
+    private void OnDirectorUpdate(WorldState.OpDirectorUpdate op)
+    {
+        foreach (var comp in _components)
+            comp.OnEventDirectorUpdate(op.UpdateID, op.Param1, op.Param2, op.Param3, op.Param4);
     }
 }

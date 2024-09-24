@@ -11,17 +11,17 @@ public enum AID : uint
     AutoAttack = 870, // Boss->player, no cast, single-target
     Teleport = 32625, // Boss->location, no cast, single-target, boss teleports to spot marked by icons 1,2,3,4 or to mid
     WaningCycle0 = 32623, // Boss->self, no cast, single-target (between in->out)
-    WaningCycle1 = 32622, // Boss->self, 4,0s cast, range 10-40 donut
-    WaningCycle2 = 32624, // Helper->self, 6,0s cast, range 10 circle
+    WaningCycle1 = 32622, // Boss->self, 4.0s cast, range 10-40 donut
+    WaningCycle2 = 32624, // Helper->self, 6.0s cast, range 10 circle
     WaxingCycle0 = 31378, // Boss->self, no cast, single-target (between out->in)
-    WaxingCycle1 = 31377, // Boss->self, 4,0s cast, range 10 circle
-    WaxingCycle2 = 31379, // Helper->self, 6,7s cast, range 10-40 donut
-    SoulScythe = 31386, // Boss->location, 6,0s cast, range 18 circle
-    SoulNebula = 31390, // Boss->self, 5,0s cast, range 40 circle, raidwide
-    ScarecrowChase = 31387, // Boss->self, 8,0s cast, single-target
+    WaxingCycle1 = 31377, // Boss->self, 4.0s cast, range 10 circle
+    WaxingCycle2 = 31379, // Helper->self, 6.7s cast, range 10-40 donut
+    SoulScythe = 31386, // Boss->location, 6.0s cast, range 18 circle
+    SoulNebula = 31390, // Boss->self, 5.0s cast, range 40 circle, raidwide
+    ScarecrowChase = 31387, // Boss->self, 8.0s cast, single-target
     ScarecrowChase2 = 31389, // Boss->self, no cast, single-target
-    ScarecrowChase3 = 32703, // Helper->self, 1,8s cast, range 40 width 10 cross
-    Tenebrism = 31382, // Boss->self, 4,0s cast, range 40 circle, small raidwide, spawns 4 towers, applies glass-eyed on tower resolve
+    ScarecrowChase3 = 32703, // Helper->self, 1.8s cast, range 40 width 10 cross
+    Tenebrism = 31382, // Boss->self, 4.0s cast, range 40 circle, small raidwide, spawns 4 towers, applies glass-eyed on tower resolve
     Burst = 31383, // Helper->self, no cast, range 5 circle, tower success
     BigBurst = 31384, // Helper->self, no cast, range 60 circle, tower fail
     StonyGaze = 31385, // Helper->self, no cast, gaze
@@ -66,7 +66,7 @@ class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventIcon(Actor actor, uint iconID)
     {
         var icon = (IconID)iconID;
-        if (icon >= IconID.Icon1 && icon <= IconID.Icon4)
+        if (icon is >= IconID.Icon1 and <= IconID.Icon4)
         {
             _casters.Add((actor, iconID));
             if (_activation == default)
@@ -96,7 +96,7 @@ class OutInAOE(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.WaxingCycle1)
-            AddSequence(Module.Bounds.Center, spell.NPCFinishAt);
+            AddSequence(Module.Center, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -121,7 +121,7 @@ class InOutAOE(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.WaningCycle1)
-            AddSequence(Module.Bounds.Center, spell.NPCFinishAt);
+            AddSequence(Module.Center, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -240,9 +240,9 @@ class Doom(BossModule module) : BossComponent(module)
         foreach (var c in _doomed)
         {
             if (_doomed.Count > 0 && actor.Role == Role.Healer)
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Esuna), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
             if (_doomed.Count > 0 && actor.Class == Class.BRD)
-                hints.PlannedActions.Add((ActionID.MakeSpell(BRD.AID.WardensPaean), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
         }
     }
 }
@@ -265,4 +265,4 @@ class D112GalateaMagnaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 10308)]
-public class D112GalateaMagna(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(350, -394), 19.5f));
+public class D112GalateaMagna(WorldState ws, Actor primary) : BossModule(ws, primary, new(350, -394), new ArenaBoundsCircle(19.5f));

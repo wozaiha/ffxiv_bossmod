@@ -53,10 +53,10 @@ class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var length = Module.Bounds.HalfSize * 2; // casters are at the border, orthogonal to borders
+        var length = Module.Bounds.Radius * 2; // casters are at the border, orthogonal to borders
         foreach (var c in Casters)
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(c.Position, c.CastInfo!.Rotation, length, Distance - length, 6), c.CastInfo!.NPCFinishAt);
+            hints.AddForbiddenZone(ShapeDistance.Rect(c.Position, c.CastInfo!.Rotation, length, Distance - length, 6), Module.CastFinishAt(c.CastInfo!));
         }
     }
 }
@@ -64,7 +64,7 @@ class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module
 class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.LunarCry), 80, false)
 {
     private readonly List<Actor> _safePillars = [];
-    private BracingWind? _knockback = module.FindComponent<BracingWind>();
+    private readonly BracingWind? _knockback = module.FindComponent<BracingWind>();
 
     public override IEnumerable<Actor> BlockerActors() => _safePillars;
 
@@ -97,7 +97,7 @@ class ThermalGust(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(60, 2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, c.CastInfo?.NPCFinishAt ?? _activation));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, Module.CastFinishAt(c.CastInfo, 0, _activation)));
 
     public override void OnActorCreated(Actor actor)
     {
@@ -134,11 +134,11 @@ class AgeOfEndlessFrost(BossModule module) : Components.GenericAOEs(module)
         {
             case AID.AgeOfEndlessFrostFirstCW:
                 _increment = -40.Degrees();
-                _nextActivation = spell.NPCFinishAt;
+                _nextActivation = Module.CastFinishAt(spell);
                 break;
             case AID.AgeOfEndlessFrostFirstCCW:
                 _increment = 40.Degrees();
-                _nextActivation = spell.NPCFinishAt;
+                _nextActivation = Module.CastFinishAt(spell);
                 break;
             case AID.AgeOfEndlessFrostFirstAOE:
                 NumCasts = 0;
@@ -198,9 +198,9 @@ class CE54NeverCryWolfStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
 public class CE54NeverCryWolf : BossModule
 {
-    private IReadOnlyList<Actor> _adds;
+    private readonly IReadOnlyList<Actor> _adds;
 
-    public CE54NeverCryWolf(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-830, 190), 24))
+    public CE54NeverCryWolf(WorldState ws, Actor primary) : base(ws, primary, new(-830, 190), new ArenaBoundsSquare(24))
     {
         _adds = Enemies(OID.Imaginifer);
     }

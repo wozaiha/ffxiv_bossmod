@@ -2,9 +2,9 @@
 
 class GoldenSilverFlame(BossModule module) : BossComponent(module)
 {
-    private List<Actor> _goldenFlames = new();
-    private List<Actor> _silverFlames = new();
-    private int[] _debuffs = new int[PartyState.MaxPartySize]; // silver << 16 | gold
+    private readonly List<Actor> _goldenFlames = [];
+    private readonly List<Actor> _silverFlames = [];
+    private readonly int[] _debuffs = new int[PartyState.MaxPartySize]; // silver << 16 | gold
 
     public bool Active => _goldenFlames.Count + _silverFlames.Count > 0;
 
@@ -66,8 +66,8 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
 
     private IEnumerable<WPos> SafeCenters(int debuff)
     {
-        var limit = Module.Bounds.Center + new WDir(Module.Bounds.HalfSize, Module.Bounds.HalfSize);
-        var first = Module.Bounds.Center - new WDir(Module.Bounds.HalfSize - _shape.HalfWidth, Module.Bounds.HalfSize - _shape.HalfWidth);
+        var limit = Module.Center + new WDir(Module.Bounds.Radius, Module.Bounds.Radius);
+        var first = Module.Center - new WDir(Module.Bounds.Radius - _shape.HalfWidth, Module.Bounds.Radius - _shape.HalfWidth);
         var advance = 2 * _shape.HalfWidth;
         for (float x = first.X; x < limit.X; x += advance)
             for (float z = first.Z; z < limit.Z; z += advance)

@@ -24,13 +24,13 @@ class Border(BossModule module) : BossComponent(module)
     {
         if (!_threePlatforms)
         {
-            Arena.AddCircle(Module.Bounds.Center, LargePlatformRadius, ArenaColor.Border);
+            Arena.AddCircle(Module.Center, LargePlatformRadius, ArenaColor.Border);
         }
         else
         {
-            var cs = Module.Bounds.Center + PlatformSOffset;
-            var ce = Module.Bounds.Center + PlatformEOffset;
-            var cw = Module.Bounds.Center + PlatformWOffset;
+            var cs = Module.Center + PlatformSOffset;
+            var ce = Module.Center + PlatformEOffset;
+            var cw = Module.Center + PlatformWOffset;
             Arena.AddCircle(cs, SmallPlatformRadius, ArenaColor.Border);
             Arena.AddCircle(ce, SmallPlatformRadius, ArenaColor.Border);
             Arena.AddCircle(cw, SmallPlatformRadius, ArenaColor.Border);
@@ -48,9 +48,9 @@ class Border(BossModule module) : BossComponent(module)
             }
             if (_bridgeCenter)
             {
-                DrawBridge(cs, Module.Bounds.Center, true);
-                DrawBridge(ce, Module.Bounds.Center, true);
-                DrawBridge(cw, Module.Bounds.Center, true);
+                DrawBridge(cs, Module.Center, true);
+                DrawBridge(ce, Module.Center, true);
+                DrawBridge(cw, Module.Center, true);
             }
         }
     }
@@ -62,15 +62,15 @@ class Border(BossModule module) : BossComponent(module)
             case 0: // small platforms
                 switch (state)
                 {
+                    // 0x00200010 - large platform disappears?
+                    // 0x00800040 - small platforms appear?
+                    // 0x08000004 - small platforms disappear?
                     case 0x00020001: // this is preparation
                         _threePlatforms = true;
                         break;
                     case 0x02000100: // this is preparation
                         _threePlatforms = false;
                         break;
-                    // 0x00200010 - large platform disappears?
-                    // 0x00800040 - small platforms appear?
-                    // 0x08000004 - small platforms disappear?
                 }
                 break;
             case 1: // bridge N

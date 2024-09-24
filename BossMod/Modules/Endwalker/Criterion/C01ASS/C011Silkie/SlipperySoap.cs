@@ -34,7 +34,9 @@ class SlipperySoapCharge(BossModule module) : Components.Knockback(module)
         if (_chargeTarget != null)
         {
             var toTarget = _chargeTarget.Position - Module.PrimaryActor.Position;
-            _chargeShape.LengthFront = toTarget.Length() + 0.01f; // add eps to ensure charge target is considered 'inside'
+            var len = toTarget.Length() + 0.01f; // add eps to ensure charge target is considered 'inside'
+            if (_chargeShape.LengthFront != len)
+                _chargeShape = _chargeShape with { LengthFront = len };
             _chargeDir = Angle.FromDirection(toTarget); // keep shape's offset zero to properly support dir-forward
         }
     }

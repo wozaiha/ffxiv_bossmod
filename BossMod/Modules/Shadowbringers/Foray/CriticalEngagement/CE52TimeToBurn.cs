@@ -37,7 +37,7 @@ class TimeEruptionBombReproduce(BossModule module) : Components.GenericAOEs(modu
 {
     private DateTime _bombsActivation;
     private DateTime _eruptionStart; // timestamp of StartTime cast start
-    private IReadOnlyList<Actor> _bombs = module.Enemies(OID.TimeBomb1); // either 1 or 2 works, dunno what's the difference
+    private readonly IReadOnlyList<Actor> _bombs = module.Enemies(OID.TimeBomb1); // either 1 or 2 works, dunno what's the difference
     private readonly List<Actor> _cycloneCasters = [];
     private readonly List<(WPos pos, TimeSpan delay)> _clocks = [];
     private readonly List<WPos> _eruptionSafeSpots = [];
@@ -56,7 +56,7 @@ class TimeEruptionBombReproduce(BossModule module) : Components.GenericAOEs(modu
         else if (_cycloneCasters.Count > 0)
         {
             foreach (var c in _cycloneCasters)
-                yield return new(_shapeCyclone, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+                yield return new(_shapeCyclone, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
         }
         else if (_eruptionStart != default)
         {
@@ -148,4 +148,4 @@ class CE52TimeToBurnStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 26)] // bnpcname=9930
-public class CE52TimeToBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(-550, 0), 30));
+public class CE52TimeToBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-550, 0), new ArenaBoundsSquare(30));

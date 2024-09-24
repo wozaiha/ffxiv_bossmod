@@ -4,10 +4,11 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
 {
     private Actor? _boss;
     private Angle _bossAngle;
-    private Angle[] _playerAngles = new Angle[PartyState.MaxPartySize];
-    private int[] _playerOrder = new int[PartyState.MaxPartySize];
+    private readonly Angle[] _playerAngles = new Angle[PartyState.MaxPartySize];
+    private readonly int[] _playerOrder = new int[PartyState.MaxPartySize];
     private int _numPlayerAngles;
-    private List<int> _monitorOrder = new();
+    private readonly List<int> _monitorOrder = [];
+    private readonly TOPConfig _config = Service.Config.Get<TOPConfig>();
 
     private static readonly AOEShapeRect _shape = new(50, 50);
 
@@ -85,20 +86,28 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
         if (_numPlayerAngles < 3 || _bossAngle == default)
             yield break;
 
-        WPos adjust(float x, float z) => Module.Bounds.Center + new WDir(_bossAngle.Rad < 0 ? -x : x, z);
+        WPos adjust(float x, float z) => Module.Center + new WDir(_bossAngle.Rad < 0 ? -x : x, z);
         if (IsMonitor(slot))
         {
-            yield return (adjust(10, -11), _playerOrder[slot] == 1);
-            yield return (adjust(-11, -9), _playerOrder[slot] == 2);
-            yield return (adjust(-11, +9), _playerOrder[slot] == 3);
+            var nextSlot = 0;
+            if (!_config.P3LastMonitorSouth)
+                yield return (adjust(10, -11), _playerOrder[slot] == ++nextSlot);
+            yield return (adjust(-11, -9), _playerOrder[slot] == ++nextSlot);
+            yield return (adjust(-11, +9), _playerOrder[slot] == ++nextSlot);
+            if (_config.P3LastMonitorSouth)
+                yield return (adjust(10, 11), _playerOrder[slot] == ++nextSlot);
         }
         else
         {
-            yield return (adjust(1, -15), _playerOrder[slot] == 1);
-            yield return (adjust(15, -4), _playerOrder[slot] == 2);
-            yield return (adjust(15, +4), _playerOrder[slot] == 3);
-            yield return (adjust(10, 11), _playerOrder[slot] == 4);
-            yield return (adjust(1, 15), _playerOrder[slot] == 5);
+            var nextSlot = 0;
+            yield return (adjust(1, -15), _playerOrder[slot] == ++nextSlot);
+            if (_config.P3LastMonitorSouth)
+                yield return (adjust(10, -11), _playerOrder[slot] == ++nextSlot);
+            yield return (adjust(15, -4), _playerOrder[slot] == ++nextSlot);
+            yield return (adjust(15, +4), _playerOrder[slot] == ++nextSlot);
+            if (!_config.P3LastMonitorSouth)
+                yield return (adjust(10, 11), _playerOrder[slot] == ++nextSlot);
+            yield return (adjust(1, 15), _playerOrder[slot] == ++nextSlot);
         }
     }
 
@@ -133,7 +142,7 @@ class P3OversampledWaveCannonSpread(BossModule module) : Components.UniformStack
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.OversampledWaveCannonR or AID.OversampledWaveCannonL)
-            AddSpreads(Raid.WithoutSlot(true), spell.NPCFinishAt);
+            AddSpreads(Raid.WithoutSlot(true), Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

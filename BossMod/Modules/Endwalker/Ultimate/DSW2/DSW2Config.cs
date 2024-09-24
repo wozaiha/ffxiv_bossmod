@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Endwalker.Ultimate.DSW2;
 
 [ConfigDisplay(Order = 0x201, Parent = typeof(EndwalkerConfig))]
-public class DSW2Config() : CooldownPlanningConfigNode(90)
+public class DSW2Config() : ConfigNode()
 {
     [PropertyDisplay("P2 Sanctity of the Ward (charges): group assignments")]
     [GroupDetails(["West/Across", "East/Behind"])]
@@ -14,6 +14,9 @@ public class DSW2Config() : CooldownPlanningConfigNode(90)
 
     [PropertyDisplay("P2 Sanctity of the Ward (charges): role responsible for balancing groups (if not set, swap with role partner instead)")]
     public Role P2SanctitySwapRole;
+
+    [PropertyDisplay("P2 Sanctity of the Ward (meteors): automatically use knockback immunity if needed")]
+    public bool P2Sanctity2AutomaticAntiKB = true;
 
     [PropertyDisplay("P2 Sanctity of the Ward (meteors): pair assignments")]
     [GroupDetails(["North", "East", "South", "West"])]

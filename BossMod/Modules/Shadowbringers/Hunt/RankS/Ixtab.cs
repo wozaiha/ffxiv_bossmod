@@ -8,18 +8,18 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 17850, // Boss->player, no cast, single-target
-    TartareanAbyss = 17848, // Boss->players, 4,0s cast, range 6 circle
-    TartareanFlare = 17846, // Boss->location, 4,5s cast, range 18 circle
-    TartareanBlizzard = 17845, // Boss->self, 3,0s cast, range 40 45-degree cone
-    TartareanFlame = 17999, // Boss->self, 5,0s cast, range 8-40 donut
+    TartareanAbyss = 17848, // Boss->players, 4.0s cast, range 6 circle
+    TartareanFlare = 17846, // Boss->location, 4.5s cast, range 18 circle
+    TartareanBlizzard = 17845, // Boss->self, 3.0s cast, range 40 45-degree cone
+    TartareanFlame = 17999, // Boss->self, 5.0s cast, range 8-40 donut
     TartareanFlame2 = 18074, // Boss->self, no cast, range 8-40 donut
-    TartareanThunder = 17843, // Boss->location, 5,0s cast, range 20 circle
+    TartareanThunder = 17843, // Boss->location, 5.0s cast, range 20 circle
     TartareanThunder2 = 18075, // Boss->location, no cast, range 20 circle
-    TartareanMeteor = 17844, // Boss->players, 5,0s cast, range 10 circle
-    ArchaicDualcast = 18077, // Boss->self, 3,0s cast, single-target, either out/in or in/out with Tartarean Flame and Tartarean Thunder
-    Cryptcall = 17847, // Boss->self/players, 3,0s cast, range 35+R 120-degree cone, sets hp to 1, applies heal to full doom with 25s duration
-    TartareanQuake = 17849, // Boss->self, 4,0s cast, range 40 circle
-    TartareanTwister = 18072, // Boss->self, 5,0s cast, range 55 circle, raidwide + windburn DoT, interruptible
+    TartareanMeteor = 17844, // Boss->players, 5.0s cast, range 10 circle
+    ArchaicDualcast = 18077, // Boss->self, 3.0s cast, single-target, either out/in or in/out with Tartarean Flame and Tartarean Thunder
+    Cryptcall = 17847, // Boss->self/players, 3.0s cast, range 35+R 120-degree cone, sets hp to 1, applies heal to full doom with 25s duration
+    TartareanQuake = 17849, // Boss->self, 4.0s cast, range 40 circle
+    TartareanTwister = 18072, // Boss->self, 5.0s cast, range 55 circle, raidwide + windburn DoT, interruptible
 }
 
 public enum SID : uint
@@ -32,7 +32,7 @@ public enum SID : uint
 
 class DualCastTartareanFlameThunder(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle circle = new(20);
     private static readonly AOEShapeDonut donut = new(8, 40);
 
@@ -43,19 +43,19 @@ class DualCastTartareanFlameThunder(BossModule module) : Components.GenericAOEs(
         var dualcast = Module.PrimaryActor.FindStatus(SID.Dualcast) != null;
         if ((AID)spell.Action.ID == AID.TartareanThunder)
             if (!dualcast)
-                _aoes.Add(new(circle, caster.Position, default, spell.NPCFinishAt));
+                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell)));
             else
             {
-                _aoes.Add(new(circle, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(donut, caster.Position, default, spell.NPCFinishAt.AddSeconds(5.1f)));
+                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell, 5.1f)));
             }
         if ((AID)spell.Action.ID == AID.TartareanFlame)
             if (!dualcast)
-                _aoes.Add(new(donut, caster.Position, default, spell.NPCFinishAt));
+                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell)));
             else
             {
-                _aoes.Add(new(donut, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(circle, caster.Position, default, spell.NPCFinishAt.AddSeconds(5.1f)));
+                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell, 5.1f)));
             }
     }
 
@@ -126,9 +126,9 @@ class Doom(BossModule module) : BossComponent(module)
         foreach (var c in _doomed)
         {
             if (_doomed.Count > 0 && actor.Role == Role.Healer)
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Esuna), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
             if (_doomed.Count > 0 && actor.Class == Class.BRD)
-                hints.PlannedActions.Add((ActionID.MakeSpell(BRD.AID.WardensPaean), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
         }
     }
 }

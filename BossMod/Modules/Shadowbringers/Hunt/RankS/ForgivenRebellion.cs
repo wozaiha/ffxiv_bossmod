@@ -8,21 +8,21 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
-    SanctifiedBlizzard = 17598, // Boss->self, 3,0s cast, range 40 45-degree cone
-    RoyalDecree = 17597, // Boss->self, 4,0s cast, range 40 circle, raidwide
-    SanctifiedBlizzardChain = 17628, // Boss->self, 5,0s cast, range 40 45-degree cone, seems to rotate 45° in a random direction, no AID or Icon to tell apart
-    SanctifiedBlizzardChain2 = 17629, // Boss->self, 0,5s cast, range 40 45-degree cone
-    SanctifiedBlizzardChain3 = 18080, // Boss->self, 0,5s cast, range 40 45-degree cone
-    HeavenlyScythe = 17600, // Boss->self, 2,5s cast, range 10 circle
+    SanctifiedBlizzard = 17598, // Boss->self, 3.0s cast, range 40 45-degree cone
+    RoyalDecree = 17597, // Boss->self, 4.0s cast, range 40 circle, raidwide
+    SanctifiedBlizzardChain = 17628, // Boss->self, 5.0s cast, range 40 45-degree cone, seems to rotate 45° in a random direction, no AID or Icon to tell apart
+    SanctifiedBlizzardChain2 = 17629, // Boss->self, 0.5s cast, range 40 45-degree cone
+    SanctifiedBlizzardChain3 = 18080, // Boss->self, 0.5s cast, range 40 45-degree cone
+    HeavenlyScythe = 17600, // Boss->self, 2.5s cast, range 10 circle
     Transference = 17611, // Boss->player, no cast, single-target, gap closer
-    RotateCW = 18078, // Boss->self, 0,5s cast, single-target
-    RotateCCW = 18079, // Boss->self, 0,5s cast, single-target
-    HeavenlyCyclone = 18126, // Boss->self, 5,0s cast, range 28 180-degree cone
-    HeavenlyCyclone1 = 18127, // Boss->self, 0,5s cast, range 28 180-degree cone
-    HeavenlyCyclone2 = 18128, // Boss->self, 0,5s cast, range 28 180-degree cone
-    Mindjack = 17599, // Boss->self, 4,0s cast, range 40 circle, applies forced march buffs
-    RagingFire = 17601, // Boss->self, 5,0s cast, range 5-40 donut
-    Interference = 17602, // Boss->self, 4,5s cast, range 28 180-degree cone
+    RotateCW = 18078, // Boss->self, 0.5s cast, single-target
+    RotateCCW = 18079, // Boss->self, 0.5s cast, single-target
+    HeavenlyCyclone = 18126, // Boss->self, 5.0s cast, range 28 180-degree cone
+    HeavenlyCyclone1 = 18127, // Boss->self, 0.5s cast, range 28 180-degree cone
+    HeavenlyCyclone2 = 18128, // Boss->self, 0.5s cast, range 28 180-degree cone
+    Mindjack = 17599, // Boss->self, 4.0s cast, range 40 circle, applies forced march buffs
+    RagingFire = 17601, // Boss->self, 5.0s cast, range 5-40 donut
+    Interference = 17602, // Boss->self, 4.5s cast, range 28 180-degree cone
 }
 
 public enum SID : uint
@@ -83,7 +83,7 @@ class SanctifiedBlizzardChain(BossModule module) : Components.GenericRotatingAOE
     {
         if ((AID)spell.Action.ID == AID.SanctifiedBlizzardChain)
         {
-            _activation = spell.NPCFinishAt;
+            _activation = Module.CastFinishAt(spell);
             _rot1 = spell.Rotation;
         }
         if ((AID)spell.Action.ID is AID.SanctifiedBlizzardChain2 or AID.SanctifiedBlizzardChain3)
@@ -145,7 +145,7 @@ class HeavenlyCyclone(BossModule module) : Components.GenericRotatingAOE(module)
         if ((AID)spell.Action.ID is AID.RotateCW or AID.RotateCCW)
         {
             _rotation = spell.Rotation;
-            _activation = spell.NPCFinishAt.AddSeconds(5.2f);
+            _activation = Module.CastFinishAt(spell, 5.2f);
         }
         if (_rotation != default)
             InitIfReady(caster);

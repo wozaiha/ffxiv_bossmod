@@ -8,7 +8,7 @@ public enum OID : uint
 public enum AID : uint
 {
     Syrup = 14757, // 271E->player, no cast, range 4 circle, applies heavy to player
-    TheLastSong = 14756, // 271E->self, 6,0s cast, range 60 circle, heavy dmg, applies silence to player
+    TheLastSong = 14756, // 271E->self, 6.0s cast, range 60 circle, heavy dmg, applies silence to player
 }
 
 class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.TheLastSong), 60, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
@@ -58,7 +58,7 @@ class Stage14Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 624, NameID = 8108, SortOrder = 2)]
 public class Stage14Act2 : BossModule
 {
-    public Stage14Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage14Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<LayoutBigQuad>();

@@ -16,7 +16,7 @@ public class StateMachineTree
         public bool IsVulnerable;
         public StateMachine.State State;
         public Node? Predecessor;
-        public List<Node> Successors = new();
+        public List<Node> Successors = [];
 
         internal Node(float t, int phaseID, int branchID, StateMachine.State state, Node? pred)
         {
@@ -89,10 +89,10 @@ public class StateMachineTree
         }
     }
 
-    private Dictionary<uint, Node> _nodes = new();
+    private readonly Dictionary<uint, Node> _nodes = [];
     public IReadOnlyDictionary<uint, Node> Nodes => _nodes;
 
-    private List<Phase> _phases = new();
+    private readonly List<Phase> _phases = [];
     public IReadOnlyList<Phase> Phases => _phases;
 
     public int TotalBranches { get; private set; }
@@ -109,19 +109,19 @@ public class StateMachineTree
         }
     }
 
-    public void ApplyTimings(StateMachineTimings? timings)
+    public void ApplyTimings(List<float>? phaseDurations)
     {
         if (Phases.Count == 0)
             return;
 
-        if (timings != null)
-            foreach (var (p, t) in Phases.Zip(timings.PhaseDurations))
+        if (phaseDurations != null)
+            foreach (var (p, t) in Phases.Zip(phaseDurations))
                 p.Duration = Math.Min(t, p.MaxTime);
 
         for (int i = 1; i < Phases.Count; ++i)
             Phases[i].StartTime = Phases[i - 1].StartTime + Phases[i - 1].Duration;
 
-        var lastPhase = Phases.Last();
+        var lastPhase = Phases[^1];
         TotalMaxTime = lastPhase.StartTime + lastPhase.Duration;
     }
 
@@ -137,13 +137,16 @@ public class StateMachineTree
         };
     }
 
+    public (Node, float) PhaseTimeToNodeAndDelay(float t, int phaseIndex, List<int> phaseBranches)
+    {
+        var node = Phases[phaseIndex].TimeToBranchNode(phaseBranches[phaseIndex], t);
+        return (node, t - (node.Predecessor?.Time ?? 0));
+    }
+
     public (Node, float) AbsoluteTimeToNodeAndDelay(float t, List<int> phaseBranches)
     {
         int phaseIndex = FindPhaseAtTime(t);
-        var phase = Phases[phaseIndex];
-        t -= phase.StartTime;
-        var node = phase.TimeToBranchNode(phaseBranches[phaseIndex], t);
-        return (node, t - (node.Predecessor?.Time ?? 0));
+        return PhaseTimeToNodeAndDelay(t - Phases[phaseIndex].StartTime, phaseIndex, phaseBranches);
     }
 
     private (Node, float) LayoutNodeAndSuccessors(float t, int phaseID, int branchID, StateMachine.State state, Node? pred)

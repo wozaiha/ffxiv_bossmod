@@ -4,8 +4,8 @@
 // TODO: not all the wall is safe...
 class FeralHowlHystericAssault(BossModule module, AID aidCast, AID aidAOE, float delay) : Components.Knockback(module, ActionID.MakeSpell(aidAOE), true, stopAtWall: true)
 {
-    private AID _aidCast = aidCast;
-    private float _delay = delay;
+    private readonly AID _aidCast = aidCast;
+    private readonly float _delay = delay;
     private Source? _source;
 
     public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
@@ -13,7 +13,7 @@ class FeralHowlHystericAssault(BossModule module, AID aidCast, AID aidAOE, float
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == _aidCast)
-            _source = new(caster.Position, 30, spell.NPCFinishAt.AddSeconds(_delay));
+            _source = new(caster.Position, 30, Module.CastFinishAt(spell, _delay));
     }
 }
 

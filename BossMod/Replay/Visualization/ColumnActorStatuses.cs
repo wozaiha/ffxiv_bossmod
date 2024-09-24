@@ -1,18 +1,17 @@
 ﻿using ImGuiNET;
-using static BossMod.Replay;
 
 namespace BossMod.ReplayVisualization;
 
 public class ColumnActorStatuses : Timeline.ColumnGroup
 {
-    private StateMachineTree _tree;
-    private List<int> _phaseBranches;
-    private Replay _replay;
-    private Replay.Encounter _enc;
-    private Replay.Participant _target;
+    private readonly StateMachineTree _tree;
+    private readonly List<int> _phaseBranches;
+    private readonly Replay _replay;
+    private readonly Replay.Encounter _enc;
+    private readonly Replay.Participant _target;
 
-    private ColumnSeparator _sep;
-    private List<(uint sid, Replay.Participant? source, ColumnGenericHistory? col)> _columns = new();
+    private readonly ColumnSeparator _sep;
+    private readonly List<(uint sid, Replay.Participant? source, ColumnGenericHistory? col)> _columns = [];
 
     public bool Visible => _sep.Width > 0;
 
@@ -44,15 +43,21 @@ public class ColumnActorStatuses : Timeline.ColumnGroup
         _sep.Width = Columns.Any(c => c != _sep && c.Width > 0) ? 1 : 0;
     }
 
-    private ColumnGenericHistory BuildColumn(uint statusID, Participant? source)
+    private ColumnGenericHistory BuildColumn(uint statusID, Replay.Participant? source)
     {
         var res = AddBefore(new ColumnGenericHistory(Timeline, _tree, _phaseBranches), _sep);
         DateTime prevEnd = default;
-        foreach (var s in _replay.EncounterStatuses(_enc).Where(s => s.ID == statusID && s.Source == source && s.Target == _target))
+
+        var minTime = _enc.Time.Start.AddSeconds(Timeline.MinTime);
+        foreach (var s in _replay.Statuses.SkipWhile(s => s.Time.Start < minTime).TakeWhile(s => s.Time.Start <= _enc.Time.End).Where(s => s.ID == statusID && s.Source == source && s.Target == _target))
         {
             var e = res.AddHistoryEntryRange(_enc.Time.Start, s.Time, $"{Utils.StatusString(statusID)} ({s.StartingExtra:X}) on {ReplayUtils.ParticipantString(_target, s.Time.Start)} from {ReplayUtils.ParticipantString(s.Source, s.Time.Start)}", 0x80808080);
-            e.TooltipExtra.Add($"- initial duration: {s.InitialDuration:f3}");
-            e.TooltipExtra.Add($"- final duration: {s.InitialDuration - s.Time.Duration:f3}");
+            e.TooltipExtra = (res, t) =>
+            {
+                var elapsed = t - (s.Time.Start - _enc.Time.Start).TotalSeconds;
+                res.Add($"- remaining: {s.InitialDuration - elapsed:f3} / {s.InitialDuration:f3}");
+                res.Add($"- final duration: {s.InitialDuration - s.Time.Duration:f3}");
+            };
             if (s.Time.Start == prevEnd)
                 res.AddHistoryEntryLine(_enc.Time.Start, prevEnd, "", 0xffffffff);
             prevEnd = s.Time.End;

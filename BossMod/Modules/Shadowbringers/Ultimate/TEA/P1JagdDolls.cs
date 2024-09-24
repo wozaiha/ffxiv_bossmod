@@ -3,10 +3,10 @@
 class P1JagdDolls(BossModule module) : BossComponent(module)
 {
     public int NumExhausts { get; private set; }
-    private IReadOnlyList<Actor> _dolls = module.Enemies(OID.JagdDoll);
-    private HashSet<ulong> _exhaustsDone = new();
+    private readonly IReadOnlyList<Actor> _dolls = module.Enemies(OID.JagdDoll);
+    private readonly HashSet<ulong> _exhaustsDone = [];
 
-    private static readonly float _exhaustRadius = 8.8f;
+    private const float _exhaustRadius = 8.8f;
 
     private IEnumerable<Actor> ActiveDolls => _dolls.Where(d => d.IsTargetable && !d.IsDead);
     public bool Active => ActiveDolls.Any();
@@ -29,7 +29,7 @@ class P1JagdDolls(BossModule module) : BossComponent(module)
     {
         foreach (var doll in ActiveDolls)
         {
-            Arena.Actor(doll, doll.HP.Cur < doll.HP.Max / 4 ? ArenaColor.Enemy : ArenaColor.Vulnerable);
+            Arena.Actor(doll, doll.HPMP.CurHP < doll.HPMP.MaxHP / 4 ? ArenaColor.Enemy : ArenaColor.Vulnerable);
 
             var tether = WorldState.Actors.Find(doll.Tether.Target);
             if (tether != null)

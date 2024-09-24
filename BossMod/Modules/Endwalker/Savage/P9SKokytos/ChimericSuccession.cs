@@ -3,7 +3,7 @@
 class ChimericSuccession(BossModule module) : Components.UniformStackSpread(module, 6, 20, 4, alwaysShowSpreads: true)
 {
     public int NumCasts { get; private set; }
-    private Actor?[] _baitOrder = { null, null, null, null };
+    private readonly Actor?[] _baitOrder = [null, null, null, null];
     private BitMask _forbiddenStack;
     private DateTime _jumpActivation;
 
@@ -21,7 +21,7 @@ class ChimericSuccession(BossModule module) : Components.UniformStackSpread(modu
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.FrontFirestrikes or AID.RearFirestrikes)
-            _jumpActivation = spell.NPCFinishAt.AddSeconds(0.4f);
+            _jumpActivation = Module.CastFinishAt(spell, 0.4f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

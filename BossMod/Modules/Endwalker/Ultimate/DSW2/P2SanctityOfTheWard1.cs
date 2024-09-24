@@ -48,22 +48,17 @@ class P2SanctityOfTheWard1Sever(BossModule module) : Components.UniformStackSpre
 // shining blade (charges that leave orbs) + flares (their explosions)
 class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.BrightFlare), "GTFO from charges and spheres!")
 {
-    public class ChargeInfo
+    public class ChargeInfo(Actor source)
     {
-        public Actor Source;
-        public List<AOEInstance> ChargeAOEs = new();
-        public List<WPos> Spheres = new();
-
-        public ChargeInfo(Actor source)
-        {
-            Source = source;
-        }
+        public Actor Source = source;
+        public List<AOEInstance> ChargeAOEs = [];
+        public List<WPos> Spheres = [];
     }
 
-    public List<ChargeInfo> Charges = new();
+    public List<ChargeInfo> Charges = [];
     public Angle ChargeAngle { get; private set; } // 0 if charges are not active or on failure, <0 if CW, >0 if CCW
 
-    private static readonly float _chargeHalfWidth = 3;
+    private const float _chargeHalfWidth = 3;
     private static readonly AOEShapeCircle _brightflareShape = new(9);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -125,25 +120,25 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
             return default;
 
         // so far I've only seen both enemies starting at (+-5, 0)
-        if (!Utils.AlmostEqual(actor.Position.Z, Module.Bounds.Center.Z, 1))
+        if (!Utils.AlmostEqual(actor.Position.Z, Module.Center.Z, 1))
             return default;
-        if (!Utils.AlmostEqual(MathF.Abs(actor.Position.X - Module.Bounds.Center.X), 5, 1))
+        if (!Utils.AlmostEqual(MathF.Abs(actor.Position.X - Module.Center.X), 5, 1))
             return default;
 
-        bool right = actor.Position.X > Module.Bounds.Center.X;
+        bool right = actor.Position.X > Module.Center.X;
         bool facingSouth = Utils.AlmostEqual(actor.Rotation.Rad, 0, 0.1f);
         bool cw = right == facingSouth;
         var res = new ChargeInfo(actor);
         var firstPointDir = actor.Rotation;
         var angleBetweenPoints = (cw ? -1 : 1) * 112.5f.Degrees();
 
-        Func<Angle, WPos> posAt = dir => Module.Bounds.Center + 21 * dir.ToDirection();
+        WPos posAt(Angle dir) => Module.Center + 21 * dir.ToDirection();
         var p0 = actor.Position;
         var p1 = posAt(firstPointDir);
         var p2 = posAt(firstPointDir + angleBetweenPoints);
         var p3 = posAt(firstPointDir + angleBetweenPoints * 2);
 
-        Func<WPos, WPos, AOEInstance> chargeAOE = (from, to) => new(new AOEShapeRect((to - from).Length(), _chargeHalfWidth), from, Angle.FromDirection(to - from));
+        AOEInstance chargeAOE(WPos from, WPos to) => new(new AOEShapeRect((to - from).Length(), _chargeHalfWidth), from, Angle.FromDirection(to - from));
         res.ChargeAOEs.Add(chargeAOE(p0, p1));
         res.ChargeAOEs.Add(chargeAOE(p1, p2));
         res.ChargeAOEs.Add(chargeAOE(p2, p3));
@@ -166,8 +161,8 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
 // hints & assignments
 class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
 {
-    private P2SanctityOfTheWard1Sever? _sever = module.FindComponent<P2SanctityOfTheWard1Sever>();
-    private P2SanctityOfTheWard1Flares? _flares = module.FindComponent<P2SanctityOfTheWard1Flares>();
+    private readonly P2SanctityOfTheWard1Sever? _sever = module.FindComponent<P2SanctityOfTheWard1Sever>();
+    private readonly P2SanctityOfTheWard1Flares? _flares = module.FindComponent<P2SanctityOfTheWard1Flares>();
     private bool _inited;
     private Angle _severStartDir;
     private bool _chargeEarly;
@@ -179,7 +174,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
         if (!_inited && _sever?.Source != null && _sever.Stacks.Count == 2 && _flares != null && _flares.ChargeAngle != default)
         {
             _inited = true;
-            _severStartDir = Angle.FromDirection(_sever.Source.Position - Module.Bounds.Center);
+            _severStartDir = Angle.FromDirection(_sever.Source.Position - Module.Center);
 
             var config = Service.Config.Get<DSW2Config>();
             _groupEast = config.P2SanctityGroups.BuildGroupMask(1, Raid);
@@ -239,7 +234,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
             var color = ArenaColor.Safe;
             foreach (var safespot in MovementHintOffsets(slot))
             {
-                var to = Module.Bounds.Center + safespot;
+                var to = Module.Center + safespot;
                 movementHints.Add(from, to, color);
                 from = to;
                 color = ArenaColor.Danger;
@@ -261,9 +256,9 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
     {
         foreach (var safespot in MovementHintOffsets(pcSlot).Take(1))
         {
-            Arena.AddCircle(Module.Bounds.Center + safespot, 1, ArenaColor.Safe);
+            Arena.AddCircle(Module.Center + safespot, 1, ArenaColor.Safe);
             if (_groupEast.None())
-                Arena.AddCircle(Module.Bounds.Center - safespot, 1, ArenaColor.Safe); // if there are no valid assignments, draw spots for both groups
+                Arena.AddCircle(Module.Center - safespot, 1, ArenaColor.Safe); // if there are no valid assignments, draw spots for both groups
         }
     }
 

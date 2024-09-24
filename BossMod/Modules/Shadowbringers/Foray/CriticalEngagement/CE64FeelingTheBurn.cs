@@ -122,7 +122,7 @@ class ChainCannonBoss(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ChainCannonBoss)
-            _instance = new(_shape, caster.Position, spell.Rotation, spell.NPCFinishAt.AddSeconds(1));
+            _instance = new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 1));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -168,7 +168,7 @@ public class CE64FeelingTheBurn : BossModule
 {
     public IReadOnlyList<Actor> Escorts;
 
-    public CE64FeelingTheBurn(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-240, -230), 24))
+    public CE64FeelingTheBurn(WorldState ws, Actor primary) : base(ws, primary, new(-240, -230), new ArenaBoundsSquare(24))
     {
         Escorts = Enemies(OID.Escort2);
     }

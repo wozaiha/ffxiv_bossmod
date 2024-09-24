@@ -2,13 +2,25 @@
 namespace BossMod.Components;
 
 // voidzone (circle aoe that stays active for some time) centered at each existing object with specified OID, assumed to be persistent voidzone center
+// for moving 'voidzones', the hints can mark the area in front of each source as dangerous
 // TODO: typically sources are either eventobj's with eventstate != 7 or normal actors that are non dead; other conditions are much rarer
-public class PersistentVoidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources) : GenericAOEs(module, default, "GTFO from voidzone!")
+public class PersistentVoidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, float moveHintLength = 0) : GenericAOEs(module, default, "GTFO from voidzone!")
 {
     public AOEShapeCircle Shape { get; init; } = new(radius);
     public Func<BossModule, IEnumerable<Actor>> Sources { get; init; } = sources;
+    public float MoveHintLength = moveHintLength;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Sources(Module).Select(s => new AOEInstance(Shape, s.Position));
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var s in Sources(Module))
+        {
+            hints.AddForbiddenZone(Shape.Distance(s.Position, s.Rotation));
+            if (MoveHintLength > 0)
+                hints.AddForbiddenZone(ShapeDistance.Capsule(s.Position, s.Rotation, MoveHintLength, Shape.Radius), WorldState.FutureTime(2));
+        }
+    }
 }
 
 // voidzone that appears with some delay at cast target
@@ -20,8 +32,8 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
     public AOEShapeCircle Shape { get; init; } = new(radius);
     public Func<BossModule, IEnumerable<Actor>> Sources { get; init; } = sources;
     public float CastEventToSpawn { get; init; } = castEventToSpawn;
-    private List<(WPos pos, DateTime time)> _predictedByEvent = new();
-    private List<(Actor caster, DateTime time)> _predictedByCast = new();
+    private readonly List<(WPos pos, DateTime time)> _predictedByEvent = [];
+    private readonly List<(Actor caster, DateTime time)> _predictedByCast = [];
 
     public bool HaveCasters => _predictedByCast.Count > 0;
 
@@ -39,13 +51,13 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
     {
         if (_predictedByEvent.Count > 0)
             foreach (var s in Sources(Module))
-                _predictedByEvent.RemoveAll(p => p.pos.InCircle(s.Position, 3));
+                _predictedByEvent.RemoveAll(p => p.pos.InCircle(s.Position, 6));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _predictedByCast.Add((caster, spell.NPCFinishAt.AddSeconds(CastEventToSpawn)));
+            _predictedByCast.Add((caster, Module.CastFinishAt(spell, CastEventToSpawn)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -88,11 +100,11 @@ public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<
         if (shapes.Count == 0)
             return;
 
-        Func<WPos, float> distance = p =>
+        float distance(WPos p)
         {
-            float dist = shapes.Select(s => s(p)).Min();
+            var dist = shapes.Select(s => s(p)).Min();
             return Inverted ? -dist : dist;
-        };
+        }
         hints.AddForbiddenZone(distance, InvertResolveAt);
     }
 
@@ -111,7 +123,7 @@ public class PersistentInvertibleVoidzoneByCast(BossModule module, float radius,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            InvertResolveAt = spell.NPCFinishAt;
+            InvertResolveAt = Module.CastFinishAt(spell);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

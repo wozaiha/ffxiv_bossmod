@@ -2,7 +2,7 @@
 
 class RoaringBlaze(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCone _shape = new(50, 90.Degrees());
 
@@ -12,7 +12,7 @@ class RoaringBlaze(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.RoaringBlazeFirst or AID.RoaringBlazeSecond or AID.RoaringBlazeSolo)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
             _aoes.SortBy(aoe => aoe.Activation);
         }
     }

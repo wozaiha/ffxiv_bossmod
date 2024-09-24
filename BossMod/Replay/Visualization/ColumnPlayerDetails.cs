@@ -1,32 +1,35 @@
-﻿using ImGuiNET;
+﻿using BossMod.Autorotation;
+using Dalamud.Interface.Utility.Raii;
+using ImGuiNET;
 
 namespace BossMod.ReplayVisualization;
 
+// TODO: currently it assumes that there's only one instance that can edit db, it won't refresh if plan is edited and saved in a different instance...
 public class ColumnPlayerDetails : Timeline.ColumnGroup
 {
-    private StateMachineTree _tree;
-    private List<int> _phaseBraches;
-    private Replay _replay;
-    private Replay.Encounter _enc;
-    private Replay.Participant _player;
-    private Class _playerClass;
-    private ModuleRegistry.Info? _moduleInfo;
+    private readonly StateMachineTree _tree;
+    private readonly List<int> _phaseBraches;
+    private readonly Replay _replay;
+    private readonly Replay.Encounter _enc;
+    private readonly Replay.Participant _player;
+    private readonly Class _playerClass;
+    private readonly PlanDatabase _planDatabase;
+    private readonly ModuleRegistry.Info? _moduleInfo;
 
-    private ColumnPlayerActions _actions;
-    private ColumnActorStatuses _statuses;
+    private readonly ColumnPlayerActions _actions;
+    private readonly ColumnActorStatuses _statuses;
 
-    private ColumnActorHP _hp;
-    private ColumnPlayerGauge? _gauge;
-    private ColumnSeparator _resourceSep;
+    private readonly ColumnActorHP _hp;
+    private readonly ColumnPlayerGauge? _gauge;
+    private readonly ColumnSeparator _resourceSep;
 
-    private CooldownPlanningConfigNode? _planConfig;
     private int _selectedPlan = -1;
-    private bool _planModified;
     private CooldownPlannerColumns? _planner;
+    private readonly List<Replay.Action> _plannerActions = [];
 
-    public bool PlanModified => _planModified;
+    public bool PlanModified => _planner?.Modified ?? false;
 
-    public ColumnPlayerDetails(Timeline timeline, StateMachineTree tree, List<int> phaseBranches, Replay replay, Replay.Encounter enc, Replay.Participant player, Class playerClass)
+    public ColumnPlayerDetails(Timeline timeline, StateMachineTree tree, List<int> phaseBranches, Replay replay, Replay.Encounter enc, Replay.Participant player, Class playerClass, PlanDatabase planDB)
         : base(timeline)
     {
         _tree = tree;
@@ -35,6 +38,7 @@ public class ColumnPlayerDetails : Timeline.ColumnGroup
         _enc = enc;
         _player = player;
         _playerClass = playerClass;
+        _planDatabase = planDB;
         _moduleInfo = ModuleRegistry.FindByOID(enc.OID);
 
         _actions = Add(new ColumnPlayerActions(timeline, tree, phaseBranches, replay, enc, player, playerClass));
@@ -48,25 +52,24 @@ public class ColumnPlayerDetails : Timeline.ColumnGroup
             Add(_gauge);
         _resourceSep = Add(new ColumnSeparator(timeline));
 
-        var info = ModuleRegistry.FindByOID(enc.OID);
-        if (info?.CooldownPlanningSupported ?? false)
+        if (_moduleInfo?.PlanLevel > 0)
         {
-            _planConfig = Service.Config.Get<CooldownPlanningConfigNode>(info.ConfigType!);
-            var plans = _planConfig?.CooldownPlans.GetValueOrDefault(playerClass);
-            if (plans != null)
-                UpdateSelectedPlan(plans, plans.SelectedIndex);
+            var minTime = _enc.Time.Start.AddSeconds(Timeline.MinTime);
+            _plannerActions = [.. _replay.Actions.SkipWhile(a => a.Timestamp < minTime).TakeWhile(a => a.Timestamp <= _enc.Time.End).Where(a => a.Source == _player)];
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            UpdateSelectedPlan(plans, plans.SelectedIndex);
         }
     }
 
     public void DrawConfig(UITree tree)
     {
         DrawConfigPlanner(tree);
-        foreach (var n in tree.Node("Actions"))
+        foreach (var _1 in tree.Node("Actions"))
             _actions.DrawConfig(tree);
-        foreach (var n in tree.Node("Statuses"))
+        foreach (var _1 in tree.Node("Statuses"))
             _statuses.DrawConfig(tree);
 
-        foreach (var n in tree.Node("Resources"))
+        foreach (var _1 in tree.Node("Resources"))
         {
             DrawResourceColumnToggle(_hp, "HP");
             if (_gauge != null)
@@ -76,79 +79,104 @@ public class ColumnPlayerDetails : Timeline.ColumnGroup
 
     public void SaveChanges()
     {
-        if (_planner != null && _planModified)
+        if (_moduleInfo != null && _planner != null && _planner.Modified)
         {
-            _planner.UpdateEditedPlan();
-            _planConfig?.NotifyModified();
-            _planModified = false;
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            _planDatabase.ModifyPlan(plans.Plans[_selectedPlan], _planner.Plan.MakeClone());
+            _planner.Modified = false;
         }
     }
 
     private void DrawConfigPlanner(UITree tree)
     {
-        if (_planConfig == null)
+        if (_moduleInfo == null || _moduleInfo.PlanLevel <= 0)
         {
             tree.LeafNode("Planner: not supported for this encounter");
             return;
         }
 
-        var plans = _planConfig.CooldownPlans.GetValueOrDefault(_playerClass);
-        if (plans == null)
+        foreach (var _1 in tree.Node("Planner"))
         {
-            tree.LeafNode("Planner: not supported for this class");
-            return;
-        }
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            UpdateSelectedPlan(plans, DrawPlanSelector(_moduleInfo.ModuleType, plans, _selectedPlan));
+            if (_planner != null)
+            {
+                ImGui.TextUnformatted($"GUID: {_planner.Plan.Guid}");
+                _planner.DrawCommonControls();
 
-        foreach (var n in tree.Node("Planner"))
-        {
-            UpdateSelectedPlan(plans, DrawPlanSelector(plans, _selectedPlan));
-            _planner?.DrawConfig();
+                bool haveDifferentPhaseTimes = false;
+                for (int i = 0; i < _tree.Phases.Count; ++i)
+                {
+                    _planner.Modified |= ImGui.SliderFloat($"{_tree.Phases[i].Name}###phase-duration-{i}", ref _planner.Plan.PhaseDurations.Ref(i), 0, _tree.Phases[i].MaxTime, $"%.1f (replay: {_tree.Phases[i].Duration:f1} / {_tree.Phases[i].MaxTime:f1})");
+                    haveDifferentPhaseTimes |= _planner.Plan.PhaseDurations[i] != _tree.Phases[i].Duration;
+                }
+
+                using (ImRaii.Disabled(!haveDifferentPhaseTimes))
+                {
+                    if (ImGui.Button("Sync phase durations to replay"))
+                    {
+                        for (int i = 0; i < _tree.Phases.Count; ++i)
+                            _planner.Plan.PhaseDurations[i] = _tree.Phases[i].Duration;
+                        _planner.Modified = true;
+                    }
+                }
+            }
         }
     }
 
-    private int DrawPlanSelector(CooldownPlanningConfigNode.PlanList list, int selection)
+    private int DrawPlanSelector(Type moduleType, PlanDatabase.PlanList list, int selection)
     {
-        selection = CooldownPlanningConfigNode.DrawPlanCombo(list, selection, "###planner");
-        ImGui.SameLine();
+        using (ImRaii.Disabled(_planner?.Modified ?? false))
+            selection = UIPlanDatabaseEditor.DrawPlanCombo(list, selection, "###planner");
 
         bool isDefault = selection == list.SelectedIndex;
+        ImGui.SameLine();
         if (ImGui.Checkbox("Default", ref isDefault))
         {
             list.SelectedIndex = isDefault ? selection : -1;
-            _planConfig?.NotifyModified();
+            _planDatabase.ModifyManifest(moduleType, _playerClass);
         }
         ImGui.SameLine();
-
-        if (ImGui.Button(selection >= 0 ? "Create copy" : "Create new"))
+        if (UIMisc.Button("Save", _planner == null || !_planner.Modified, "Current plan was not modified"))
+            SaveChanges();
+        ImGui.SameLine();
+        if (UIMisc.Button("Copy", _planner == null, "No plan selected") && _planner != null && _moduleInfo != null)
         {
-            CooldownPlan plan;
-            if (selection >= 0)
-            {
-                plan = list.Available[selection].Clone();
-                plan.Name += " Copy";
-            }
-            else
-            {
-                plan = new(_playerClass, _planConfig?.SyncLevel ?? 0, $"New {list.Available.Count}");
-            }
-            selection = list.Available.Count;
-            list.Available.Add(plan);
-            _planConfig?.NotifyModified();
+            _planner.Plan.Guid = Guid.NewGuid().ToString();
+            _planner.Plan.Name += " Copy";
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            selection = _selectedPlan = plans.Plans.Count;
+            _planDatabase.ModifyPlan(null, _planner.Plan.MakeClone());
+            _planner.Modified = false;
         }
-
-        if (_planner != null && _planModified)
+        ImGui.SameLine();
+        if (UIMisc.Button("Revert", _planner == null || !_planner.Modified, "Current plan was not modified") && _planner != null && _moduleInfo != null)
         {
-            ImGui.SameLine();
-            if (ImGui.Button("Save modifications"))
-            {
-                SaveChanges();
-            }
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            _planner.Plan = plans.Plans[_selectedPlan].MakeClone();
+            _planner.SyncCreateImport();
+            _planner.Modified = false;
+        }
+        ImGui.SameLine();
+        if (UIMisc.Button("New", _planner != null && _planner.Modified, "Current preset is modified, save or discard changes") && _moduleInfo != null)
+        {
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            var plan = new Plan($"New {plans.Plans.Count + 1}", _moduleInfo.ModuleType) { Guid = Guid.NewGuid().ToString(), Class = _playerClass, Level = _moduleInfo.PlanLevel };
+            _planDatabase.ModifyPlan(null, plan);
+            selection = plans.Plans.Count - 1;
+        }
+        ImGui.SameLine();
+        if (UIMisc.Button("Delete", 0, (!ImGui.GetIO().KeyShift, "Hold shift to delete"), (_planner == null, "No preset is selected")) && _moduleInfo != null && _selectedPlan >= 0)
+        {
+            var plans = _planDatabase.GetPlans(_moduleInfo.ModuleType, _playerClass);
+            _planDatabase.ModifyPlan(plans.Plans[_selectedPlan], null);
+            selection = -1;
         }
 
         return selection;
     }
 
-    private void UpdateSelectedPlan(CooldownPlanningConfigNode.PlanList list, int newSelection)
+    private void UpdateSelectedPlan(PlanDatabase.PlanList list, int newSelection)
     {
         if (_selectedPlan == newSelection)
             return;
@@ -159,19 +187,9 @@ public class ColumnPlayerDetails : Timeline.ColumnGroup
             _planner = null;
         }
         _selectedPlan = newSelection;
-        _planModified = false;
         if (_selectedPlan >= 0)
         {
-            _planner = AddBefore(new CooldownPlannerColumns(list.Available[newSelection], () => _planModified = true, Timeline, _tree, _phaseBraches, _moduleInfo, false), _actions);
-
-            // TODO: this should be reworked...
-            var minTime = _enc.Time.Start.AddSeconds(Timeline.MinTime);
-            foreach (var a in _replay.Actions.SkipWhile(a => a.Timestamp < minTime).TakeWhile(a => a.Timestamp <= _enc.Time.End).Where(a => a.Source == _player))
-            {
-                var track = _planner.TrackForAction(a.ID);
-                if (track != null)
-                    track.AddHistoryEntryDot(_enc.Time.Start, a.Timestamp, $"{a.ID} -> {ReplayUtils.ParticipantString(a.MainTarget, a.Timestamp)} #{a.GlobalSequence}", 0xffffffff).AddActionTooltip(a);
-            }
+            _planner = AddBefore(new CooldownPlannerColumns(list.Plans[newSelection].MakeClone(), Timeline, _tree, _phaseBraches, false, _plannerActions, _enc.Time.Start), _actions);
         }
     }
 

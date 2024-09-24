@@ -4,7 +4,7 @@ class WillOfTheFury(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
-    private static readonly float _impactRadiusIncrement = 6;
+    private const float _impactRadiusIncrement = 6;
 
     public bool Active => _aoe != null;
 
@@ -14,7 +14,7 @@ class WillOfTheFury(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID == AID.WillOfTheFuryAOE1)
         {
-            UpdateAOE(spell.NPCFinishAt);
+            UpdateAOE(Module.CastFinishAt(spell));
         }
     }
 
@@ -36,6 +36,6 @@ class WillOfTheFury(BossModule module) : Components.GenericAOEs(module)
             4 => new AOEShapeCircle(outerRadius),
             _ => null
         };
-        _aoe = shape != null ? new(shape, Module.Bounds.Center, default, activation) : null;
+        _aoe = shape != null ? new(shape, Module.Center, default, activation) : null;
     }
 }

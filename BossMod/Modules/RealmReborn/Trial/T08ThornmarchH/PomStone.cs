@@ -2,7 +2,7 @@
 
 class PomStone(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(Actor caster, AOEShape shape)> _casters = new();
+    private readonly List<(Actor caster, AOEShape shape)> _casters = [];
     private static readonly AOEShapeCircle _shapeIn = new(10);
     private static readonly AOEShapeDonut _shapeMid = new(10, 20);
     private static readonly AOEShapeDonut _shapeOut = new(20, 30);
@@ -11,10 +11,10 @@ class PomStone(BossModule module) : Components.GenericAOEs(module)
     {
         if (_casters.Count > 0)
         {
-            var deadline = _casters[0].caster.CastInfo!.NPCFinishAt.AddSeconds(1);
+            var deadline = _casters[0].caster.CastInfo!.RemainingTime + 1;
             foreach (var c in _casters)
-                if (c.caster.CastInfo!.NPCFinishAt < deadline)
-                    yield return new(c.shape, c.caster.Position, c.caster.CastInfo.Rotation, c.caster.CastInfo.NPCFinishAt);
+                if (c.caster.CastInfo!.RemainingTime < deadline)
+                    yield return new(c.shape, c.caster.Position, c.caster.CastInfo!.Rotation, Module.CastFinishAt(c.caster.CastInfo));
         }
     }
 

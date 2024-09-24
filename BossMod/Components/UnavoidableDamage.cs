@@ -6,7 +6,7 @@ public class RaidwideCast(BossModule module, ActionID aid, string hint = "Raidwi
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var c in Casters)
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), c.CastInfo?.NPCFinishAt ?? default));
+            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(c.CastInfo)));
     }
 }
 
@@ -47,7 +47,7 @@ public class RaidwideCastDelay(BossModule module, ActionID actionVisual, ActionI
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == ActionVisual)
-            Activation = spell.NPCFinishAt.AddSeconds(Delay);
+            Activation = Module.CastFinishAt(spell, Delay);
     }
 }
 
@@ -72,7 +72,8 @@ public class SingleTargetCast(BossModule module, ActionID aid, string hint = "Ta
         {
             if (c.CastInfo != null)
             {
-                hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(c.CastInfo.TargetID)), c.CastInfo.NPCFinishAt));
+                var target = c.CastInfo.TargetID != c.InstanceID ? c.CastInfo.TargetID : c.TargetID; // assume self-targeted casts actually hit main target
+                hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(target)), Module.CastFinishAt(c.CastInfo)));
             }
         }
     }
@@ -83,7 +84,7 @@ public class SingleTargetInstant(BossModule module, ActionID aid, float delay, s
 {
     public float Delay = delay; // delay from visual cast end to cast event
     public string Hint = hint;
-    public readonly List<(int slot, DateTime activation)> Targets = new();
+    public readonly List<(int slot, DateTime activation)> Targets = [];
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -115,7 +116,10 @@ public class SingleTargetCastDelay(BossModule module, ActionID actionVisual, Act
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == ActionVisual)
-            Targets.Add((Raid.FindSlot(spell.TargetID), spell.NPCFinishAt.AddSeconds(Delay)));
+        {
+            var target = spell.TargetID != caster.InstanceID ? spell.TargetID : caster.TargetID; // assume self-targeted casts actually hit main target
+            Targets.Add((Raid.FindSlot(target), Module.CastFinishAt(spell, Delay)));
+        }
     }
 }
 

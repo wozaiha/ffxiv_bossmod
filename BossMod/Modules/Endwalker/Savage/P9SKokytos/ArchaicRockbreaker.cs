@@ -4,21 +4,21 @@ class ArchaicRockbreakerCenter(BossModule module) : Components.LocationTargetedA
 
 class ArchaicRockbreakerShockwave(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.ArchaicRockbreakerShockwave), true)
 {
-    private Uplift? _uplift = module.FindComponent<Uplift>();
-    private DateTime _activation = module.WorldState.FutureTime(6.5f);
+    private readonly Uplift? _uplift = module.FindComponent<Uplift>();
+    private readonly DateTime _activation = module.WorldState.FutureTime(6.5f);
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         float distance = 21;
         if (_uplift?.WallDirection != null)
         {
-            var offset = actor.Position - Module.Bounds.Center;
+            var offset = actor.Position - Module.Center;
             var dot = Math.Abs(_uplift.WallDirection.Value.ToDirection().Dot(offset.Normalized()));
-            bool againstWall = dot > 0.9238795f || dot < 0.3826834f;
+            bool againstWall = dot is > 0.9238795f or < 0.3826834f;
             if (againstWall)
-                distance = Module.Bounds.HalfSize - offset.Length() - 0.5f;
+                distance = Module.Bounds.Radius - offset.Length() - 0.5f;
         }
-        yield return new(Module.Bounds.Center, distance, _activation);
+        yield return new(Module.Center, distance, _activation);
     }
 }
 
@@ -41,7 +41,7 @@ class ArchaicRockbreakerLine(BossModule module) : Components.LocationTargetedAOE
 
 class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeOut = new(12);
     private static readonly AOEShapeDonut _shapeIn = new(8, 20);
@@ -125,7 +125,7 @@ class ArchaicDemolish(BossModule module) : Components.UniformStackSpread(module,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ArchaicDemolish)
-            AddStacks(Raid.WithoutSlot(true).Where(a => a.Role == Role.Healer), spell.NPCFinishAt.AddSeconds(1.2f));
+            AddStacks(Raid.WithoutSlot(true).Where(a => a.Role == Role.Healer), Module.CastFinishAt(spell, 1.2f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

@@ -7,19 +7,19 @@ public class GenericForcedMarch(BossModule module, float activationLimit = float
 {
     public class PlayerState
     {
-        public List<(Angle dir, float duration, DateTime activation)> PendingMoves = new();
+        public List<(Angle dir, float duration, DateTime activation)> PendingMoves = [];
         public DateTime ForcedEnd; // zero if forced march not active
 
         public bool Active(BossModule module) => ForcedEnd > module.WorldState.CurrentTime || PendingMoves.Count > 0;
     }
 
     public int NumActiveForcedMarches { get; private set; }
-    public Dictionary<ulong, PlayerState> State = new(); // key = instance ID
+    public Dictionary<ulong, PlayerState> State = []; // key = instance ID
     public float MovementSpeed = 6; // default movement speed, can be overridden if necessary
     public float ActivationLimit = activationLimit; // do not show pending moves that activate later than this limit
 
     // called to determine whether we need to show hint
-    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.Bounds.Contains(pos);
+    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -32,10 +32,10 @@ public class GenericForcedMarch(BossModule module, float activationLimit = float
     {
         foreach (var m in ForcedMovements(pc))
         {
+            Arena.ActorProjected(m.from, m.to, m.dir, ArenaColor.Danger);
             if (Arena.Config.ShowOutlinesAndShadows)
                 Arena.AddLine(m.from, m.to, 0xFF000000, 2);
             Arena.AddLine(m.from, m.to, ArenaColor.Danger);
-            Arena.Actor(m.to, m.dir, ArenaColor.Danger);
         }
     }
 

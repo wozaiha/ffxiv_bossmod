@@ -12,10 +12,10 @@ class DarkAndLight(BossModule module) : BossComponent(module)
     }
 
     public bool ShowSafespots = true;
-    private PlayerState[] _states = new PlayerState[PartyState.MaxPartySize];
+    private readonly PlayerState[] _states = new PlayerState[PartyState.MaxPartySize];
 
-    private static readonly float _farOffset = 13;
-    private static readonly float _nearOffset = 7;
+    private const float _farOffset = 13;
+    private const float _nearOffset = 7;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -88,6 +88,6 @@ class DarkAndLight(BossModule module) : BossComponent(module)
             Role.Healer => isFar ? 0.Degrees() : 90.Degrees(),
             _ => Raid[_states[slot].PartnerSlot]?.Role == Role.Tank ? (isFar ? -45.Degrees() : -135.Degrees()) : (isFar ? 135.Degrees() : 45.Degrees())
         };
-        return Module.Bounds.Center + (isFar ? _farOffset : _nearOffset) * dir.ToDirection();
+        return Module.Center + (isFar ? _farOffset : _nearOffset) * dir.ToDirection();
     }
 }

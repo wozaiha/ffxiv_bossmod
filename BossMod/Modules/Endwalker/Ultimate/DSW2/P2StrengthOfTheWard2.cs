@@ -7,8 +7,8 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
 {
     public bool LeapsDone { get; private set; }
     public bool RageDone { get; private set; }
-    private Actor? _leftCharge;
-    private Actor? _rightCharge;
+    private readonly Actor? _leftCharge;
+    private readonly Actor? _rightCharge;
     private Angle _dirToStackPos;
 
     public P2StrengthOfTheWard2SpreadStack(BossModule module) : base(module, 8, 24, 5)
@@ -21,8 +21,8 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
             return;
         }
 
-        var offset1 = c1.Position - Module.Bounds.Center;
-        var offset2 = c2.Position - Module.Bounds.Center;
+        var offset1 = c1.Position - Module.Center;
+        var offset2 = c2.Position - Module.Center;
         var toStack = -(offset1 + offset2);
         (_leftCharge, _rightCharge) = toStack.OrthoL().Dot(offset1) > 0 ? (c1, c2) : (c2, c1);
         _dirToStackPos = Angle.FromDirection(toStack);
@@ -90,7 +90,7 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
         }
     }
 
-    private WPos SafeSpotAt(Angle dir) => Module.Bounds.Center + 20 * dir.ToDirection();
+    private WPos SafeSpotAt(Angle dir) => Module.Center + 20 * dir.ToDirection();
 }
 
 // growing voidzones
@@ -99,9 +99,9 @@ class P2StrengthOfTheWard2Voidzones(BossModule module) : Components.LocationTarg
 // charges on tethered targets
 class P2StrengthOfTheWard2Charges(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.HolyShieldBash))
 {
-    private List<Actor> _chargeSources = [.. module.Enemies(OID.SerAdelphel), .. module.Enemies(OID.SerJanlenoux)];
+    private readonly List<Actor> _chargeSources = [.. module.Enemies(OID.SerAdelphel), .. module.Enemies(OID.SerJanlenoux)];
 
-    private static readonly float _chargeHalfWidth = 4;
+    private const float _chargeHalfWidth = 4;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {

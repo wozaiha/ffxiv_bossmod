@@ -3,8 +3,8 @@
 // predict puddles under all players until actual casts start
 class P1FeatherRain(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FeatherRain), "GTFO from puddle!")
 {
-    private List<WPos> _predicted = new();
-    private List<Actor> _casters = new();
+    private readonly List<WPos> _predicted = [];
+    private readonly List<Actor> _casters = [];
     private DateTime _activation;
 
     private static readonly AOEShapeCircle _shape = new(3);
@@ -17,7 +17,7 @@ class P1FeatherRain(BossModule module) : Components.GenericAOEs(module, ActionID
         foreach (var p in _predicted)
             yield return new(_shape, p, new(), _activation);
         foreach (var c in _casters)
-            yield return new(_shape, c.CastInfo!.LocXZ, new(), c.CastInfo!.NPCFinishAt);
+            yield return new(_shape, c.CastInfo!.LocXZ, new(), Module.CastFinishAt(c.CastInfo!));
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)

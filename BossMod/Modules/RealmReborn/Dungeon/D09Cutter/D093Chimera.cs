@@ -30,7 +30,7 @@ class RamsKeeperVoidzone(BossModule module) : Components.PersistentVoidzone(modu
 
 class ChaoticChorus(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ChaoticChorus))
 {
-    private AOEShape _shape = new AOEShapeCircle(6);
+    private readonly AOEShape _shape = new AOEShapeCircle(6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -56,4 +56,4 @@ class D093ChimeraStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12, NameID = 1590)]
-public class D093Chimera(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-170, -200), 30));
+public class D093Chimera(WorldState ws, Actor primary) : BossModule(ws, primary, new(-170, -200), new ArenaBoundsCircle(30));

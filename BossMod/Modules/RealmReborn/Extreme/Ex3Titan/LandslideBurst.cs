@@ -4,8 +4,8 @@
 class LandslideBurst(BossModule module) : Components.GenericAOEs(module)
 {
     public int MaxBombs = 9;
-    private List<Actor> _landslides = new();
-    private List<Actor> _bursts = new(); // TODO: reconsider: we can start showing bombs even before cast starts...
+    private readonly List<Actor> _landslides = [];
+    private readonly List<Actor> _bursts = []; // TODO: reconsider: we can start showing bombs even before cast starts...
     public int NumActiveBursts => _bursts.Count;
 
     private static readonly AOEShapeRect _shapeLandslide = new(40.25f, 3);
@@ -14,9 +14,9 @@ class LandslideBurst(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var l in _landslides)
-            yield return new(_shapeLandslide, l.Position, l.CastInfo!.Rotation, l.CastInfo.NPCFinishAt);
+            yield return new(_shapeLandslide, l.Position, l.CastInfo!.Rotation, Module.CastFinishAt(l.CastInfo));
         foreach (var b in _bursts.Take(MaxBombs))
-            yield return new(_shapeBurst, b.Position, b.CastInfo!.Rotation, b.CastInfo.NPCFinishAt);
+            yield return new(_shapeBurst, b.Position, b.CastInfo!.Rotation, Module.CastFinishAt(b.CastInfo));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

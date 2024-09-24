@@ -3,11 +3,11 @@
 // state related to shift mechanics
 class Shift(BossModule module) : BossComponent(module)
 {
-    private AOEShapeCone _swordAOE = new(50, 60.Degrees());
+    private readonly AOEShapeCone _swordAOE = new(50, 60.Degrees());
     private Actor? _swordCaster;
     private Actor? _cloakCaster;
 
-    private static readonly float _knockbackRange = 30;
+    private const float _knockbackRange = 30;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -15,7 +15,7 @@ class Shift(BossModule module) : BossComponent(module)
         {
             hints.Add("GTFO from sword!");
         }
-        else if (_cloakCaster != null && !Module.Bounds.Contains(Components.Knockback.AwayFromSource(actor.Position, _cloakCaster, _knockbackRange)))
+        else if (_cloakCaster != null && !Module.InBounds(Components.Knockback.AwayFromSource(actor.Position, _cloakCaster, _knockbackRange)))
         {
             hints.Add("About to be knocked into wall!");
         }

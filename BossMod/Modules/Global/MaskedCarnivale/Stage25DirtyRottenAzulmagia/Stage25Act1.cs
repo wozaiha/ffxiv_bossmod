@@ -8,14 +8,14 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    IceSpikes = 14762, // 2678->self, 2,0s cast, single-target, boss reflects all physical damage
-    ApocalypticBolt = 14766, // 2678->self, 3,0s cast, range 50+R width 8 rect
-    TheRamsVoice = 14763, // 2678->self, 3,5s cast, range 8 circle
-    TheDragonsVoice = 14764, // 2678->self, 3,5s cast, range 6-30 donut
-    Plaincracker = 14765, // 2678->self, 3,5s cast, range 6+R circle
-    TremblingEarth = 14774, // 233C->self, 3,5s cast, range 10-20 donut
-    TremblingEarth2 = 14775, // 233C->self, 3,5s cast, range 20-30 donut
-    ApocalypticRoar = 14767, // 2678->self, 5,0s cast, range 35+R 120-degree cone
+    IceSpikes = 14762, // 2678->self, 2.0s cast, single-target, boss reflects all physical damage
+    ApocalypticBolt = 14766, // 2678->self, 3.0s cast, range 50+R width 8 rect
+    TheRamsVoice = 14763, // 2678->self, 3.5s cast, range 8 circle
+    TheDragonsVoice = 14764, // 2678->self, 3.5s cast, range 6-30 donut
+    Plaincracker = 14765, // 2678->self, 3.5s cast, range 6+R circle
+    TremblingEarth = 14774, // 233C->self, 3.5s cast, range 10-20 donut
+    TremblingEarth2 = 14775, // 233C->self, 3.5s cast, range 20-30 donut
+    ApocalypticRoar = 14767, // 2678->self, 5.0s cast, range 35+R 120-degree cone
 }
 
 public enum SID : uint
@@ -49,7 +49,7 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var physicalreflect = Module.Enemies(OID.Boss).Where(x => x.FindStatus(SID.IceSpikes) != null).FirstOrDefault();
+        var physicalreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.IceSpikes) != null);
         if (physicalreflect != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all physical damage!");
     }
@@ -82,7 +82,7 @@ class Stage25Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 635, NameID = 8129, SortOrder = 1)]
 public class Stage25Act1 : BossModule
 {
-    public Stage25Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage25Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

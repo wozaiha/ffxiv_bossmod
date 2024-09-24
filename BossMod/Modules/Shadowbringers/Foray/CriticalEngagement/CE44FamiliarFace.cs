@@ -54,14 +54,14 @@ class Towerfall(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 
 class ExtremeEdge(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(Actor caster, float offset)> _casters = new();
+    private readonly List<(Actor caster, float offset)> _casters = [];
 
     private static readonly AOEShapeRect _shape = new(60, 18);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var c in _casters)
-            yield return new(_shape, c.caster.Position + c.offset * c.caster.CastInfo!.Rotation.ToDirection().OrthoL(), c.caster.CastInfo.Rotation, c.caster.CastInfo.NPCFinishAt);
+            yield return new(_shape, c.caster.Position + c.offset * c.caster.CastInfo!.Rotation.ToDirection().OrthoL(), c.caster.CastInfo.Rotation, Module.CastFinishAt(c.caster.CastInfo));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -89,7 +89,7 @@ class IntractableLand(BossModule module) : Components.Exaflare(module, 8)
     {
         if ((AID)spell.Action.ID == AID.IntractableLandFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = spell.NPCFinishAt, TimeToMove = 0.8f, ExplosionsLeft = 8, MaxShownExplosions = 4 });
+            Lines.Add(new() { Next = caster.Position, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 8, MaxShownExplosions = 4 });
         }
     }
 
@@ -150,4 +150,4 @@ class CE44FamiliarFaceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
-public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(330, 390), 30));
+public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, new(330, 390), new ArenaBoundsCircle(30));

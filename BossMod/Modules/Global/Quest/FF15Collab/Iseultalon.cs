@@ -14,18 +14,18 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack2 = 872, // Boss->player, no cast, single-target
-    Stomp = 14605, // Boss->location, 3,0s cast, range 80 circle
-    DeathRay = 14602, // Boss->self, 4,0s cast, single-target
-    DeathRay2 = 14603, // 273D->self, 4,0s cast, range 40 width 2 rect
+    Stomp = 14605, // Boss->location, 3.0s cast, range 80 circle
+    DeathRay = 14602, // Boss->self, 4.0s cast, single-target
+    DeathRay2 = 14603, // 273D->self, 4.0s cast, range 40 width 2 rect
     DeathRay3 = 14604, // Boss->self, no cast, range 40 width 22 rect
-    NeedleShot = 14606, // Boss->Noctis, 5,0s cast, range 5 circle
-    Thunderbolt = 15082, // Boss->self, 5,0s cast, single-target
+    NeedleShot = 14606, // Boss->Noctis, 5.0s cast, range 5 circle
+    Thunderbolt = 15082, // Boss->self, 5.0s cast, single-target
     Thunderbolt2 = 15083, // 260C->player/Noctis, no cast, range 5 circle
     unknown = 14608, // Boss->self, no cast, single-target
-    Electrocution = 14609, // 25B3->location, 10,0s cast, range 3 circle, tower
-    Electrocution2 = 14981, // 25B3->location, 10,0s cast, range 3 circle, tower
-    FatalCurrent = 14610, // Helper/Helper2->self, 2,0s cast, range 80 circle, tower fail
-    TailWhip = 14607, // Boss->self, 3,0s cast, range 12 270-degree cone
+    Electrocution = 14609, // 25B3->location, 10.0s cast, range 3 circle, tower
+    Electrocution2 = 14981, // 25B3->location, 10.0s cast, range 3 circle, tower
+    FatalCurrent = 14610, // Helper/Helper2->self, 2.0s cast, range 80 circle, tower fail
+    TailWhip = 14607, // Boss->self, 3.0s cast, range 12 270-degree cone
 }
 
 public enum IconID : uint
@@ -144,7 +144,7 @@ class IseultalonStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68695, NameID = 7895)]
-public class Iseultalon(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-289, -30), 25)) // note the arena is actually a 6 sided polygon
+public class Iseultalon(WorldState ws, Actor primary) : BossModule(ws, primary, new(-289, -30), new ArenaBoundsCircle(25)) // note the arena is actually a 6 sided polygon
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -21,9 +21,9 @@ public enum AID : uint
     HellpounceSecond = 20540, // Boss->location, 1.0s cast, width 10 rect charge, knockback away from source, dist 5 (consider showing?)
     LionsBreath = 20541, // Boss->self, 4.0s cast, single-target, visual (frontal cone)
     LionsBreathAOE = 20542, // Helper->self, 4.5s cast, range 60 45-degree cone aoe
-    DragonsBreath = 20543, // Boss->self, 4,0s cast, single-target, visual (side cones)
-    DragonsBreathAOER = 20544, // Helper->self, 4,5s cast, range 60 30-degree cone
-    DragonsBreathAOEL = 20545, // Helper->self, 4,5s cast, range 60 30-degree cone
+    DragonsBreath = 20543, // Boss->self, 4.0s cast, single-target, visual (side cones)
+    DragonsBreathAOER = 20544, // Helper->self, 4.5s cast, range 60 30-degree cone
+    DragonsBreathAOEL = 20545, // Helper->self, 4.5s cast, range 60 30-degree cone
     VoidTornado = 20546, // Boss->self, 4.0s cast, single-target, visual (set hp to 1)
     VoidTornadoAOE = 20547, // Helper->self, no cast, range 30 circle, set hp to 1
     VoidQuake = 20548, // Boss->self, 3.0s cast, single-target, visual (staggered circle/donuts)
@@ -46,7 +46,7 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.Hellpounce or AID.HellpounceSecond)
-            Activate(caster.Position, spell.LocXZ, spell.NPCFinishAt);
+            Activate(caster.Position, spell.LocXZ, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -54,8 +54,8 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
         switch ((AID)spell.Action.ID)
         {
             case AID.Hellpounce:
-                var offset = spell.LocXZ - Module.Bounds.Center;
-                Activate(spell.LocXZ, Module.Bounds.Center - offset, WorldState.FutureTime(3.7f));
+                var offset = spell.LocXZ - Module.Center;
+                Activate(spell.LocXZ, Module.Center - offset, WorldState.FutureTime(3.7f));
                 break;
             case AID.HellpounceSecond:
                 _charge = null;
@@ -65,9 +65,8 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
 
     private void Activate(WPos source, WPos target, DateTime activation)
     {
-        var shape = new AOEShapeRect(0, 5);
-        shape.SetEndPoint(target, source, new());
-        _charge = new(shape, source, default, activation);
+        var toTarget = target - source;
+        _charge = new(new AOEShapeRect(toTarget.Length(), 5), source, Angle.FromDirection(toTarget), activation);
     }
 }
 
@@ -82,7 +81,7 @@ class VoidQuake(BossModule module) : Components.GenericAOEs(module) //this conce
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _active.Take(1).Select(e => new AOEInstance(e.shape, e.caster.Position, e.caster.CastInfo!.Rotation, e.caster.CastInfo.NPCFinishAt));
+        return _active.Take(1).Select(e => new AOEInstance(e.shape, e.caster.Position, e.caster.CastInfo!.Rotation, Module.CastFinishAt(e.caster.CastInfo)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -123,4 +122,4 @@ class CE12BayingOfHoundsStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)] // bnpcname=9394
-public class CE12BayingOfHounds(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(154, 785), 25));
+public class CE12BayingOfHounds(WorldState ws, Actor primary) : BossModule(ws, primary, new(154, 785), new ArenaBoundsCircle(25));

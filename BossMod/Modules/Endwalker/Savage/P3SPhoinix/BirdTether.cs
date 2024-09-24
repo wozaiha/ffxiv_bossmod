@@ -4,12 +4,12 @@
 // TODO: simplify and make more robust, e.g. in case something goes wrong and bird dies without tether update
 class BirdTether(BossModule module) : BossComponent(module)
 {
-    public int NumFinishedChains { get; private set; } = 0;
-    private (Actor?, Actor?, int)[] _chains = new (Actor?, Actor?, int)[4]; // actor1, actor2, num-charges
+    public int NumFinishedChains { get; private set; }
+    private readonly (Actor?, Actor?, int)[] _chains = new (Actor?, Actor?, int)[4]; // actor1, actor2, num-charges
     private BitMask _playersInAOE;
 
-    private static readonly float _chargeHalfWidth = 3;
-    private static readonly float _chargeMinSafeDistance = 30;
+    private const float _chargeHalfWidth = 3;
+    private const float _chargeMinSafeDistance = 30;
 
     public override void Update()
     {
@@ -129,9 +129,9 @@ class BirdTether(BossModule module) : BossComponent(module)
                         Arena.AddLine(pc.Position, p2.Position, (pc.Tether.ID == (uint)TetherID.LargeBirdFar) ? ArenaColor.Safe : ArenaColor.Danger);
                     }
 
-                    if (bird.Position != Module.Bounds.Center)
+                    if (bird.Position != Module.Center)
                     {
-                        var safespot = bird.Position + (Module.Bounds.Center - bird.Position).Normalized() * _chargeMinSafeDistance;
+                        var safespot = bird.Position + (Module.Center - bird.Position).Normalized() * _chargeMinSafeDistance;
                         Arena.AddCircle(safespot, 1, ArenaColor.Safe);
                     }
                 }
@@ -151,9 +151,9 @@ class BirdTether(BossModule module) : BossComponent(module)
                 {
                     Arena.AddLine(bird.Position, pc.Position, (p1.Tether.ID == (uint)TetherID.LargeBirdFar) ? ArenaColor.Safe : ArenaColor.Danger);
 
-                    if (bird.Position != Module.Bounds.Center)
+                    if (bird.Position != Module.Center)
                     {
-                        var safespot = bird.Position + (Module.Bounds.Center - bird.Position).Normalized() * _chargeMinSafeDistance;
+                        var safespot = bird.Position + (Module.Center - bird.Position).Normalized() * _chargeMinSafeDistance;
                         Arena.AddCircle(safespot, 1, ArenaColor.Safe);
                     }
                 }

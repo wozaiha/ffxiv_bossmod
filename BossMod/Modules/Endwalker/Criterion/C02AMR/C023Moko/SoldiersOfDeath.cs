@@ -2,12 +2,12 @@
 
 class IronRainStorm(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
-    private IaiGiriBait? _bait = module.FindComponent<IaiGiriBait>();
+    public List<AOEInstance> AOEs = [];
+    private readonly IaiGiriBait? _bait = module.FindComponent<IaiGiriBait>();
 
     private static readonly AOEShapeCircle _shapeRain = new(10);
     private static readonly AOEShapeCircle _shapeStorm = new(20);
-    private static readonly WDir[] _safespotDirections = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+    private static readonly WDir[] _safespotDirections = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
@@ -22,7 +22,7 @@ class IronRainStorm(BossModule module) : Components.GenericAOEs(module)
             var offset = bait.DirOffsets[1].Rad > 0 ? 5 : -5;
             foreach (var dir in _safespotDirections)
             {
-                var safespot = Module.Bounds.Center + 19 * dir;
+                var safespot = Module.Center + 19 * dir;
                 if (!AOEs.Any(aoe => aoe.Check(safespot)))
                 {
                     Arena.AddCircle(safespot + offset * dir.OrthoR(), 1, ArenaColor.Safe);
@@ -40,7 +40,7 @@ class IronRainStorm(BossModule module) : Components.GenericAOEs(module)
             _ => null
         };
         if (shape != null)
-            AOEs.Add(new(shape, spell.LocXZ, default, spell.NPCFinishAt));
+            AOEs.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

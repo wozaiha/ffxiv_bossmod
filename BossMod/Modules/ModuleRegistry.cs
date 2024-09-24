@@ -25,8 +25,7 @@ public static class ModuleRegistry
         public uint GroupID;
         public uint NameID;
         public int SortOrder;
-
-        public bool CooldownPlanningSupported => ConfigType?.IsSubclassOf(typeof(CooldownPlanningConfigNode)) ?? false;
+        public int PlanLevel;
 
         public static Info? Build(Type module)
         {
@@ -39,7 +38,7 @@ public static class ModuleRegistry
             var tidType = infoAttr?.TetherIDType ?? module.Module.GetType($"{module.Namespace}.TetherID");
             var iidType = infoAttr?.IconIDType ?? module.Module.GetType($"{module.Namespace}.IconID");
 
-            if (statesType == null || !statesType.IsSubclassOf(typeof(StateMachineBuilder)) || statesType.GetConstructor(new[] { module }) == null)
+            if (statesType == null || !statesType.IsSubclassOf(typeof(StateMachineBuilder)) || statesType.GetConstructor([module]) == null)
             {
                 Service.Log($"[ModuleRegistry] Module {module.FullName} has incorrect associated states type: it should be derived from StateMachineBuilder and have a constructor accepting module");
                 return null;
@@ -84,8 +83,7 @@ public static class ModuleRegistry
             uint primaryOID = infoAttr?.PrimaryActorOID ?? 0;
             if (primaryOID == 0 && oidType != null)
             {
-                object? oid;
-                if (Enum.TryParse(oidType, "Boss", out oid))
+                if (Enum.TryParse(oidType, "Boss", out var oid))
                     primaryOID = (uint)oid!;
             }
             if (primaryOID == 0)
@@ -154,6 +152,7 @@ public static class ModuleRegistry
                 GroupID = groupID,
                 NameID = nameID,
                 SortOrder = sortOrder,
+                PlanLevel = infoAttr?.PlanLevel ?? 0,
             };
         }
 
@@ -165,7 +164,8 @@ public static class ModuleRegistry
         }
     }
 
-    private static Dictionary<uint, Info> _modules = new(); // [primary-actor-oid] = module type
+    private static readonly Dictionary<uint, Info> _modulesByOID = []; // [primary-actor-oid] = module info
+    private static readonly Dictionary<Type, Info> _modulesByType = []; // [module-type] = module info
 
     static ModuleRegistry()
     {
@@ -174,21 +174,18 @@ public static class ModuleRegistry
             var info = Info.Build(t);
             if (info == null)
                 continue;
-
-            if (_modules.ContainsKey(info.PrimaryActorOID))
-                throw new Exception($"Two boss modules have same primary actor OID: {t.Name} and {_modules[info.PrimaryActorOID].ModuleType.Name}");
-            _modules[info.PrimaryActorOID] = info;
+            _modulesByType[t] = info;
+            if (!_modulesByOID.TryAdd(info.PrimaryActorOID, info))
+                Service.Log($"Two boss modules have same primary actor OID: {t.Name} and {_modulesByOID[info.PrimaryActorOID].ModuleType.Name}");
         }
     }
 
-    public static IReadOnlyDictionary<uint, Info> RegisteredModules => _modules;
+    public static IReadOnlyDictionary<uint, Info> RegisteredModules => _modulesByOID;
 
-    public static Info? FindByOID(uint oid) => _modules.GetValueOrDefault(oid);
+    public static Info? FindByOID(uint oid) => _modulesByOID.GetValueOrDefault(oid);
+    public static Info? FindByType(Type type) => _modulesByType.GetValueOrDefault(type);
 
-    public static BossModule? CreateModule(Info? info, WorldState ws, Actor primary)
-    {
-        return info != null ? info.ModuleFactory(ws, primary) : null;
-    }
+    public static BossModule? CreateModule(Info? info, WorldState ws, Actor primary) => info?.ModuleFactory(ws, primary);
 
     public static BossModule? CreateModuleForActor(WorldState ws, Actor primary, BossModuleInfo.Maturity minMaturity)
     {
@@ -197,17 +194,12 @@ public static class ModuleRegistry
     }
 
     // TODO: this is a hack...
-    public static BossModule? CreateModuleForConfigPlanning(Type cfg)
+    public static BossModule? CreateModuleForConfigPlanning(Type module)
     {
-        foreach (var i in _modules.Values)
-            if (i.ConfigType == cfg)
-                return CreateModule(i, new(TimeSpan.TicksPerSecond, "fake"), new(0, i.PrimaryActorOID, -1, "", 0, ActorType.None, Class.None, 0, new()));
-        return null;
+        var info = FindByType(module);
+        return info != null ? CreateModule(info, new(TimeSpan.TicksPerSecond, "fake"), new(0, info.PrimaryActorOID, -1, "", 0, ActorType.None, Class.None, 0, new())) : null;
     }
 
     // TODO: this is a hack...
-    public static BossModule? CreateModuleForTimeline(uint oid)
-    {
-        return CreateModule(FindByOID(oid), new(TimeSpan.TicksPerSecond, "fake"), new(0, oid, -1, "", 0, ActorType.None, Class.None, 0, new()));
-    }
+    public static BossModule? CreateModuleForTimeline(uint oid) => CreateModule(FindByOID(oid), new(TimeSpan.TicksPerSecond, "fake"), new(0, oid, -1, "", 0, ActorType.None, Class.None, 0, new()));
 }

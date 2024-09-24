@@ -52,10 +52,10 @@ class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "G
     {
         if (_tenderStatuses[slot])
             foreach (var c in _tenderCasters)
-                yield return new(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+                yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
         if (_jealousStatuses[slot])
             foreach (var c in _jealousCasters)
-                yield return new(_shape, c.Position, c.CastInfo!.Rotation, c.CastInfo.NPCFinishAt);
+                yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -124,4 +124,4 @@ class CE13KillItWithFireStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
-public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-90, 700), 25));
+public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, new(-90, 700), new ArenaBoundsCircle(25));

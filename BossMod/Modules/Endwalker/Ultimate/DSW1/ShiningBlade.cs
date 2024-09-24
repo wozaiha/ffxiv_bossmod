@@ -2,20 +2,20 @@
 
 class ShiningBladeKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FaithUnmoving), 16)
 {
-    private WDir _dirToAdelphel = (module.Enemies(OID.SerAdelphel).FirstOrDefault()?.Position ?? module.Bounds.Center) - module.Bounds.Center; // we don't want to be knocked near adelphel
-    private IReadOnlyList<Actor> _tears = module.Enemies(OID.AetherialTear); // we don't want to be knocked into them
+    private WDir _dirToAdelphel = (module.Enemies(OID.SerAdelphel).FirstOrDefault()?.Position ?? module.Center) - module.Center; // we don't want to be knocked near adelphel
+    private readonly IReadOnlyList<Actor> _tears = module.Enemies(OID.AetherialTear); // we don't want to be knocked into them
 
-    private static readonly float _tearRadius = 9; // TODO: verify
+    private const float _tearRadius = 9; // TODO: verify
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         foreach (var e in CalculateMovements(slot, actor))
         {
-            if (!Module.Bounds.Contains(e.to))
+            if (!Module.InBounds(e.to))
                 hints.Add("About to be knocked into wall!");
             if (_tears.InRadius(e.to, _tearRadius).Any())
                 hints.Add("About to be knocked into tear!");
-            if (_dirToAdelphel.Dot(e.to - Module.Bounds.Center) > 0)
+            if (_dirToAdelphel.Dot(e.to - Module.Center) > 0)
                 hints.Add("Aim away from boss!");
         }
     }
@@ -30,7 +30,7 @@ class ShiningBladeKnockback(BossModule module) : Components.KnockbackFromCastTar
 
 class ShiningBladeFlares(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.BrightFlare), "GTFO from explosion!")
 {
-    private List<WDir> _flares = new(); // [0] = initial boss offset from center, [2] = first charge offset, [5] = second charge offset, [7] = third charge offset, [10] = fourth charge offset == [0]
+    private readonly List<WDir> _flares = []; // [0] = initial boss offset from center, [2] = first charge offset, [5] = second charge offset, [7] = third charge offset, [10] = fourth charge offset == [0]
 
     private static readonly AOEShapeCircle _shape = new(9);
 
@@ -38,7 +38,7 @@ class ShiningBladeFlares(BossModule module) : Components.GenericAOEs(module, Act
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _flares.Skip(NumCasts).Take(7).Select(f => new AOEInstance(_shape, Module.Bounds.Center + f)); // TODO: activation
+        return _flares.Skip(NumCasts).Take(7).Select(f => new AOEInstance(_shape, Module.Center + f)); // TODO: activation
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -47,8 +47,8 @@ class ShiningBladeFlares(BossModule module) : Components.GenericAOEs(module, Act
             return;
 
         // add first flare at boss position; we can't determine direction yet
-        var bossOffset = actor.Position - Module.Bounds.Center;
-        if (!Utils.AlmostEqual(bossOffset.LengthSq(), Module.Bounds.HalfSize * Module.Bounds.HalfSize, 1))
+        var bossOffset = actor.Position - Module.Center;
+        if (!Utils.AlmostEqual(bossOffset.LengthSq(), Module.Bounds.Radius * Module.Bounds.Radius, 1))
             ReportError("Unexpected boss position");
         _flares.Add(bossOffset);
     }
@@ -58,8 +58,8 @@ class ShiningBladeFlares(BossModule module) : Components.GenericAOEs(module, Act
         base.OnEventCast(caster, spell);
         if ((AID)spell.Action.ID == AID.ShiningBlade && _flares.Count <= 1)
         {
-            var startOffset = caster.Position - Module.Bounds.Center;
-            var endOffset = spell.TargetXZ - Module.Bounds.Center;
+            var startOffset = caster.Position - Module.Center;
+            var endOffset = spell.TargetXZ - Module.Center;
             _flares.Clear();
             _flares.Add(startOffset);
             AddShortFlares(startOffset, endOffset);
@@ -88,7 +88,7 @@ class ShiningBladeExecution(BossModule module) : Components.CastCounter(module, 
 {
     private Actor? _target;
 
-    private static readonly float _executionRadius = 5;
+    private const float _executionRadius = 5;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {

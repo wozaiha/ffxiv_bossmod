@@ -3,10 +3,10 @@
 // state related to darkblaze twister mechanics
 class DarkblazeTwister(BossModule module) : BossComponent(module)
 {
-    private static readonly float _knockbackRange = 17;
-    private static readonly float _aoeInnerRadius = 5;
-    private static readonly float _aoeMiddleRadius = 7;
-    private static readonly float _aoeOuterRadius = 20;
+    private const float _knockbackRange = 17;
+    private const float _aoeInnerRadius = 5;
+    private const float _aoeMiddleRadius = 7;
+    private const float _aoeOuterRadius = 20;
 
     public IEnumerable<Actor> BurningTwisters() => Module.Enemies(OID.DarkblazeTwister).Where(twister => twister.CastInfo?.IsSpell(AID.BurningTwister) ?? false);
     public Actor? DarkTwister() => Module.Enemies(OID.DarkblazeTwister).FirstOrDefault(twister => twister.CastInfo?.IsSpell(AID.DarkTwister) ?? false);
@@ -14,7 +14,7 @@ class DarkblazeTwister(BossModule module) : BossComponent(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         var adjPos = Components.Knockback.AwayFromSource(actor.Position, DarkTwister(), _knockbackRange);
-        if (actor.Position != adjPos && !Module.Bounds.Contains(adjPos))
+        if (actor.Position != adjPos && !Module.InBounds(adjPos))
         {
             hints.Add("About to be knocked back into wall!");
         }

@@ -16,7 +16,7 @@ public enum AID : uint
 
 class Selfdetonations(BossModule module) : BossComponent(module)
 {
-    private static readonly string hint = "In bomb explosion radius!";
+    private const string hint = "In bomb explosion radius!";
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -83,7 +83,7 @@ class Stage08Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 618, NameID = 8140, SortOrder = 1)]
 public class Stage08Act1 : BossModule
 {
-    public Stage08Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage08Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<Selfdetonations>();
@@ -100,9 +100,8 @@ public class Stage08Act1 : BossModule
             Arena.Actor(s, ArenaColor.Enemy);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

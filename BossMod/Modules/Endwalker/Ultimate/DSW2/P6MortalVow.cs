@@ -3,11 +3,11 @@
 class P6MortalVow : Components.UniformStackSpread
 {
     public int Progress { get; private set; } // 0 before application, N before Nth pass
-    private DSW2Config _config = Service.Config.Get<DSW2Config>();
+    private readonly DSW2Config _config = Service.Config.Get<DSW2Config>();
     private Actor? _vow;
     private Actor? _target;
     private DateTime _vowExpiration;
-    private DateTime[] _atonementExpiration = new DateTime[PartyState.MaxPartySize];
+    private readonly DateTime[] _atonementExpiration = new DateTime[PartyState.MaxPartySize];
 
     public P6MortalVow(BossModule module) : base(module, 5, 5, 2, 2, true, false)
     {
@@ -34,7 +34,7 @@ class P6MortalVow : Components.UniformStackSpread
     {
         base.DrawArenaForeground(pcSlot, pc);
         if (_vow != null && _target != null && (pc == _vow || pc == _target))
-            Arena.AddCircle(Module.Bounds.Center, 1, ArenaColor.Safe);
+            Arena.AddCircle(Module.Center, 1, ArenaColor.Safe);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)

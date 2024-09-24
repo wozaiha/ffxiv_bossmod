@@ -10,12 +10,12 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
-    Blizzard = 14267, // Imp->player, 1,0s cast, single-target
-    VoidBlizzard = 15063, // Imp->player, 6,0s cast, single-target
-    Icefall = 15064, // Imp->location, 2,5s cast, range 5 circle
-    TheRamsVoice = 15079, // Boss->self, 4,0s cast, range 9 circle
-    TheDragonsVoice = 15080, // Boss->self, 4,0s cast, range 8-30 donut
-    TheRamsKeeper = 15081, // Boss->location, 6,0s cast, range 9 circle
+    Blizzard = 14267, // Imp->player, 1.0s cast, single-target
+    VoidBlizzard = 15063, // Imp->player, 6.0s cast, single-target
+    Icefall = 15064, // Imp->location, 2.5s cast, range 5 circle
+    TheRamsVoice = 15079, // Boss->self, 4.0s cast, range 9 circle
+    TheDragonsVoice = 15080, // Boss->self, 4.0s cast, range 8-30 donut
+    TheRamsKeeper = 15081, // Boss->location, 6.0s cast, range 9 circle
 
 }
 
@@ -62,7 +62,7 @@ class Stage21Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 631, NameID = 8121, SortOrder = 2)]
 public class Stage21Act2 : BossModule
 {
-    public Stage21Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))
+    public Stage21Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
     {
         ActivateComponent<Hints>();
     }

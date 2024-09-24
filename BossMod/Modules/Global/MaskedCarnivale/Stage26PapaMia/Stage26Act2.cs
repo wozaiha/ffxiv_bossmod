@@ -10,12 +10,12 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6499, // 2C58->player, no cast, single-target
-    RawInstinct = 18604, // 2C58->self, 3,0s cast, single-target
-    BodyBlow = 18601, // 2C58->player, 4,0s cast, single-target
-    VoidThunderII = 18602, // 2C58->location, 3,0s cast, range 4 circle
+    RawInstinct = 18604, // 2C58->self, 3.0s cast, single-target
+    BodyBlow = 18601, // 2C58->player, 4.0s cast, single-target
+    VoidThunderII = 18602, // 2C58->location, 3.0s cast, range 4 circle
     LightningBolt = 18606, // 2C59->self, no cast, range 8 circle
     DadJoke = 18605, // 2C58->self, no cast, range 25+R 120-degree cone, knockback 15, dir forward
-    VoidThunderIII = 18603, // 2C58->player, 4,0s cast, range 20 circle
+    VoidThunderIII = 18603, // 2C58->player, 4.0s cast, range 20 circle
 }
 
 public enum SID : uint
@@ -57,7 +57,7 @@ class DadJoke(BossModule module) : Components.Knockback(module)
     {
         if (Module.FindComponent<Thunderhead>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false)
             return true;
-        if (!Module.Bounds.Contains(pos))
+        if (!Module.InBounds(pos))
             return true;
         else
             return false;
@@ -81,7 +81,7 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var critbuff = Module.Enemies(OID.Boss).Where(x => x.FindStatus(SID.CriticalStrikes) != null).FirstOrDefault();
+        var critbuff = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.CriticalStrikes) != null);
         if (critbuff != null)
             hints.Add($"Dispel {Module.PrimaryActor.Name} with Eerie Soundwave!");
     }
@@ -113,7 +113,7 @@ class Stage26Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9231, SortOrder = 2)]
 public class Stage26Act2 : BossModule
 {
-    public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))
+    public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
     {
         ActivateComponent<Hints>();
     }

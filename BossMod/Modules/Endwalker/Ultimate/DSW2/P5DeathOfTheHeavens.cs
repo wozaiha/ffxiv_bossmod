@@ -41,26 +41,26 @@ class P5DeathOfTheHeavensLightningStorm : Components.UniformStackSpread
 class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.HeavensflameAOE))
 {
     public bool KnockbackDone { get; private set; }
-    private WPos[] _playerAdjustedPositions = new WPos[PartyState.MaxPartySize];
-    private int[] _playerIcons = new int[PartyState.MaxPartySize]; // 0 = unassigned, 1 = circle/red, 2 = triangle/green, 3 = cross/blue, 4 = square/purple
+    private readonly WPos[] _playerAdjustedPositions = new WPos[PartyState.MaxPartySize];
+    private readonly int[] _playerIcons = new int[PartyState.MaxPartySize]; // 0 = unassigned, 1 = circle/red, 2 = triangle/green, 3 = cross/blue, 4 = square/purple
     private BitMask _brokenTethers;
     private BitMask _dooms;
-    private List<WPos> _cleanses = new();
+    private readonly List<WPos> _cleanses = [];
     private WDir _relSouth; // TODO: this is quite hacky, works for LPDU...
 
-    private static readonly float _knockbackDistance = 16;
-    private static readonly float _aoeRadius = 10;
-    private static readonly float _tetherBreakDistance = 32; // TODO: verify...
+    private const float _knockbackDistance = 16;
+    private const float _aoeRadius = 10;
+    private const float _tetherBreakDistance = 32; // TODO: verify...
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(Module.Bounds.Center, _knockbackDistance);
+        yield return new(Module.Center, _knockbackDistance);
     }
 
     public override void Update()
     {
         foreach (var (slot, player) in Raid.WithSlot())
-            _playerAdjustedPositions[slot] = !KnockbackDone ? AwayFromSource(player.Position, Module.Bounds.Center, _knockbackDistance) : player.Position;
+            _playerAdjustedPositions[slot] = !KnockbackDone ? AwayFromSource(player.Position, Module.Center, _knockbackDistance) : player.Position;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -72,7 +72,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
             hints.Add("Cancel knockback immunity!");
 
         var actorAdjPos = _playerAdjustedPositions[slot];
-        if (!Module.Bounds.Contains(actorAdjPos))
+        if (!Module.InBounds(actorAdjPos))
             hints.Add("About to be knocked into wall!");
 
         if (Raid.WithSlot().Exclude(actor).WhereSlot(s => _playerAdjustedPositions[s].InCircle(actorAdjPos, _aoeRadius)).Any())
@@ -113,7 +113,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
         if ((AID)spell.Action.ID == AID.WingsOfSalvationAOE)
         {
             _cleanses.Add(spell.LocXZ);
-            _relSouth += spell.LocXZ - Module.Bounds.Center;
+            _relSouth += spell.LocXZ - Module.Center;
         }
     }
 
@@ -179,17 +179,17 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
         switch (icon)
         {
             case 1: // circle - show two cleanses closest to E and W
-                yield return ClosestCleanse(Module.Bounds.Center + offset);
-                yield return ClosestCleanse(Module.Bounds.Center - offset);
+                yield return ClosestCleanse(Module.Center + offset);
+                yield return ClosestCleanse(Module.Center - offset);
                 break;
             case 2: // triangle/square - doom to closest cleanse to SE/SW, otherwise opposite
             case 4:
-                var cleanseSpot = ClosestCleanse(Module.Bounds.Center + offset);
-                yield return _dooms[slot] ? cleanseSpot : Module.Bounds.Center - (cleanseSpot - Module.Bounds.Center);
+                var cleanseSpot = ClosestCleanse(Module.Center + offset);
+                yield return _dooms[slot] ? cleanseSpot : Module.Center - (cleanseSpot - Module.Center);
                 break;
             case 3: // cross - show two spots to N and S
-                yield return Module.Bounds.Center + offset;
-                yield return Module.Bounds.Center - offset;
+                yield return Module.Center + offset;
+                yield return Module.Center - offset;
                 break;
         }
     }

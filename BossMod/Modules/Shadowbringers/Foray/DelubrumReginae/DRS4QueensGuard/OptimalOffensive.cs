@@ -4,12 +4,11 @@ class OptimalOffensiveSword(BossModule module) : Components.ChargeAOEs(module, A
 class OptimalOffensiveShield(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.OptimalOffensiveShield), 2.5f);
 
 // note: there are two casters (as usual in bozja content for raidwides)
-// TODO: not sure whether it ignores immunes, I assume so...
 class OptimalOffensiveShieldKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.OptimalOffensiveShieldKnockback), 10, true, 1);
 
 class UnluckyLot(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe = new(new AOEShapeCircle(20), module.Bounds.Center, default, module.WorldState.FutureTime(7.6f));
+    private AOEInstance? _aoe = new(new AOEShapeCircle(20), module.Center, default, module.WorldState.FutureTime(7.6f));
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 

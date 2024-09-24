@@ -13,21 +13,21 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
-    MistralShriek = 14611, // Boss->self, 7,0s cast, range 30 circle
-    MistralSong = 14616, // Boss->self, 3,5s cast, range 20 150-degree cone
+    MistralShriek = 14611, // Boss->self, 7.0s cast, range 30 circle
+    MistralSong = 14616, // Boss->self, 3.5s cast, range 20 150-degree cone
     MiniSupercell = 14588, // Helper->Noctis, no cast, single-target, linestack target
-    MiniSupercell2 = 14612, // Boss->self, 5,0s cast, range 45 width 6 rect, line stack, knockback 50, away from source
-    GravitationalForce = 14614, // Boss->self, 3,5s cast, single-target
-    GravitationalForce2 = 14615, // Helper->location, 3,5s cast, range 5 circle
+    MiniSupercell2 = 14612, // Boss->self, 5.0s cast, range 45 width 6 rect, line stack, knockback 50, away from source
+    GravitationalForce = 14614, // Boss->self, 3.5s cast, single-target
+    GravitationalForce2 = 14615, // Helper->location, 3.5s cast, range 5 circle
     Vortex = 14677, // Helper->self, no cast, range 50 circle
     Vortex2 = 14620, // Helper->self, no cast, range 50 circle
     Vortex3 = 14622, // Helper->self, no cast, range 50 circle
     Vortex4 = 14623, // Helper->self, no cast, range 50 circle
-    Microburst = 14619, // Boss->self, 17,3s cast, range 25 circle
+    Microburst = 14619, // Boss->self, 17.3s cast, range 25 circle
     GustFront = 14617, // Boss->self, no cast, single-target, dorito stack
     GustFront2 = 14618, // Helper->player/Noctis, no cast, single-target
-    WickedTornado = 14613, // Boss->self, 3,5s cast, range 8-20 donut
-    MistralGaol = 14621, // Boss->self, 5,0s cast, range 6 circle, quick time event starts
+    WickedTornado = 14613, // Boss->self, 3.5s cast, range 8-20 donut
+    MistralGaol = 14621, // Boss->self, 5.0s cast, range 6 circle, quick time event starts
     Microburst2 = 14624, // Boss->self, no cast, range 25 circle, quick time event failed (enrage)
     warpstrike = 14597, //duty action for player
 }
@@ -71,7 +71,7 @@ class Microburst(BossModule module) : Components.SelfTargetedAOEs(module, Action
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (casting && actor.Position.AlmostEqual(Module.PrimaryActor.Position, 15))
-            hints.PlannedActions.Add((ActionID.MakeSpell(AID.warpstrike), Module.Enemies(OID.Monolith).FirstOrDefault()!, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.warpstrike), Module.Enemies(OID.Monolith).FirstOrDefault()!, ActionQueue.Priority.High);
     }
 }
 
@@ -105,9 +105,9 @@ class MistralShriek(BossModule module) : Components.SelfTargetedAOEs(module, Act
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (casting)
-            hints.PlannedActions.Add((ActionID.MakeSpell(AID.warpstrike), Module.Enemies(OID.Monolith).Where(p => !p.Position.AlmostEqual(Module.PrimaryActor.Position, 5)).FirstOrDefault()!, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.warpstrike), Module.Enemies(OID.Monolith).FirstOrDefault(p => !p.Position.AlmostEqual(Module.PrimaryActor.Position, 5))!, ActionQueue.Priority.High);
         if (WorldState.CurrentTime > done && WorldState.CurrentTime < done.AddSeconds(2))
-            hints.PlannedActions.Add((ActionID.MakeSpell(AID.warpstrike), Module.PrimaryActor, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.warpstrike), Module.PrimaryActor, ActionQueue.Priority.High);
     }
 }
 
@@ -183,7 +183,7 @@ class GarudaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68696, NameID = 7893)] // also: CFC 646
-public class Garuda(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(0, 0), 22))
+public class Garuda(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(22))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

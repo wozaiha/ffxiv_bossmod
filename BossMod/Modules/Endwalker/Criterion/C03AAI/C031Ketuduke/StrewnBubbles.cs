@@ -2,7 +2,7 @@
 
 class StrewnBubbles(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shape = new(20, 5);
 
@@ -30,7 +30,7 @@ class StrewnBubbles(BossModule module) : Components.GenericAOEs(module)
 
 class RecedingEncroachingTwintides(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeOut = new(14);
     private static readonly AOEShapeDonut _shapeIn = new(8, 60);
@@ -43,13 +43,13 @@ class RecedingEncroachingTwintides(BossModule module) : Components.GenericAOEs(m
         {
             case AID.NRecedingTwintides:
             case AID.SRecedingTwintides:
-                _aoes.Add(new(_shapeOut, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(_shapeIn, caster.Position, default, spell.NPCFinishAt.AddSeconds(3.1f)));
+                _aoes.Add(new(_shapeOut, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(_shapeIn, caster.Position, default, Module.CastFinishAt(spell, 3.1f)));
                 break;
             case AID.NEncroachingTwintides:
             case AID.SEncroachingTwintides:
-                _aoes.Add(new(_shapeIn, caster.Position, default, spell.NPCFinishAt));
-                _aoes.Add(new(_shapeOut, caster.Position, default, spell.NPCFinishAt.AddSeconds(3.1f)));
+                _aoes.Add(new(_shapeIn, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(_shapeOut, caster.Position, default, Module.CastFinishAt(spell, 3.1f)));
                 break;
         }
     }

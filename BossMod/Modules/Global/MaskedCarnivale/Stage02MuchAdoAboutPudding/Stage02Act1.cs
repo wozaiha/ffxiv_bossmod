@@ -9,10 +9,10 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Fire = 14266, // 25C0->player, 1,0s cast, single-target
-    Aero = 14269, // 25C2->player, 1,0s cast, single-target
-    Thunder = 14268, // 25C4->player, 1,0s cast, single-target
-    GoldenTongue = 14265, // 25C0/25C2/25C4->self, 5,0s cast, single-target
+    Fire = 14266, // 25C0->player, 1.0s cast, single-target
+    Aero = 14269, // 25C2->player, 1.0s cast, single-target
+    Thunder = 14268, // 25C4->player, 1.0s cast, single-target
+    GoldenTongue = 14265, // 25C0/25C2/25C4->self, 5.0s cast, single-target
 }
 
 class GoldenTongue(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.GoldenTongue), "Can be interrupted, increase its magic damage");
@@ -48,7 +48,7 @@ class Stage02Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 612, NameID = 8078, SortOrder = 1)]
 public class Stage02Act1 : BossModule
 {
-    public Stage02Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage02Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

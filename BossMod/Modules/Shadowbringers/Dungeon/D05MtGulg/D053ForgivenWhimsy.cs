@@ -12,21 +12,21 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 15624, // 27CC->player, no cast, single-target
-    SacramentOfPenance = 15627, // 27CC->self, 4,0s cast, single-target
+    SacramentOfPenance = 15627, // 27CC->self, 4.0s cast, single-target
     SacramentOfPenance2 = 15628, // 233C->self, no cast, range 50 circle
     Reformation = 15620, // 27CC->self, no cast, single-target, boss changes pattern
-    ExegesisA = 16989, // 27CC->self, 5,0s cast, single-target
-    ExegesisB = 16987, // 27CC->self, 5,0s cast, single-target
-    ExegesisC = 15622, // 27CC->self, 5,0s cast, single-target
-    ExegesisD = 16988, // 27CC->self, 5,0s cast, single-target
+    ExegesisA = 16989, // 27CC->self, 5.0s cast, single-target
+    ExegesisB = 16987, // 27CC->self, 5.0s cast, single-target
+    ExegesisC = 15622, // 27CC->self, 5.0s cast, single-target
+    ExegesisD = 16988, // 27CC->self, 5.0s cast, single-target
     Exegesis = 15623, // 233C->self, no cast, range 10 width 10 rect
-    Catechism = 15625, // 27CC->self, 4,0s cast, single-target
+    Catechism = 15625, // 27CC->self, 4.0s cast, single-target
     Catechism2 = 15626, // 233C->player, no cast, single-target
-    JudgmentDay = 15631, // 27CC->self, 3,0s cast, single-target, tower circle 5
+    JudgmentDay = 15631, // 27CC->self, 3.0s cast, single-target, tower circle 5
     Judged = 15633, // 233C->self, no cast, range 5 circle, tower success
     FoundWanting = 15632, // 233C->self, no cast, range 40 circle, tower fail
     RiteOfTheSacrament = 15629, // 27CC->self, no cast, single-target
-    PerfectContrition = 15630, // 27CD->self, 6,0s cast, range 5-15 donut
+    PerfectContrition = 15630, // 27CD->self, 6.0s cast, range 5-15 donut
 }
 
 class Catechism(BossModule module) : Components.SingleTargetCastDelay(module, ActionID.MakeSpell(AID.Catechism), ActionID.MakeSpell(AID.Catechism2), 0.5f);
@@ -55,7 +55,7 @@ class JudgmentDay(BossModule module) : Components.GenericTowers(module)
         if (Towers.Count > 0)
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Towers[0].Position, 5));
         if (Towers.Count > 1)
-            hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Sprint), actor, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
     }
 }
 
@@ -102,19 +102,19 @@ class Exegesis(BossModule module) : Components.GenericAOEs(module)
         {
             case AID.ExegesisA:
                 Pattern = Patterns.Diagonal;
-                _activation = spell.NPCFinishAt;
+                _activation = Module.CastFinishAt(spell);
                 break;
             case AID.ExegesisB:
                 Pattern = Patterns.EastWest;
-                _activation = spell.NPCFinishAt;
+                _activation = Module.CastFinishAt(spell);
                 break;
             case AID.ExegesisC:
                 Pattern = Patterns.NorthSouth;
-                _activation = spell.NPCFinishAt;
+                _activation = Module.CastFinishAt(spell);
                 break;
             case AID.ExegesisD:
                 Pattern = Patterns.Cross;
-                _activation = spell.NPCFinishAt;
+                _activation = Module.CastFinishAt(spell);
                 break;
         }
     }
@@ -140,4 +140,4 @@ class D053ForgivenWhimsyStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8261)]
-public class D053ForgivenWhimsy(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(-240, -50), 15));
+public class D053ForgivenWhimsy(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240, -50), new ArenaBoundsSquare(15));

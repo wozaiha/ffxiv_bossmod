@@ -7,12 +7,12 @@ class LimitlessDesolation : Components.UniformStackSpread
     public int NumBursts { get; private set; }
     private BitMask _waitingForTowers;
     private BitMask _activeTowers;
-    private int[] _towerAssignments = Utils.MakeArray(PartyState.MaxPartySize, -1); // [slot] = tower index
-    private int[] _towerSlots = Utils.MakeArray(_towerOffsets.Length, -1); // [tower index] = slot
-    private bool _thRight = Service.Config.Get<P8S2Config>().LimitlessDesolationTHRight;
+    private readonly int[] _towerAssignments = Utils.MakeArray(PartyState.MaxPartySize, -1); // [slot] = tower index
+    private readonly int[] _towerSlots = Utils.MakeArray(_towerOffsets.Length, -1); // [tower index] = slot
+    private readonly bool _thRight = Service.Config.Get<P8S2Config>().LimitlessDesolationTHRight;
 
-    private static readonly float _towerRadius = 4;
-    private static readonly WDir[] _towerOffsets = { new(-15, -15), new(-15, -5), new(-15, 5), new(-5, -15), new(-5, -5), new(-5, 5), new(5, -15), new(5, -5), new(5, 5), new(15, -15), new(15, -5), new(15, 5) };
+    private const float _towerRadius = 4;
+    private static readonly WDir[] _towerOffsets = [new(-15, -15), new(-15, -5), new(-15, 5), new(-5, -15), new(-5, -5), new(-5, 5), new(5, -15), new(5, -5), new(5, 5), new(15, -15), new(15, -5), new(15, 5)];
 
     public LimitlessDesolation(BossModule module) : base(module, 0, 6, alwaysShowSpreads: true, raidwideOnResolve: false)
     {
@@ -24,7 +24,7 @@ class LimitlessDesolation : Components.UniformStackSpread
         base.AddHints(slot, actor, hints);
 
         var towerIndex = _towerAssignments[slot];
-        if (towerIndex >= 0 && !actor.Position.InCircle(Module.Bounds.Center + _towerOffsets[towerIndex], _towerRadius))
+        if (towerIndex >= 0 && !actor.Position.InCircle(Module.Center + _towerOffsets[towerIndex], _towerRadius))
             hints.Add("Soak assigned tower!");
     }
 
@@ -34,7 +34,7 @@ class LimitlessDesolation : Components.UniformStackSpread
 
         var towerIndex = _towerAssignments[pcSlot];
         if (towerIndex >= 0)
-            Arena.AddCircle(Module.Bounds.Center + _towerOffsets[towerIndex], _towerRadius, ArenaColor.Safe, 2);
+            Arena.AddCircle(Module.Center + _towerOffsets[towerIndex], _towerRadius, ArenaColor.Safe, 2);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -82,7 +82,7 @@ class LimitlessDesolation : Components.UniformStackSpread
             case 0x00020001: // appear
                 _activeTowers.Set(towerIndex);
                 bool towerForTH = _thRight == towerIndex >= 6;
-                var (slot, player) = Raid.WithSlot(true).Where(ia => _waitingForTowers[ia.Item1] && ia.Item2.Class.IsSupport() == towerForTH).FirstOrDefault();
+                var (slot, player) = Raid.WithSlot(true).FirstOrDefault(ia => _waitingForTowers[ia.Item1] && ia.Item2.Class.IsSupport() == towerForTH);
                 if (player != null)
                 {
                     _towerAssignments[slot] = towerIndex;

@@ -8,11 +8,11 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    WildHorn = 14751, // 271B->self, 3,5s cast, range 10+R 120-degree cone
-    SporeSac = 14752, // 271B->self, 3,0s cast, range 50 circle
+    WildHorn = 14751, // 271B->self, 3.5s cast, range 10+R 120-degree cone
+    SporeSac = 14752, // 271B->self, 3.0s cast, range 50 circle
     Seedvolley = 14750, // 271C->player, no cast, single-target
-    Trounce = 14754, // 271B->self, 4,5s cast, range 40+R 60-degree cone
-    InflammableFumes = 14753, // 271B->self, 15,0s cast, range 50 circle
+    Trounce = 14754, // 271B->self, 4.5s cast, range 40+R 60-degree cone
+    InflammableFumes = 14753, // 271B->self, 15.0s cast, range 50 circle
 }
 
 class WildHorn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(16.96f, 60.Degrees()));
@@ -44,7 +44,7 @@ class Stage12Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 622, NameID = 8102, SortOrder = 2)]
 public class Stage12Act2 : BossModule
 {
-    public Stage12Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage12Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }
@@ -56,9 +56,8 @@ public class Stage12Act2 : BossModule
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

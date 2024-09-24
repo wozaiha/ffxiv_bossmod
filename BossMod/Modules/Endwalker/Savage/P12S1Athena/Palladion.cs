@@ -8,7 +8,7 @@ class Palladion(BossModule module) : BossComponent(module)
     public BitMask BaitOrder; // bit i is set if i'th action is a bait rather than center aoe
     public int NumBaitsAssigned;
     public int NumBaitsDone;
-    private Dictionary<ulong, bool> _baitedLight = new(); // key = instance id, value = true if bait, false if center aoe
+    private readonly Dictionary<ulong, bool> _baitedLight = []; // key = instance id, value = true if bait, false if center aoe
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -72,7 +72,7 @@ class PalladionArena(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         for (int i = 0; i < 8; ++i)
-            Arena.PathLineTo(Module.Bounds.Center + 14 * (i * 45).Degrees().ToDirection());
+            Arena.PathLineTo(Module.Center + 14 * (i * 45).Degrees().ToDirection());
         Arena.PathStroke(true, ArenaColor.Border, 2);
     }
 }
@@ -80,14 +80,17 @@ class PalladionArena(BossModule module) : BossComponent(module)
 // shockwave is targeted at next jump target; everyone except target and partner should avoid it
 class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
 {
-    private Palladion? _palladion = module.FindComponent<Palladion>();
+    private readonly Palladion? _palladion = module.FindComponent<Palladion>();
     private WPos _origin = module.PrimaryActor.Position;
-    private DateTime _activation = module.PrimaryActor.CastInfo?.NPCFinishAt.AddSeconds(0.3f) ?? default;
+    private DateTime _activation = module.CastFinishAt(module.PrimaryActor.CastInfo, 0.3f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && target != null && actor != target && actor != _palladion.Partners[NumCasts])
-            yield return new(BuildShape(target.Position), _origin, default, _activation);
+        {
+            var toTarget = target.Position - _origin;
+            yield return new(new AOEShapeRect(toTarget.Length(), 2), _origin, Angle.FromDirection(toTarget), _activation);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -100,7 +103,10 @@ class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && target != null && (pc == target || pc == _palladion.Partners[NumCasts]))
-            BuildShape(target.Position).Outline(Arena, _origin, default, ArenaColor.Safe);
+        {
+            var toTarget = target.Position - _origin;
+            Arena.AddRect(_origin, toTarget.Normalized(), toTarget.Length(), 0, 2, ArenaColor.Safe);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -113,24 +119,17 @@ class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
             ++NumCasts;
         }
     }
-
-    private AOEShapeRect BuildShape(WPos target)
-    {
-        var shape = new AOEShapeRect(0, 2);
-        shape.SetEndPoint(target, _origin, default);
-        return shape;
-    }
 }
 
 class PalladionStack : Components.UniformStackSpread
 {
     private int _numCasts;
-    private Palladion? _palladion;
+    private readonly Palladion? _palladion;
 
     public PalladionStack(BossModule module) : base(module, 6, 0, raidwideOnResolve: false)
     {
         _palladion = module.FindComponent<Palladion>();
-        UpdateStack(Module.PrimaryActor.CastInfo?.NPCFinishAt.AddSeconds(0.3f) ?? default);
+        UpdateStack(Module.CastFinishAt(Module.PrimaryActor.CastInfo, 0.3f));
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => IsStackTarget(player) ? PlayerPriority.Interesting : PlayerPriority.Normal;
@@ -156,22 +155,22 @@ class PalladionVoidzone(BossModule module) : Components.PersistentVoidzoneAtCast
 
 class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 {
-    private Palladion? _palladion = module.FindComponent<Palladion>();
+    private readonly Palladion? _palladion = module.FindComponent<Palladion>();
 
     private static readonly AOEShapeCircle _shape = new(4); // note: it's really a 270? degree cone, but we don't really know rotation early enough, and we just shouldn't stay in center anyway
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_palladion != null && _palladion.NumBaitsDone < _palladion.NumBaitsAssigned && !_palladion.BaitOrder[_palladion.NumBaitsDone])
-            yield return new(_shape, Module.Bounds.Center);
+            yield return new(_shape, Module.Center);
     }
 }
 
 // TODO: reconsider - show always, even if next is clear cut?..
 class PalladionWhiteFlame : Components.GenericBaitAway
 {
-    private Palladion? _palladion;
-    private Actor _fakeSource = new(0, 0, -1, "dummy", 0, ActorType.None, Class.None, 0, new(100, 0, 100, 0)); // fake actor used as bait source
+    private readonly Palladion? _palladion;
+    private readonly Actor _fakeSource = new(0, 0, -1, "dummy", 0, ActorType.None, Class.None, 0, new(100, 0, 100, 0)); // fake actor used as bait source
 
     private static readonly AOEShapeRect _shape = new(100, 2);
 
@@ -185,7 +184,7 @@ class PalladionWhiteFlame : Components.GenericBaitAway
     {
         CurrentBaits.Clear();
         if (_palladion != null && _palladion.NumBaitsDone < _palladion.NumBaitsAssigned && _palladion.BaitOrder[_palladion.NumBaitsDone])
-            foreach (var t in Raid.WithoutSlot().SortedByRange(Module.Bounds.Center).Take(2))
+            foreach (var t in Raid.WithoutSlot().SortedByRange(Module.Center).Take(2))
                 CurrentBaits.Add(new(_fakeSource, t, _shape));
     }
 
@@ -199,7 +198,7 @@ class PalladionWhiteFlame : Components.GenericBaitAway
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (CurrentBaits.Count > 0)
-            Arena.Actor(Module.Bounds.Center, default, ArenaColor.Object);
+            Arena.Actor(Module.Center, default, ArenaColor.Object);
         base.DrawArenaForeground(pcSlot, pc);
     }
 
@@ -236,6 +235,6 @@ class PalladionDestroyPlatforms(BossModule module) : Components.GenericAOEs(modu
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(_shape, Module.Bounds.Center);
+        yield return new(_shape, Module.Center);
     }
 }

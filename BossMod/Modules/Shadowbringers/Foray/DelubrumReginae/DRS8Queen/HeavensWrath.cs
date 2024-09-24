@@ -5,7 +5,7 @@ class HeavensWrathAOE(BossModule module) : Components.SelfTargetedAOEs(module, A
 // TODO: generalize
 class HeavensWrathKnockback(BossModule module) : Components.Knockback(module)
 {
-    private List<Source> _sources = new();
+    private readonly List<Source> _sources = [];
     private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
 
     public override IEnumerable<Source> Sources(int slot, Actor actor) => _sources;
@@ -15,8 +15,8 @@ class HeavensWrathKnockback(BossModule module) : Components.Knockback(module)
         if ((AID)spell.Action.ID == AID.HeavensWrathVisual)
         {
             _sources.Clear();
-            _sources.Add(new(caster.Position, 15, spell.NPCFinishAt, _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
-            _sources.Add(new(caster.Position, 15, spell.NPCFinishAt, _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(caster.Position, 15, Module.CastFinishAt(spell), _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(caster.Position, 15, Module.CastFinishAt(spell), _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
         }
     }
 

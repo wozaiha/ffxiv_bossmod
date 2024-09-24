@@ -7,7 +7,7 @@ class Hydroshot(BossModule module) : Components.Knockback(module)
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         if (_caster?.CastInfo?.TargetID == actor.InstanceID)
-            yield return new(_caster.Position, 10, _caster.CastInfo?.NPCFinishAt ?? default);
+            yield return new(_caster.Position, 10, Module.CastFinishAt(_caster.CastInfo));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -25,7 +25,7 @@ class Hydroshot(BossModule module) : Components.Knockback(module)
 
 class C030MonkStates : StateMachineBuilder
 {
-    private bool _savage;
+    private readonly bool _savage;
 
     public C030MonkStates(BossModule module, bool savage) : base(module)
     {

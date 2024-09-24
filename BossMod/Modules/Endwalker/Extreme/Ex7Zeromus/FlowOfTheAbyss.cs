@@ -32,7 +32,7 @@ class FlowOfTheAbyssSpreadStack(BossModule module) : Components.GenericStackSpre
 
 class FlowOfTheAbyssAkhRhai(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shape = new(5);
 
@@ -55,7 +55,7 @@ class FlowOfTheAbyssAkhRhai(BossModule module) : Components.GenericAOEs(module)
 
 class ChasmicNails(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(Angle rot, DateTime activation)> _angles = new();
+    private readonly List<(Angle rot, DateTime activation)> _angles = [];
 
     private static readonly AOEShapeCone _shape = new(60, 20.Degrees());
 
@@ -71,7 +71,7 @@ class ChasmicNails(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.ChasmicNailsAOE1 or AID.ChasmicNailsAOE2 or AID.ChasmicNailsAOE3 or AID.ChasmicNailsAOE4 or AID.ChasmicNailsAOE5)
         {
-            _angles.Add((spell.Rotation, spell.NPCFinishAt));
+            _angles.Add((spell.Rotation, Module.CastFinishAt(spell)));
             _angles.SortBy(a => a.activation);
         }
     }

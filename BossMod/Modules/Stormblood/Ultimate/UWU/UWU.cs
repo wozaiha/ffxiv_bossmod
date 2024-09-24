@@ -2,9 +2,6 @@
 
 class P1Slipstream(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Slipstream), new AOEShapeCone(11.7f, 45.Degrees()));
 class P1Downburst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Downburst), new AOEShapeCone(11.7f, 45.Degrees()));
-class P1MistralSongBoss(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.MistralSongBoss)); // TODO: hints... (use wild charge component? need 'avoid or share-non-first' role?)
-class P1MistralSongAdds(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.MistralSongAdds)); // TODO: same as boss variant + multi targets
-class P1GreatWhirlwind(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GreatWhirlwind), 8);
 class P1EyeOfTheStorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EyeOfTheStorm), new AOEShapeDonut(12, 25));
 class P1Gigastorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Gigastorm), new AOEShapeCircle(6.5f));
 class P2RadiantPlume(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
@@ -24,16 +21,15 @@ class P5AetherochemicalLaserLeft(BossModule module) : Components.SelfTargetedAOE
 class P5LightPillar(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.LightPillarAOE), 3); // TODO: consider showing circle around baiter
 class P5AethericBoom(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AethericBoom), 10);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Garuda, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 539)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Garuda, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 539, PlanLevel = 70)]
 public class UWU : BossModule
 {
-    private IReadOnlyList<Actor> _ifrits;
-    private IReadOnlyList<Actor> _titan;
-    private IReadOnlyList<Actor> _lahabrea;
-    private IReadOnlyList<Actor> _ultima;
+    private readonly IReadOnlyList<Actor> _titan;
+    private readonly IReadOnlyList<Actor> _lahabrea;
+    private readonly IReadOnlyList<Actor> _ultima;
     private Actor? _mainIfrit;
 
-    public IReadOnlyList<Actor> Ifrits => _ifrits;
+    public IReadOnlyList<Actor> Ifrits { get; }
 
     public Actor? Garuda() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? Ifrit() => _mainIfrit;
@@ -41,9 +37,9 @@ public class UWU : BossModule
     public Actor? Lahabrea() => _lahabrea.FirstOrDefault();
     public Actor? Ultima() => _ultima.FirstOrDefault();
 
-    public UWU(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+    public UWU(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
     {
-        _ifrits = Enemies(OID.Ifrit);
+        Ifrits = Enemies(OID.Ifrit);
         _titan = Enemies(OID.Titan);
         _lahabrea = Enemies(OID.Lahabrea);
         _ultima = Enemies(OID.UltimaWeapon);
@@ -52,7 +48,7 @@ public class UWU : BossModule
     protected override void UpdateModule()
     {
         if (StateMachine.ActivePhaseIndex == 1)
-            _mainIfrit ??= _ifrits.FirstOrDefault(a => a.IsTargetable);
+            _mainIfrit ??= Ifrits.FirstOrDefault(a => a.IsTargetable);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

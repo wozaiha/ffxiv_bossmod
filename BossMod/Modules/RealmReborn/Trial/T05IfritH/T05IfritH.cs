@@ -44,13 +44,13 @@ class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, Acti
 
 class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone))
 {
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
 
     private static readonly AOEShape _shape = new AOEShapeRect(43, 6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, c.CastInfo?.NPCFinishAt ?? WorldState.FutureTime(4)));
+        return _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, Module.CastFinishAt(c.CastInfo, 0, WorldState.FutureTime(4))));
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -84,17 +84,16 @@ class T05IfritHStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 59, NameID = 1185)]
 public class T05IfritH : BossModule
 {
-    private IReadOnlyList<Actor> _nails;
+    private readonly IReadOnlyList<Actor> _nails;
     public IEnumerable<Actor> ActiveNails => _nails.Where(n => n.IsTargetable && !n.IsDead);
 
-    public T05IfritH(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 20))
+    public T05IfritH(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
     {
         _nails = Enemies(OID.InfernalNail);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

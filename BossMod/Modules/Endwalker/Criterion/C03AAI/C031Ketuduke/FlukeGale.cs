@@ -5,9 +5,9 @@ class FlukeGale(BossModule module) : Components.Knockback(module)
     public enum Debuff { None, BubbleWeave, FoamyFetters }
     public enum Resolve { None, Stack, Spread }
 
-    public List<Source> Gales = new();
-    private SpringCrystalsRect? _crystals = module.FindComponent<SpringCrystalsRect>();
-    private Debuff[] _debuffs = new Debuff[PartyState.MaxPartySize];
+    public List<Source> Gales = [];
+    private readonly SpringCrystalsRect? _crystals = module.FindComponent<SpringCrystalsRect>();
+    private readonly Debuff[] _debuffs = new Debuff[PartyState.MaxPartySize];
     private Resolve _resolution;
 
     private static readonly AOEShapeRect _shape = new(20, 10);
@@ -52,7 +52,7 @@ class FlukeGale(BossModule module) : Components.Knockback(module)
         {
             case AID.FlukeGaleAOE1:
             case AID.FlukeGaleAOE2:
-                Gales.Add(new(caster.Position, 20, spell.NPCFinishAt, _shape, spell.Rotation, Kind.DirForward));
+                Gales.Add(new(caster.Position, 20, Module.CastFinishAt(spell), _shape, spell.Rotation, Kind.DirForward));
                 Gales.SortBy(s => s.Activation);
                 break;
             case AID.Hydrofall:

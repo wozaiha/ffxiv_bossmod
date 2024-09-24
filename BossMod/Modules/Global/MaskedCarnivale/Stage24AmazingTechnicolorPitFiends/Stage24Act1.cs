@@ -9,10 +9,10 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6497, // ArenaViking->player, no cast, single-target
-    Fire = 14266, // Boss->player, 1,0s cast, single-target
-    Starstorm = 15317, // Boss->location, 3,0s cast, range 5 circle
-    RagingAxe = 15316, // ArenaViking->self, 3,0s cast, range 4+R 90-degree cone
-    LightningSpark = 15318, // Boss->player, 6,0s cast, single-target
+    Fire = 14266, // Boss->player, 1.0s cast, single-target
+    Starstorm = 15317, // Boss->location, 3.0s cast, range 5 circle
+    RagingAxe = 15316, // ArenaViking->self, 3.0s cast, range 4+R 90-degree cone
+    LightningSpark = 15318, // Boss->player, 6.0s cast, single-target
 }
 
 class Starstorm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
@@ -55,7 +55,7 @@ class Stage24Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8127, SortOrder = 1)]
 public class Stage24Act1 : BossModule
 {
-    public Stage24Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage24Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }
@@ -69,9 +69,8 @@ public class Stage24Act1 : BossModule
             Arena.Actor(s, ArenaColor.Enemy);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

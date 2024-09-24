@@ -3,7 +3,7 @@
 // note: apparently there's a slight overlap between aoes in the center, which looks ugly, but at least that's the truth...
 class VisceralWhirl(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shapeNormal = new(29, 14);
     private static readonly AOEShapeRect _shapeOffset = new(60, 14);
@@ -18,13 +18,13 @@ class VisceralWhirl(BossModule module) : Components.GenericAOEs(module)
         {
             case AID.VisceralWhirlRAOE1:
             case AID.VisceralWhirlLAOE1:
-                _aoes.Add(new(_shapeNormal, caster.Position, spell.Rotation, spell.NPCFinishAt));
+                _aoes.Add(new(_shapeNormal, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
                 break;
             case AID.VisceralWhirlRAOE2:
-                _aoes.Add(new(_shapeOffset, caster.Position + _shapeOffset.HalfWidth * spell.Rotation.ToDirection().OrthoL(), spell.Rotation, spell.NPCFinishAt));
+                _aoes.Add(new(_shapeOffset, caster.Position + _shapeOffset.HalfWidth * spell.Rotation.ToDirection().OrthoL(), spell.Rotation, Module.CastFinishAt(spell)));
                 break;
             case AID.VisceralWhirlLAOE2:
-                _aoes.Add(new(_shapeOffset, caster.Position + _shapeOffset.HalfWidth * spell.Rotation.ToDirection().OrthoR(), spell.Rotation, spell.NPCFinishAt));
+                _aoes.Add(new(_shapeOffset, caster.Position + _shapeOffset.HalfWidth * spell.Rotation.ToDirection().OrthoR(), spell.Rotation, Module.CastFinishAt(spell)));
                 break;
         }
     }
@@ -40,7 +40,7 @@ class MiasmicBlast(BossModule module) : Components.SelfTargetedAOEs(module, Acti
 
 class VoidBio(BossModule module) : Components.GenericAOEs(module)
 {
-    private IReadOnlyList<Actor> _bubbles = module.Enemies(OID.ToxicBubble);
+    private readonly IReadOnlyList<Actor> _bubbles = module.Enemies(OID.ToxicBubble);
 
     private static readonly AOEShapeCircle _shape = new(2); // TODO: verify explosion radius
 
@@ -50,7 +50,7 @@ class VoidBio(BossModule module) : Components.GenericAOEs(module)
 class BondsOfDarkness(BossModule module) : BossComponent(module)
 {
     public int NumTethers { get; private set; }
-    private int[] _partners = Utils.MakeArray(PartyState.MaxPartySize, -1);
+    private readonly int[] _partners = Utils.MakeArray(PartyState.MaxPartySize, -1);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {

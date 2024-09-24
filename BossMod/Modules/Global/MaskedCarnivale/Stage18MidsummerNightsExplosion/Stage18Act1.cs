@@ -8,12 +8,12 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    WildCharge = 15055, // 2724->players, 3,5s cast, width 8 rect charge
-    Explosion = 15054, // 2726->self, 2,0s cast, range 10 circle
-    RipperClaw = 15050, // 2724->self, 4,0s cast, range 5+R 90-degree cone
-    Fireball = 15051, // 2724->location, 4,0s cast, range 6 circle
+    WildCharge = 15055, // 2724->players, 3.5s cast, width 8 rect charge
+    Explosion = 15054, // 2726->self, 2.0s cast, range 10 circle
+    RipperClaw = 15050, // 2724->self, 4.0s cast, range 5+R 90-degree cone
+    Fireball = 15051, // 2724->location, 4.0s cast, range 6 circle
     BoneShaker = 15053, // 2724->self, no cast, range 50 circle
-    TailSmash = 15052, // 2724->self, 4,0s cast, range 12+R 90-degree cone
+    TailSmash = 15052, // 2724->self, 4.0s cast, range 12+R 90-degree cone
 }
 
 class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCircle(10));
@@ -80,7 +80,7 @@ class Stage18Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 628, NameID = 8116, SortOrder = 1)]
 public class Stage18Act1 : BossModule
 {
-    public Stage18Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage18Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<KegExplosion>();
@@ -95,9 +95,8 @@ public class Stage18Act1 : BossModule
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

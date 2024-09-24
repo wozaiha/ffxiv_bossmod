@@ -22,7 +22,7 @@ class BadBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 // arena has multiple weirdly-shaped puddles, so just prefer standing in large safe zone
 class AIPosition(BossModule module) : BossComponent(module)
 {
-    private WPos[] _centers = { new(-395, -130), new(-402, -114) };
+    private readonly WPos[] _centers = [new(-395, -130), new(-402, -114)];
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -42,11 +42,10 @@ class D123MisersMistressStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 5, NameID = 1532)]
-public class D123MisersMistress(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(-400, -130), 25))
+public class D123MisersMistress(WorldState ws, Actor primary) : BossModule(ws, primary, new(-400, -130), new ArenaBoundsSquare(25))
 {
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

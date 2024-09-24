@@ -5,7 +5,7 @@
 class WickedWheel(BossModule module) : Components.GenericAOEs(module)
 {
     public DateTime AwakenedResolve { get; private set; }
-    public List<(Actor source, AOEShape shape, DateTime activation)> Sources = new();
+    public List<(Actor source, AOEShape shape, DateTime activation)> Sources = [];
 
     public static readonly AOEShapeCircle ShapeWheel = new(8.7f);
     public static readonly AOEShapeDonut ShapeTornado = new(7, 20);
@@ -27,12 +27,12 @@ class WickedWheel(BossModule module) : Components.GenericAOEs(module)
                 // if wheel was predicted, keep the shape, but update the activation time
                 var predictedIndex = Sources.FindIndex(s => s.source == caster);
                 if (predictedIndex >= 0)
-                    Sources[predictedIndex] = (caster, Sources[predictedIndex].shape, spell.NPCFinishAt);
+                    Sources[predictedIndex] = (caster, Sources[predictedIndex].shape, Module.CastFinishAt(spell));
                 else
-                    Sources.Add((caster, ShapeWheel, spell.NPCFinishAt));
+                    Sources.Add((caster, ShapeWheel, Module.CastFinishAt(spell)));
                 break;
             case AID.WickedWheelSister:
-                Sources.Add((caster, ShapeSister, spell.NPCFinishAt));
+                Sources.Add((caster, ShapeSister, Module.CastFinishAt(spell)));
                 break;
         };
     }

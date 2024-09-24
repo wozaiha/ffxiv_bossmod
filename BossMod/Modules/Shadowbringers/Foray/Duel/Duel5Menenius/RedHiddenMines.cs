@@ -2,7 +2,7 @@
 
 class RedHiddenMines(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _mines = new();
+    private List<AOEInstance> _mines = [];
     private static readonly AOEShapeCircle _shapeTrigger = new(3.6f);
     private static readonly AOEShapeCircle _shapeExplosion = new(8f);
 
@@ -14,7 +14,7 @@ class RedHiddenMines(BossModule module) : Components.GenericAOEs(module)
         {
             _mines.Add(new(_shapeTrigger, caster.Position, Color: ArenaColor.Trap));
         }
-        if ((AID)spell.Action.ID is AID.DetonateRedMine)
+        if ((AID)spell.Action.ID is AID.DetonateRedMine or AID.Explosion)
         {
             _mines.RemoveAll(t => t.Origin.AlmostEqual(caster.Position, 1));
         }
@@ -24,7 +24,7 @@ class RedHiddenMines(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.IndiscriminateDetonation)
         {
-            List<AOEInstance> _detonatingMines = new();
+            List<AOEInstance> _detonatingMines = [];
             for (int i = 0; i < _mines.Count; i++)
             {
                 _detonatingMines.Add(new(_shapeExplosion, _mines[i].Origin, Color: ArenaColor.AOE));

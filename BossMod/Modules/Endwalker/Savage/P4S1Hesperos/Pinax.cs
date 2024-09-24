@@ -5,17 +5,17 @@ class Pinax(BossModule module) : BossComponent(module)
 {
     private enum Order { Unknown, LUWU, WULU, LFWA, LAWF, WFLA, WALF }
 
-    public int NumFinished { get; private set; } = 0;
+    public int NumFinished { get; private set; }
     private Order _order;
     private Actor? _acid;
     private Actor? _fire;
     private Actor? _water;
     private Actor? _lighting;
 
-    private static readonly float _acidAOERadius = 5;
-    private static readonly float _fireAOERadius = 6;
-    private static readonly float _knockbackRadius = 13;
-    private static readonly float _lightingSafeDistance = 16; // linear falloff until 16, then constant (not sure whether it is true distance-based or max-coord-based)
+    private const float _acidAOERadius = 5;
+    private const float _fireAOERadius = 6;
+    private const float _knockbackRadius = 13;
+    private const float _lightingSafeDistance = 16; // linear falloff until 16, then constant (not sure whether it is true distance-based or max-coord-based)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -41,7 +41,7 @@ class Pinax(BossModule module) : BossComponent(module)
             {
                 hints.Add("GTFO from water square!");
             }
-            if (!Module.Bounds.Contains(Components.Knockback.AwayFromSource(actor.Position, Module.Bounds.Center, _knockbackRadius)))
+            if (!Module.InBounds(Components.Knockback.AwayFromSource(actor.Position, Module.Center, _knockbackRadius)))
             {
                 hints.Add("About to be knocked into wall!");
             }
@@ -52,7 +52,7 @@ class Pinax(BossModule module) : BossComponent(module)
             {
                 hints.Add("GTFO from lighting square!");
             }
-            hints.Add("GTFO from center!", actor.Position.InRect(Module.Bounds.Center, new WDir(1, 0), _lightingSafeDistance, _lightingSafeDistance, _lightingSafeDistance));
+            hints.Add("GTFO from center!", actor.Position.InRect(Module.Center, new WDir(1, 0), _lightingSafeDistance, _lightingSafeDistance, _lightingSafeDistance));
         }
     }
 
@@ -88,7 +88,7 @@ class Pinax(BossModule module) : BossComponent(module)
         if (_lighting != null)
         {
             Arena.ZoneRect(_lighting.Position, new WDir(1, 0), 10, 10, 10, ArenaColor.AOE);
-            Arena.ZoneRect(Module.Bounds.Center, new WDir(1, 0), _lightingSafeDistance, _lightingSafeDistance, _lightingSafeDistance, ArenaColor.AOE);
+            Arena.ZoneRect(Module.Center, new WDir(1, 0), _lightingSafeDistance, _lightingSafeDistance, _lightingSafeDistance, ArenaColor.AOE);
         }
     }
 
@@ -117,7 +117,7 @@ class Pinax(BossModule module) : BossComponent(module)
         }
         if (_water != null)
         {
-            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Module.Bounds.Center, _knockbackRadius);
+            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Module.Center, _knockbackRadius);
             if (adjPos != pc.Position)
             {
                 Arena.AddLine(pc.Position, adjPos, ArenaColor.Danger);

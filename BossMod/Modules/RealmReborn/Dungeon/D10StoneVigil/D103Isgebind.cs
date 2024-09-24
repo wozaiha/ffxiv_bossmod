@@ -25,13 +25,13 @@ class Cauterize(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(m
 
 class Touchdown(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Touchdown))
 {
-    private AOEShapeCircle _shape = new(5);
+    private readonly AOEShapeCircle _shape = new(5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: proper timings...
         if (!Module.PrimaryActor.IsTargetable && !Module.FindComponent<Cauterize>()!.ActiveCasters.Any())
-            yield return new(_shape, Module.Bounds.Center);
+            yield return new(_shape, Module.Center);
     }
 }
 
@@ -50,4 +50,4 @@ class D103IsgebindStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1680)]
-public class D103Isgebind(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(0, -248), 20));
+public class D103Isgebind(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -248), new ArenaBoundsSquare(20));

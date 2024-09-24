@@ -1,13 +1,14 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Interface.Utility.Raii;
+using ImGuiNET;
 
 namespace BossMod;
 
-[ConfigDisplay(Name = "小队职责分配", Order = 2)]
+[ConfigDisplay(Name = "Party Roles", Order = 2)]
 public class PartyRolesConfig : ConfigNode
 {
     public enum Assignment { MT, OT, H1, H2, M1, M2, R1, R2, Unassigned }
 
-    public Dictionary<ulong, Assignment> Assignments = new();
+    public Dictionary<ulong, Assignment> Assignments = [];
 
     public Assignment this[ulong contentID] => Assignments.GetValueOrDefault(contentID, Assignment.Unassigned);
 
@@ -18,11 +19,11 @@ public class PartyRolesConfig : ConfigNode
         Assignment[] res = Utils.MakeArray(PartyState.MaxPartySize, Assignment.Unassigned);
         for (int i = 0; i < PartyState.MaxPartySize; ++i)
         {
-            var r = this[party.ContentIDs[i]];
+            var r = this[party.Members[i].ContentId];
             if (r == Assignment.Unassigned)
-                return new Assignment[0];
+                return [];
             if (counts[(int)r]++ > 0)
-                return new Assignment[0];
+                return [];
             res[i] = r;
         }
         return res;
@@ -34,11 +35,11 @@ public class PartyRolesConfig : ConfigNode
         int[] res = Utils.MakeArray((int)Assignment.Unassigned, PartyState.MaxPartySize);
         for (int i = 0; i < PartyState.MaxPartySize; ++i)
         {
-            var r = this[party.ContentIDs[i]];
+            var r = this[party.Members[i].ContentId];
             if (r == Assignment.Unassigned)
-                return new int[0];
+                return [];
             if (res[(int)r] != PartyState.MaxPartySize)
-                return new int[0];
+                return [];
             res[(int)r] = i;
         }
         return res;
@@ -50,7 +51,7 @@ public class PartyRolesConfig : ConfigNode
         var res = new Role[PartyState.MaxPartySize];
         for (int i = 0; i < PartyState.MaxPartySize; ++i)
         {
-            res[i] = this[party.ContentIDs[i]] switch
+            res[i] = this[party.Members[i].ContentId] switch
             {
                 Assignment.MT or Assignment.OT => Role.Tank,
                 Assignment.H1 or Assignment.H2 => Role.Healer,
@@ -64,54 +65,54 @@ public class PartyRolesConfig : ConfigNode
 
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        if (ImGui.BeginTable("tab2", 10, ImGuiTableFlags.SizingFixedFit))
+        using (var table = ImRaii.Table("tab2", 10, ImGuiTableFlags.SizingFixedFit))
         {
-            foreach (var r in typeof(Assignment).GetEnumValues())
-                ImGui.TableSetupColumn(r.ToString(), ImGuiTableColumnFlags.None, 25);
-            ImGui.TableSetupColumn("名称");
-            ImGui.TableHeadersRow();
-
-            List<(ulong cid, string name, Role role, Assignment assignment)> party = new();
-            for (int i = 0; i < PartyState.MaxPartySize; ++i)
+            if (table)
             {
-                var m = ws.Party.Members[i];
-                if (m != null)
-                    party.Add((ws.Party.ContentIDs[i], m.Name, m.Role, this[ws.Party.ContentIDs[i]]));
-            }
-            party.SortBy(e => e.role);
+                foreach (var r in typeof(Assignment).GetEnumValues())
+                    ImGui.TableSetupColumn(r.ToString(), ImGuiTableColumnFlags.None, 25);
+                ImGui.TableSetupColumn("Name");
+                ImGui.TableHeadersRow();
 
-            foreach (var (contentID, name, classRole, assignment) in party)
-            {
-                ImGui.TableNextRow();
-                foreach (var r in typeof(Assignment).GetEnumValues().Cast<Assignment>())
+                List<(ulong cid, string name, char role, Assignment assignment)> party = [];
+                for (int i = 0; i < PartyState.MaxPartySize; ++i)
                 {
-                    ImGui.TableNextColumn();
-                    if (ImGui.RadioButton($"###{contentID:X}:{r}", assignment == r))
-                    {
-                        if (r != Assignment.Unassigned)
-                            Assignments[contentID] = r;
-                        else
-                            Assignments.Remove(contentID);
-                        NotifyModified();
-                    }
+                    ref var m = ref ws.Party.Members[i];
+                    if (m.IsValid())
+                        party.Add((m.ContentId, m.Name, ws.Party[i]?.Role.ToString()[0] ?? '?', this[m.ContentId]));
                 }
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted($"({classRole.ToString()[0]}) {name}");
-            }
-            ImGui.EndTable();
+                party.SortBy(e => e.role);
 
-            if (AssignmentsPerSlot(ws.Party).Length == 0)
-            {
-                ImGui.PushStyleColor(ImGuiCol.Text, 0xff00ffff);
-                ImGui.TextUnformatted("无效分配: 每一个职责都必须有一个玩家!");
-                ImGui.PopStyleColor();
+                foreach (var (contentID, name, classRole, assignment) in party)
+                {
+                    ImGui.TableNextRow();
+                    foreach (var r in typeof(Assignment).GetEnumValues().Cast<Assignment>())
+                    {
+                        ImGui.TableNextColumn();
+                        if (ImGui.RadioButton($"###{contentID:X}:{r}", assignment == r))
+                        {
+                            if (r != Assignment.Unassigned)
+                                Assignments[contentID] = r;
+                            else
+                                Assignments.Remove(contentID);
+                            Modified.Fire();
+                        }
+                    }
+                    ImGui.TableNextColumn();
+                    ImGui.TextUnformatted($"({classRole}) {name}");
+                }
             }
-            else
-            {
-                ImGui.PushStyleColor(ImGuiCol.Text, 0xff00ff00);
-                ImGui.TextUnformatted("没有问题!");
-                ImGui.PopStyleColor();
-            }
+        }
+
+        if (AssignmentsPerSlot(ws.Party).Length == 0)
+        {
+            using var color = ImRaii.PushColor(ImGuiCol.Text, 0xff00ffff);
+            ImGui.TextUnformatted("Invalid assignments: there should be exactly one raid member per role");
+        }
+        else
+        {
+            using var color = ImRaii.PushColor(ImGuiCol.Text, 0xff00ff00);
+            ImGui.TextUnformatted("All good!");
         }
     }
 }

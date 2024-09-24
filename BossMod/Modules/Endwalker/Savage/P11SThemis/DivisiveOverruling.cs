@@ -2,7 +2,7 @@
 
 class DivisiveOverruling(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
+    public List<AOEInstance> AOEs = [];
 
     private static readonly AOEShapeRect _shapeNarrow = new(46, 8, 23); // note: boss variants are 23+23, clone variants are 46+0, doesn't matter too much
     private static readonly AOEShapeRect _shapeWide = new(46, 13, 23);
@@ -20,22 +20,22 @@ class DivisiveOverruling(BossModule module) : Components.GenericAOEs(module)
             case AID.DivisiveOverrulingSoloAOE: // first aoe
             case AID.DivisiveRulingAOE:
             case AID.DivisiveOverrulingBossAOE:
-                AddAOE(new(_shapeNarrow, caster.Position, spell.Rotation, spell.NPCFinishAt));
+                AddAOE(new(_shapeNarrow, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
                 break;
             case AID.DivineRuinationSolo:
             case AID.DivineRuinationClone:
             case AID.DivineRuinationBoss:
-                AddAOE(new(_shapeWide, caster.Position, spell.Rotation, spell.NPCFinishAt));
+                AddAOE(new(_shapeWide, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
                 break;
             case AID.RipplesOfGloomSoloR:
             case AID.RipplesOfGloomCloneR:
             case AID.RipplesOfGloomBossR:
-                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoR(), spell.Rotation, spell.NPCFinishAt));
+                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoR(), spell.Rotation, Module.CastFinishAt(spell)));
                 break;
             case AID.RipplesOfGloomSoloL:
             case AID.RipplesOfGloomCloneL:
             case AID.RipplesOfGloomBossL:
-                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoL(), spell.Rotation, spell.NPCFinishAt));
+                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoL(), spell.Rotation, Module.CastFinishAt(spell)));
                 break;
         }
     }

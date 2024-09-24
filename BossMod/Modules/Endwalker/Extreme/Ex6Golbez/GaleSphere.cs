@@ -4,8 +4,8 @@ class GaleSphere(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Side { S, E, N, W } // direction = value * 90deg
 
-    private List<Side> _sides = new();
-    private List<Actor>[] _spheres = { new(), new(), new(), new() };
+    private readonly List<Side> _sides = [];
+    private readonly List<Actor>[] _spheres = [[], [], [], []];
 
     private static readonly AOEShapeRect _shape = new(30, 2.5f);
 
@@ -13,7 +13,7 @@ class GaleSphere(BossModule module) : Components.GenericAOEs(module)
     {
         if (NumCasts < _spheres.Length)
             foreach (var s in _spheres[NumCasts])
-                yield return new(_shape, s.Position, s.CastInfo?.Rotation ?? s.Rotation, s.CastInfo?.NPCFinishAt ?? WorldState.CurrentTime);
+                yield return new(_shape, s.Position, s.CastInfo?.Rotation ?? s.Rotation, Module.CastFinishAt(s.CastInfo));
     }
 
     public override void AddGlobalHints(GlobalHints hints)

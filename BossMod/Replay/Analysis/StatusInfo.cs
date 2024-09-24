@@ -7,13 +7,13 @@ class StatusInfo : CommonEnumInfo
 {
     private class StatusData
     {
-        public HashSet<uint> SourceOIDs = new();
-        public HashSet<uint> TargetOIDs = new();
-        public HashSet<ushort> Extras = new();
+        public HashSet<uint> SourceOIDs = [];
+        public HashSet<uint> TargetOIDs = [];
+        public HashSet<ushort> Extras = [];
     }
 
-    private Type? _sidType;
-    private Dictionary<uint, StatusData> _data = new();
+    private readonly Type? _sidType;
+    private readonly Dictionary<uint, StatusData> _data = [];
 
     public StatusInfo(List<Replay> replays, uint oid)
     {
@@ -24,12 +24,12 @@ class StatusInfo : CommonEnumInfo
         {
             foreach (var enc in replay.Encounters.Where(enc => enc.OID == oid))
             {
-                foreach (var status in replay.EncounterStatuses(enc).Where(s => !(s.Source?.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo) && !(s.Target.Type is ActorType.Pet or ActorType.Chocobo)))
+                foreach (var status in replay.EncounterStatuses(enc).Where(s => !(s.Source?.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.DutySupport) && !(s.Target.Type is ActorType.Pet or ActorType.Chocobo)))
                 {
                     var data = _data.GetOrAdd(status.ID);
                     if (status.Source != null)
-                        data.SourceOIDs.Add(status.Source.OID);
-                    data.TargetOIDs.Add(status.Target.OID);
+                        data.SourceOIDs.Add(status.Source.Type != ActorType.DutySupport ? status.Source.OID : 0);
+                    data.TargetOIDs.Add(status.Target.Type != ActorType.DutySupport ? status.Target.OID : 0);
                     data.Extras.Add(status.StartingExtra);
                 }
             }
@@ -38,11 +38,11 @@ class StatusInfo : CommonEnumInfo
 
     public void Draw(UITree tree)
     {
-        Func<KeyValuePair<uint, StatusData>, UITree.NodeProperties> map = kv =>
+        UITree.NodeProperties map(KeyValuePair<uint, StatusData> kv)
         {
             var name = _sidType?.GetEnumName(kv.Key);
             return new($"{Utils.StatusString(kv.Key)} ({name})", false, name == null ? 0xff00ffff : 0xffffffff);
-        };
+        }
         foreach (var (sid, data) in tree.Nodes(_data, map))
         {
             tree.LeafNode($"Source IDs: {OIDListString(data.SourceOIDs)}");

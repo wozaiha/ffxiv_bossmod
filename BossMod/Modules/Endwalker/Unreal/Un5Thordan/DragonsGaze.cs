@@ -2,10 +2,10 @@
 
 class DragonsGaze(BossModule module) : Components.GenericGaze(module)
 {
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
     private WPos _posHint;
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Select(c => new Eye(c.Position, c.CastInfo!.NPCFinishAt));
+    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Select(c => new Eye(c.Position, Module.CastFinishAt(c.CastInfo!)));
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -34,7 +34,7 @@ class DragonsGaze(BossModule module) : Components.GenericGaze(module)
         if (state == 0x00040008 && (OID)actor.OID is >= OID.DragonEyeN and <= OID.DragonEyeNW)
         {
             var index = actor.OID - (uint)OID.DragonEyeN; // 0 = N, then CW
-            _posHint = Module.Bounds.Center + 19 * (180 - (int)index * 45).Degrees().ToDirection();
+            _posHint = Module.Center + 19 * (180 - (int)index * 45).Degrees().ToDirection();
         }
     }
 }

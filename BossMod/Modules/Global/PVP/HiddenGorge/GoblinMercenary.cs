@@ -8,13 +8,13 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    IronKiss = 14562, // 233C->location, 5,0s cast, range 7 circle
-    GobfireShootypopsStart = 14563, // 25FA->self, 5,0s cast, range 30+R width 6 rect
+    IronKiss = 14562, // 233C->location, 5.0s cast, range 7 circle
+    GobfireShootypopsStart = 14563, // 25FA->self, 5.0s cast, range 30+R width 6 rect
     GobfireShootypops = 14564, // 25FA->self, no cast, range 30+R width 6 rect
-    GobspinWhooshdropsTelegraph = 14567, // 233C->self, 1,0s cast, single-target
-    Plannyplot = 14558, // 25FA->self, 4,0s cast, single-target
+    GobspinWhooshdropsTelegraph = 14567, // 233C->self, 1.0s cast, single-target
+    Plannyplot = 14558, // 25FA->self, 4.0s cast, single-target
     GobspinWhooshdrops = 14559, // 25FA->self, no cast, range 8 circle, knockback 15 away from source
-    GobswipeConklopsTelegraph = 14568, // BossHelper->self, 1,0s cast, single-target
+    GobswipeConklopsTelegraph = 14568, // BossHelper->self, 1.0s cast, single-target
     GobswipeConklops = 14560, // Boss->self, no cast, range 5-30 donut, knockback 15 away from source
     Discharge = 14561, // Boss->self, no cast, single-target
 }
@@ -34,9 +34,9 @@ class GobspinSwipe(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.GobspinWhooshdropsTelegraph)
-            _aoe = new(new AOEShapeCircle(8), Module.PrimaryActor.Position, default, spell.NPCFinishAt.AddSeconds(4));
+            _aoe = new(new AOEShapeCircle(8), Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 4));
         if ((AID)spell.Action.ID == AID.GobswipeConklopsTelegraph)
-            _aoe = new(new AOEShapeDonut(5, 30), Module.PrimaryActor.Position, default, spell.NPCFinishAt.AddSeconds(4));
+            _aoe = new(new AOEShapeDonut(5, 30), Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 4));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -55,9 +55,9 @@ class Knockbacks(BossModule module) : Components.Knockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.GobspinWhooshdropsTelegraph)
-            _knockback = new(Module.PrimaryActor.Position, 15, spell.NPCFinishAt.AddSeconds(4), new AOEShapeCircle(8));
+            _knockback = new(Module.PrimaryActor.Position, 15, Module.CastFinishAt(spell, 4), new AOEShapeCircle(8));
         if ((AID)spell.Action.ID == AID.GobswipeConklopsTelegraph)
-            _knockback = new(Module.PrimaryActor.Position, 15, spell.NPCFinishAt.AddSeconds(4), new AOEShapeDonut(5, 30));
+            _knockback = new(Module.PrimaryActor.Position, 15, Module.CastFinishAt(spell, 4), new AOEShapeDonut(5, 30));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -73,7 +73,7 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
     private Angle _rotation;
     private DateTime _activation;
 
-    private static readonly AOEShapeRect _shape = new AOEShapeRect(32, 3);
+    private static readonly AOEShapeRect _shape = new(32, 3);
 
     public override void OnEventIcon(Actor actor, uint iconID)
     {
@@ -95,7 +95,7 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
         if ((AID)spell.Action.ID == AID.GobfireShootypopsStart)
         {
             _rotation = spell.Rotation;
-            _activation = spell.NPCFinishAt;
+            _activation = Module.CastFinishAt(spell);
         }
         if (_rotation != default)
             InitIfReady(caster);
@@ -133,14 +133,6 @@ class GoblinMercenaryStates : StateMachineBuilder
     }
 }
 
+// note: arena shapes don't seem to be perfect circle/square ?
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 599, NameID = 7906)]
-public class GoblinMercenary(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(0, 0), 0))
-{
-    protected override void UpdateModule()
-    {
-        if (Enemies(OID.Boss).Any(e => e.Position.AlmostEqual(new(0, -125), 1)))
-            Arena.Bounds = new ArenaBoundsSquare(new(0, -124.5f), 16); //Note: the arena doesn't seem to be a perfect square, but it seems close enough
-        if (Enemies(OID.Boss).Any(e => e.Position.AlmostEqual(new(0, 144.5f), 1)))
-            Arena.Bounds = new ArenaBoundsCircle(new(0, 144.5f), 30); //Note: the arena doesn't seem to be a perfect circle, but this seems good enough
-    }
-}
+public class GoblinMercenary(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, primary.Position.Z < 0 ? -124.5f : 144.5f), primary.Position.Z < 0 ? new ArenaBoundsSquare(16) : new ArenaBoundsCircle(30));

@@ -8,7 +8,7 @@ class SWater(BossModule module) : Water(module, AID.SWater);
 
 class BubbleShowerCrabDribble(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCone _shape1 = new(9, 45.Degrees());
     private static readonly AOEShapeCone _shape2 = new(6, 60.Degrees());
@@ -20,8 +20,8 @@ class BubbleShowerCrabDribble(BossModule module) : Components.GenericAOEs(module
         if ((AID)spell.Action.ID is AID.NBubbleShower or AID.SBubbleShower)
         {
             _aoes.Clear();
-            _aoes.Add(new(_shape1, caster.Position, spell.Rotation, spell.NPCFinishAt));
-            _aoes.Add(new(_shape2, caster.Position, spell.Rotation + 180.Degrees(), spell.NPCFinishAt.AddSeconds(3.6f)));
+            _aoes.Add(new(_shape1, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape2, caster.Position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 3.6f)));
         }
     }
 
@@ -36,7 +36,7 @@ class BubbleShowerCrabDribble(BossModule module) : Components.GenericAOEs(module
 
 class C030SnipperStates : StateMachineBuilder
 {
-    private bool _savage;
+    private readonly bool _savage;
 
     public C030SnipperStates(BossModule module, bool savage) : base(module)
     {

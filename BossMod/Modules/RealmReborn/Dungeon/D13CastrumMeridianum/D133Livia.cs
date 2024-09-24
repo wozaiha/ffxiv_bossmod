@@ -41,8 +41,8 @@ class ArtificialPlasma(BossModule module) : Components.RaidwideCast(module, Acti
 
 class Roundhouse(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Roundhouse))
 {
-    private List<Actor> _castersRoundhouse = new();
-    private List<Actor> _castersDischarge = new();
+    private readonly List<Actor> _castersRoundhouse = [];
+    private readonly List<Actor> _castersDischarge = [];
 
     private static readonly AOEShape _shapeRoundhouse = new AOEShapeCircle(10);
     private static readonly AOEShape _shapeDischarge = new AOEShapeCircle(8);
@@ -50,9 +50,9 @@ class Roundhouse(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_castersRoundhouse.Count > 0)
-            return _castersRoundhouse.Select(c => new AOEInstance(_shapeRoundhouse, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+            return _castersRoundhouse.Select(c => new AOEInstance(_shapeRoundhouse, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
         else
-            return _castersDischarge.Select(c => new AOEInstance(_shapeDischarge, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+            return _castersDischarge.Select(c => new AOEInstance(_shapeDischarge, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -77,9 +77,9 @@ class Roundhouse(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
 // a 'set' is always considered finished when 6th discharge finishes
 class InfiniteReach(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.InfiniteReachDischarge))
 {
-    private List<Actor?> _castersRect = new();
-    private List<Actor?> _castersDischarge = new();
-    private List<Actor?> _castersSalamander = new();
+    private readonly List<Actor?> _castersRect = [];
+    private readonly List<Actor?> _castersDischarge = [];
+    private readonly List<Actor?> _castersSalamander = [];
 
     private static readonly AOEShapeRect _shapeRect = new(40, 2);
     private static readonly AOEShapeCircle _shapeDischarge = new(8);
@@ -92,18 +92,18 @@ class InfiniteReach(BossModule module) : Components.GenericAOEs(module, ActionID
         foreach (var c in _castersRect.Skip(currentSet).Take(1).OfType<Actor>())
         {
             haveSets = true;
-            yield return new(_shapeRect, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt);
+            yield return new(_shapeRect, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
         }
         foreach (var c in _castersDischarge.Skip(currentSet * 6).Take(6).OfType<Actor>())
         {
             haveSets = true;
-            yield return new(_shapeDischarge, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt);
+            yield return new(_shapeDischarge, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
         }
         if (!haveSets)
         {
             foreach (var c in _castersSalamander.OfType<Actor>())
             {
-                yield return new(_shapeSalamander, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt);
+                yield return new(_shapeSalamander, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
             }
         }
     }
@@ -135,8 +135,8 @@ class InfiniteReach(BossModule module) : Components.GenericAOEs(module, ActionID
 
 class StunningSweep(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.StunningSweep))
 {
-    private List<Actor> _castersSweepDischarge = new();
-    private List<Actor> _castersThermobaric = new();
+    private readonly List<Actor> _castersSweepDischarge = [];
+    private readonly List<Actor> _castersThermobaric = [];
 
     private static readonly AOEShape _shapeSweepDischarge = new AOEShapeCircle(8);
     private static readonly AOEShape _shapeThermobaric = new AOEShapeCircle(13); // TODO: verify falloff
@@ -144,9 +144,9 @@ class StunningSweep(BossModule module) : Components.GenericAOEs(module, ActionID
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_castersSweepDischarge.Count > 0)
-            return _castersSweepDischarge.Select(c => new AOEInstance(_shapeSweepDischarge, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+            return _castersSweepDischarge.Select(c => new AOEInstance(_shapeSweepDischarge, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
         else
-            return _castersThermobaric.Select(c => new AOEInstance(_shapeThermobaric, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+            return _castersThermobaric.Select(c => new AOEInstance(_shapeThermobaric, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -169,8 +169,8 @@ class StunningSweep(BossModule module) : Components.GenericAOEs(module, ActionID
 
 class AngrySalamander(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.AngrySalamander))
 {
-    private List<Actor> _castersSalamander = new();
-    private List<Actor> _castersThermobaric = new();
+    private readonly List<Actor> _castersSalamander = [];
+    private readonly List<Actor> _castersThermobaric = [];
 
     private static readonly AOEShape _shapeSalamander = new AOEShapeCross(20, 2);
     private static readonly AOEShape _shapeThermobaric = new AOEShapeCircle(13); // TODO: verify falloff
@@ -178,9 +178,9 @@ class AngrySalamander(BossModule module) : Components.GenericAOEs(module, Action
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var c in _castersSalamander)
-            yield return new(_shapeSalamander, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt);
+            yield return new(_shapeSalamander, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
         foreach (var c in _castersThermobaric)
-            yield return new(_shapeThermobaric, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt);
+            yield return new(_shapeThermobaric, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -216,4 +216,4 @@ class D133LiviaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2118)]
-public class D133Livia(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-98, -33), 20));
+public class D133Livia(WorldState ws, Actor primary) : BossModule(ws, primary, new(-98, -33), new ArenaBoundsCircle(20));

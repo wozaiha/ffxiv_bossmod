@@ -40,7 +40,7 @@ class EngravementOfSouls3Shock(BossModule module) : Components.CastTowers(module
 
 class EngravementOfSouls3Spread(BossModule module) : Components.UniformStackSpread(module, 0, 3, alwaysShowSpreads: true, raidwideOnResolve: false)
 {
-    private EngravementOfSoulsTethers? _tethers = module.FindComponent<EngravementOfSoulsTethers>();
+    private readonly EngravementOfSoulsTethers? _tethers = module.FindComponent<EngravementOfSoulsTethers>();
     private EngravementOfSoulsTethers.TetherType _soakers;
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
@@ -86,7 +86,7 @@ class EngravementOfSouls3Hints(BossModule module) : BossComponent(module)
     private bool _topLeftSafe;
     private bool _towersLight;
     private bool _leftTowerMatchTether;
-    private PlayerState[] _playerStates = new PlayerState[PartyState.MaxPartySize];
+    private readonly PlayerState[] _playerStates = new PlayerState[PartyState.MaxPartySize];
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
@@ -96,7 +96,7 @@ class EngravementOfSouls3Hints(BossModule module) : BossComponent(module)
             var color = ArenaColor.Safe;
             foreach (var offset in chain)
             {
-                var to = Module.Bounds.Center + offset;
+                var to = Module.Center + offset;
                 movementHints.Add(from, to, color);
                 from = to;
                 color = ArenaColor.Danger;
@@ -108,7 +108,7 @@ class EngravementOfSouls3Hints(BossModule module) : BossComponent(module)
     {
         foreach (var chain in PositionHints(pcSlot))
             foreach (var offset in chain.Take(1))
-                Arena.AddCircle(Module.Bounds.Center + offset, 1, ArenaColor.Safe);
+                Arena.AddCircle(Module.Center + offset, 1, ArenaColor.Safe);
     }
 
     // note: these statuses are assigned before any tethers
@@ -148,7 +148,7 @@ class EngravementOfSouls3Hints(BossModule module) : BossComponent(module)
             case TetherID.UnnaturalEnchainment:
                 if (source.Position.Z < 90)
                 {
-                    _topLeftSafe = source.Position.X > Module.Bounds.Center.X;
+                    _topLeftSafe = source.Position.X > Module.Center.X;
                     AdvanceMechanic(Mechanic.FixedTowers);
                 }
                 break;
@@ -206,8 +206,8 @@ class EngravementOfSouls3Hints(BossModule module) : BossComponent(module)
 
     private void AssignTether(Actor source, int slot, bool light)
     {
-        bool stayLeft = source.Position.X > Module.Bounds.Center.X;
-        bool stayTop = source.Position.Z > Module.Bounds.Center.Z;
+        bool stayLeft = source.Position.X > Module.Center.X;
+        bool stayTop = source.Position.Z > Module.Center.Z;
         SetState(slot, stayLeft ? (stayTop ? PlayerState.TetherTL : PlayerState.TetherBL) : (stayTop ? PlayerState.TetherTR : PlayerState.TetherBR));
 
         bool lightStayLeft = stayLeft == light;

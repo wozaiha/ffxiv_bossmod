@@ -7,7 +7,7 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Fulmination = 14583, // 2718->self, 23,0s cast, range 60 circle
+    Fulmination = 14583, // 2718->self, 23.0s cast, range 60 circle
 }
 
 class Hints(BossModule module) : BossComponent(module)
@@ -31,7 +31,7 @@ class Stage11Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 621, NameID = 2280, SortOrder = 1)]
 public class Stage11Act1 : BossModule
 {
-    public Stage11Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage11Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

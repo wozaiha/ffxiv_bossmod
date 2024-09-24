@@ -12,10 +12,6 @@ public static class ActorEnumeration
         return mask;
     }
 
-    // empty actor list utility
-    private static List<Actor> _emptyList = new();
-    public static IReadOnlyList<Actor> EmptyList => _emptyList;
-
     // convert slot+actor range into actor range
     public static IEnumerable<Actor> Actors(this IEnumerable<(int, Actor)> range) => range.Select(indexActor => indexActor.Item2);
 
@@ -131,7 +127,7 @@ public static class ActorEnumeration
         return range
             .Select(actor => (actor, (actor.Position - origin).LengthSq()))
             .OrderBy(actorDist => actorDist.Item2)
-            .Select(actorDist => actorDist.Item1);
+            .Select(actorDist => actorDist.actor);
     }
 
     public static IEnumerable<(int, Actor)> SortedByRange(this IEnumerable<(int, Actor)> range, WPos origin)
@@ -148,4 +144,33 @@ public static class ActorEnumeration
 
     // find farthest actor from point
     public static Actor? Farthest(this IEnumerable<Actor> range, WPos origin) => range.MaxBy(a => (a.Position - origin).LengthSq());
+
+    // count num actors matching and not matching a condition
+    public static (int match, int mismatch) CountByCondition(this IEnumerable<Actor> range, Func<Actor, bool> condition)
+    {
+        int match = 0, mismatch = 0;
+        foreach (var a in range)
+        {
+            if (condition(a))
+                ++match;
+            else
+                ++mismatch;
+        }
+        return (match, mismatch);
+    }
+
+    // find the centroid of actor positions
+    public static WPos PositionCentroid(this IEnumerable<Actor> range)
+    {
+        WDir sum = default;
+        int count = 0;
+        foreach (var a in range)
+        {
+            sum += a.Position.ToWDir();
+            ++count;
+        }
+        if (count > 0)
+            sum /= count;
+        return sum.ToWPos();
+    }
 }

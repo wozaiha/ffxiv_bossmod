@@ -25,7 +25,7 @@ class AetherialSurge(BossModule module) : Components.SelfTargetedAOEs(module, Ac
 // note: actor 'dies' immediately after casting
 class SeaOfPitch(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SeaOfPitch))
 {
-    private AOEShape _shape = new AOEShapeCircle(4);
+    private readonly AOEShape _shape = new AOEShapeCircle(4);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -47,11 +47,10 @@ class D113BatraalStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 13, NameID = 1396)]
-public class D113Batraal(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(85, -180), 25))
+public class D113Batraal(WorldState ws, Actor primary) : BossModule(ws, primary, new(85, -180), new ArenaBoundsSquare(25))
 {
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

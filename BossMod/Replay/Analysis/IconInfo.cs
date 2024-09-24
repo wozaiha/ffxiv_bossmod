@@ -8,11 +8,11 @@ class IconInfo : CommonEnumInfo
 {
     private class IconData
     {
-        public HashSet<uint> TargetOIDs = new();
+        public HashSet<uint> TargetOIDs = [];
     }
 
-    private Type? _iidType;
-    private Dictionary<uint, IconData> _data = new();
+    private readonly Type? _iidType;
+    private readonly Dictionary<uint, IconData> _data = [];
 
     public IconInfo(List<Replay> replays, uint oid)
     {
@@ -26,7 +26,7 @@ class IconInfo : CommonEnumInfo
                 foreach (var icon in replay.EncounterIcons(enc))
                 {
                     var data = _data.GetOrAdd(icon.ID);
-                    data.TargetOIDs.Add(icon.Target.OID);
+                    data.TargetOIDs.Add(icon.Target.Type != ActorType.DutySupport ? icon.Target.OID : 0);
                 }
             }
         }
@@ -34,11 +34,11 @@ class IconInfo : CommonEnumInfo
 
     public void Draw(UITree tree)
     {
-        Func<KeyValuePair<uint, IconData>, UITree.NodeProperties> map = kv =>
+        UITree.NodeProperties map(KeyValuePair<uint, IconData> kv)
         {
             var name = _iidType?.GetEnumName(kv.Key);
             return new($"{kv.Key} ({name})", false, name == null ? 0xff00ffff : 0xffffffff);
-        };
+        }
         foreach (var (iid, data) in tree.Nodes(_data, map))
         {
             tree.LeafNode($"Target IDs: {OIDListString(data.TargetOIDs)}");

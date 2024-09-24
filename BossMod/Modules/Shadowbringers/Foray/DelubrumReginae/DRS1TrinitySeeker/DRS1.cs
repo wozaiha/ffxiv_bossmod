@@ -20,17 +20,17 @@ class DeadIron : Components.BaitAwayTethers
     public DeadIron(BossModule module) : base(module, new AOEShapeCone(50, 15.Degrees()), (uint)TetherID.DeadIron, ActionID.MakeSpell(AID.DeadIronAOE)) { DrawTethers = false; }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9834)]
-public class DRS1(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(0, 278), 25))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9834, PlanLevel = 80)]
+public class DRS1(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 278), new ArenaBoundsCircle(25))
 {
-    public static readonly float BarricadeRadius = 20;
+    public const float BarricadeRadius = 20;
 
     protected override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         for (int i = 0; i < 4; ++i)
         {
             var center = (45 + i * 90).Degrees();
-            Arena.PathArcTo(Bounds.Center, BarricadeRadius, (center - 22.5f.Degrees()).Rad, (center + 22.5f.Degrees()).Rad);
+            Arena.PathArcTo(Center, BarricadeRadius, (center - 22.5f.Degrees()).Rad, (center + 22.5f.Degrees()).Rad);
             Arena.PathStroke(false, ArenaColor.Border, 2);
         }
     }

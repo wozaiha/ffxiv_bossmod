@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
+using System.Globalization;
 using System.Text;
 
 namespace BossMod.ReplayAnalysis;
@@ -8,21 +9,20 @@ class ParticipantInfo : CommonEnumInfo
 {
     class ParticipantData
     {
-        public List<ActorType> Types = new();
-        public List<(uint zoneId, uint cfcId)> Zones = new();
-        public List<(string name, uint id)> Names = new();
-        public List<int> SpawnedPreFight = new();
-        public bool SpawnedMidFight = false;
+        public List<ActorType> Types = [];
+        public List<(uint zoneId, uint cfcId)> Zones = [];
+        public List<(string name, uint id)> Names = [];
+        public List<int> SpawnedPreFight = [];
+        public bool SpawnedMidFight;
+        public bool SeenTargetable;
         public float MinRadius = float.MaxValue;
         public float MaxRadius = float.MinValue;
     }
 
-    private uint _encOID;
-    private Dictionary<uint, ParticipantData> _data = new();
+    private readonly Dictionary<uint, ParticipantData> _data = [];
 
     public ParticipantInfo(List<Replay> replays, uint oid)
     {
-        _encOID = oid;
         var moduleInfo = ModuleRegistry.FindByOID(oid);
         _oidType = moduleInfo?.ObjectIDType;
         foreach (var replay in replays)
@@ -45,6 +45,7 @@ class ParticipantInfo : CommonEnumInfo
                         else
                             data.SpawnedMidFight = true;
 
+                        data.SeenTargetable |= p.TargetableHistory.Count > 0;
                         data.MinRadius = Math.Min(data.MinRadius, p.MinRadius);
                         data.MaxRadius = Math.Max(data.MaxRadius, p.MaxRadius);
                     }
@@ -65,6 +66,7 @@ class ParticipantInfo : CommonEnumInfo
                 data.Types.Add(p.Type);
                 data.Zones.Add((p.ZoneID, p.CFCID));
                 data.Names.AddRange(p.NameHistory.Values);
+                data.SeenTargetable = p.TargetableHistory.Count > 0;
                 data.MinRadius = Math.Min(data.MinRadius, p.MinRadius);
                 data.MaxRadius = Math.Max(data.MaxRadius, p.MaxRadius);
             }
@@ -74,17 +76,19 @@ class ParticipantInfo : CommonEnumInfo
 
     public void Draw(UITree tree)
     {
-        Func<KeyValuePair<uint, ParticipantData>, UITree.NodeProperties> map = kv =>
+        UITree.NodeProperties map(KeyValuePair<uint, ParticipantData> kv)
         {
             var name = _oidType?.GetEnumName(kv.Key);
             var typeName = kv.Value.Types.Count switch
             {
                 0 => "???",
-                1 => kv.Value.Types.First().ToString(),
+                1 => kv.Value.Types[0].ToString(),
                 _ => "mixed!"
             };
-            return new($"{kv.Key:X} ({_oidType?.GetEnumName(kv.Key)}) '{kv.Value.Names.FirstOrDefault().Item1}' ({typeName})", false, name == null ? 0xff00ffff : 0xffffffff);
-        };
+            // for global, highlight by targetable; for encounter, highlight by being defined in enum
+            var highlight = _oidType != null ? name == null : !kv.Value.SeenTargetable;
+            return new($"{kv.Key:X} ({_oidType?.GetEnumName(kv.Key)}) '{kv.Value.Names.FirstOrDefault().name}' ({typeName})", false, highlight ? 0xff00ffff : 0xffffffff);
+        }
         foreach (var (oid, data) in tree.Nodes(_data, map, kv => DrawSubContextMenu(kv.Key, kv.Value)))
         {
             foreach (var n in tree.Node($"Types ({data.Types.Count})", data.Types.Count == 0))
@@ -92,10 +96,11 @@ class ParticipantInfo : CommonEnumInfo
             foreach (var n in tree.Node($"Zones ({data.Zones.Count})", data.Zones.Count == 0))
                 tree.LeafNodes(data.Zones, z => $"{z.zoneId} '{Service.LuminaRow<TerritoryType>(z.zoneId)?.PlaceName.Value?.Name}' (cfc={z.cfcId})");
             foreach (var n in tree.Node($"Names ({data.Names.Count})", data.Names.Count == 0))
-                tree.LeafNodes(data.Names, n => $"[{n.Item2}] {n.Item1}");
+                tree.LeafNodes(data.Names, n => $"[{n.id}] {n.name}");
             tree.LeafNode($"Spawned pre fight: {string.Join(", ", data.SpawnedPreFight)}");
             tree.LeafNode($"Spawned mid fight: {data.SpawnedMidFight}");
             tree.LeafNode($"Radius: {RadiusString(data)}");
+            tree.LeafNode($"Seen targetable: {data.SeenTargetable}");
         }
     }
 
@@ -117,7 +122,7 @@ class ParticipantInfo : CommonEnumInfo
 
     private void FinishBuild()
     {
-        List<uint> toDel = new();
+        List<uint> toDel = [];
         foreach (var (curOID, data) in _data)
         {
             if (data.Types.Count == 0)
@@ -149,8 +154,8 @@ class ParticipantInfo : CommonEnumInfo
     }
 
     private static bool IsIgnored(Replay.Participant p) => p.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.Area or ActorType.Treasure;
-    private string RadiusString(ParticipantData d) => d.MinRadius != d.MaxRadius ? $"{d.MinRadius:f3}-{d.MaxRadius:f3}" : $"{d.MinRadius:f3}";
-    private string GuessName(uint oid, ParticipantData d) => Utils.StringToIdentifier(d.Names.Count > 0 ? d.Names[0].Item1 : $"Actor{oid:X}");
+    private string RadiusString(ParticipantData d) => d.MinRadius != d.MaxRadius ? string.Create(CultureInfo.InvariantCulture, $"{d.MinRadius:f3}-{d.MaxRadius:f3}") : string.Create(CultureInfo.InvariantCulture, $"{d.MinRadius:f3}");
+    private string GuessName(uint oid, ParticipantData d) => Utils.StringToIdentifier(d.Names.Count > 0 ? d.Names[0].name : $"Actor{oid:X}");
 
     private string EnumMemberString(uint oid, ParticipantData data, string? forcedName = null)
     {
@@ -185,7 +190,11 @@ class ParticipantInfo : CommonEnumInfo
     private StringBuilder AddBossModuleStub(StringBuilder sb, uint oid, ParticipantData data, bool withStates)
     {
         var name = GuessName(oid, data);
-        AddOIDEnum(sb, oid);
+        sb.AppendLine("public enum OID : uint");
+        sb.AppendLine("{");
+        sb.AppendLine($"    Boss = 0x{oid:X},");
+        sb.AppendLine($"    Helper = 0x233C,");
+        sb.AppendLine("}");
         sb.AppendLine();
         sb.AppendLine($"class {name}States : StateMachineBuilder");
         sb.AppendLine("{");
@@ -209,10 +218,7 @@ class ParticipantInfo : CommonEnumInfo
         sb.AppendLine("}");
         sb.AppendLine();
         sb.AppendLine($"[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = {data.Zones.FirstOrDefault().cfcId}, NameID = {data.Names.FirstOrDefault().id})]");
-        sb.AppendLine($"public class {name} : BossModule");
-        sb.AppendLine("{");
-        sb.AppendLine($"    public {name}(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) {{ }}");
-        sb.AppendLine("}");
+        sb.AppendLine($"public class {name}(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));");
         return sb;
     }
 }

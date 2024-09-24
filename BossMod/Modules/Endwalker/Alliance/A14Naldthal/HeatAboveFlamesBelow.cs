@@ -2,7 +2,7 @@
 
 class HeatAboveFlamesBelow(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> _aoes = new();
+    public List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeOut = new(8);
     private static readonly AOEShapeDonut _shapeIn = new(8, 30);
@@ -13,7 +13,7 @@ class HeatAboveFlamesBelow(BossModule module) : Components.GenericAOEs(module)
     {
         var shape = ShapeForAction(spell.Action);
         if (shape != null)
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

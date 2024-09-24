@@ -61,15 +61,15 @@ class AethericBoom(BossModule module) : Components.KnockbackFromCastTarget(modul
     {
         if (Casters.Count > 0)
         {
-            hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.ArmsLength), actor, 1, false));
-            hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Surecast), actor, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.ArmsLength), actor, ActionQueue.Priority.High);
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Surecast), actor, ActionQueue.Priority.High);
         }
     }
 }
 
 class Aetheroplasm(BossModule module) : BossComponent(module)
 {
-    private IReadOnlyList<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
+    private readonly IReadOnlyList<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
 
     public IEnumerable<Actor> ActiveOrbs => _orbs.Where(orb => !orb.IsDead);
 
@@ -84,7 +84,7 @@ class Aetheroplasm(BossModule module) : BossComponent(module)
         var orb = ActiveOrbs.FirstOrDefault();
         if (orb != null)
         {
-            hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.Sprint), actor, 1, false));
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(orb.Position + 0.7f * orb.Rotation.ToDirection(), 1.2f));
         }
     }
@@ -133,7 +133,7 @@ class T04PortaDecumana2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 830, NameID = 2137, SortOrder = 2)]
-public class T04PortaDecumana2(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-704, 480), 20))
+public class T04PortaDecumana2(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

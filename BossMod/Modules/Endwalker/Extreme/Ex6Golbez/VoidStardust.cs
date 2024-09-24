@@ -2,7 +2,7 @@
 
 class VoidStardust(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(WPos pos, DateTime activation)> _aoes = new();
+    private readonly List<(WPos pos, DateTime activation)> _aoes = [];
 
     private static readonly AOEShapeCircle _shape = new(6);
 
@@ -19,10 +19,10 @@ class VoidStardust(BossModule module) : Components.GenericAOEs(module)
         switch ((AID)spell.Action.ID)
         {
             case AID.VoidStardustFirst:
-                _aoes.Add((caster.Position, spell.NPCFinishAt));
+                _aoes.Add((caster.Position, Module.CastFinishAt(spell)));
                 break;
             case AID.VoidStardustRestVisual:
-                _aoes.Add((caster.Position, spell.NPCFinishAt.AddSeconds(2.9f)));
+                _aoes.Add((caster.Position, Module.CastFinishAt(spell, 2.9f)));
                 break;
         }
     }

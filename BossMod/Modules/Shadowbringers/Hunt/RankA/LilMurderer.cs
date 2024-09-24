@@ -8,10 +8,10 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
-    GobthunderIII = 17493, // Boss->player, 6,0s cast, range 20 circle, interruptible, applies Lightning Resistance Down II
-    GoblinPunch = 17488, // Boss->player, 3,0s cast, single-target
-    GobthunderII = 17492, // Boss->location, 4,0s cast, range 8 circle, applies Lightning Resistance Down II
-    Gobhaste = 17491, // Boss->self, 3,0s cast, single-target
+    GobthunderIII = 17493, // Boss->player, 6.0s cast, range 20 circle, interruptible, applies Lightning Resistance Down II
+    GoblinPunch = 17488, // Boss->player, 3.0s cast, single-target
+    GobthunderII = 17492, // Boss->location, 4.0s cast, range 8 circle, applies Lightning Resistance Down II
+    Gobhaste = 17491, // Boss->self, 3.0s cast, single-target
     GoblinSlash = 17489, // Boss->self, no cast, range 8 circle, sometimes boss uses Gobthunder II on itself, next attack after is this
 }
 
@@ -24,7 +24,7 @@ class GoblinSlash(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.GobthunderII && spell.LocXZ == caster.Position)
-            _aoe = new(new AOEShapeCircle(8), Module.PrimaryActor.Position, default, spell.NPCFinishAt.AddSeconds(2.6f));
+            _aoe = new(new AOEShapeCircle(8), Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 2.6f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

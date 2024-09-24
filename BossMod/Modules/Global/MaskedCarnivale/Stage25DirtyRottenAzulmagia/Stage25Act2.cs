@@ -9,13 +9,13 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    RepellingSpray = 14768, // Boss->self, 2,0s cast, single-target, boss reflectss magic attacks
-    ApocalypticBolt = 14766, // 267F->self, 3,0s cast, range 50+R width 8 rect
-    BlazingAngon = 14769, // 267F->location, 1,0s cast, single-target
-    Burn = 14776, // 2682->self, 6,0s cast, range 50+R circle
-    TheRamsVoice = 14763, // 267F->self, 3,5s cast, range 8 circle
-    TheDragonsVoice = 14764, // 267F->self, 3,5s cast, range 6-30 donut
-    ApocalypticRoar = 14767, // 267F->self, 5,0s cast, range 35+R 120-degree cone
+    RepellingSpray = 14768, // Boss->self, 2.0s cast, single-target, boss reflectss magic attacks
+    ApocalypticBolt = 14766, // 267F->self, 3.0s cast, range 50+R width 8 rect
+    BlazingAngon = 14769, // 267F->location, 1.0s cast, single-target
+    Burn = 14776, // 2682->self, 6.0s cast, range 50+R circle
+    TheRamsVoice = 14763, // 267F->self, 3.5s cast, range 8 circle
+    TheDragonsVoice = 14764, // 267F->self, 3.5s cast, range 6-30 donut
+    ApocalypticRoar = 14767, // 267F->self, 5.0s cast, range 35+R 120-degree cone
 }
 
 public enum SID : uint
@@ -43,7 +43,7 @@ class Hints2(BossModule module) : BossComponent(module)
     {
         if (!Module.Enemies(OID.BlazingAngon).All(e => e.IsDead))
             hints.Add($"Kill {Module.Enemies(OID.BlazingAngon).FirstOrDefault()!.Name}! Use physical attacks except fire aspected.");
-        var magicreflect = Module.Enemies(OID.Boss).Where(x => x.FindStatus(SID.RepellingSpray) != null).FirstOrDefault();
+        var magicreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.RepellingSpray) != null);
         if (magicreflect != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all magic damage!");
     }
@@ -73,14 +73,13 @@ class Stage25Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 635, NameID = 8129, SortOrder = 2)]
 public class Stage25Act2 : BossModule
 {
-    public Stage25Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage25Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

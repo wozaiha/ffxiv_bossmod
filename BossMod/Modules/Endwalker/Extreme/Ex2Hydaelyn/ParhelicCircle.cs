@@ -2,10 +2,10 @@
 
 class ParhelicCircle(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Incandescence))
 {
-    private List<WPos> _positions = new();
+    private readonly List<WPos> _positions = [];
 
-    private static readonly float _triRadius = 8;
-    private static readonly float _hexRadius = 17;
+    private const float _triRadius = 8;
+    private const float _hexRadius = 17;
     private static readonly AOEShapeCircle _aoeShape = new(6);
 
     public override void Update()
@@ -18,12 +18,12 @@ class ParhelicCircle(BossModule module) : Components.CastCounter(module, ActionI
             var tri = Module.Enemies(OID.RefulgenceTriangle).FirstOrDefault();
             if (hex != null && tri != null)
             {
-                var c = Module.Bounds.Center;
+                var c = Module.Center;
                 _positions.Add(c);
                 _positions.Add(c + _triRadius * (tri.Rotation + 60.Degrees()).ToDirection());
                 _positions.Add(c + _triRadius * (tri.Rotation + 180.Degrees()).ToDirection());
                 _positions.Add(c + _triRadius * (tri.Rotation - 60.Degrees()).ToDirection());
-                _positions.Add(c + _hexRadius *  hex.Rotation.ToDirection());
+                _positions.Add(c + _hexRadius * hex.Rotation.ToDirection());
                 _positions.Add(c + _hexRadius * (hex.Rotation + 60.Degrees()).ToDirection());
                 _positions.Add(c + _hexRadius * (hex.Rotation + 120.Degrees()).ToDirection());
                 _positions.Add(c + _hexRadius * (hex.Rotation + 180.Degrees()).ToDirection());

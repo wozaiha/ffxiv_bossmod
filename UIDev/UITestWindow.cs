@@ -2,24 +2,27 @@
 using ImGuiScene;
 using BossMod;
 using System.Reflection;
+using BossMod.Autorotation;
 
 namespace UIDev;
 
 class UITestWindow : UIWindow
 {
-    private SimpleImGuiScene _scene;
-    private List<Type> _testTypes;
-    private ReplayManager _replayManager = new(".");
+    private readonly SimpleImGuiScene _scene;
+    private readonly List<Type> _testTypes;
+    private readonly RotationDatabase _rotationDB;
+    private readonly ReplayManager _replayManager;
+    private readonly EventSubscription _onConfigModified;
     private string _configPath;
 
     // don't allow closing window by esc while there are any config modifications
-    private bool _configModified
+    private bool ConfigModified
     {
         get => !RespectCloseHotkey;
         set => RespectCloseHotkey = !value;
     }
 
-    public UITestWindow(SimpleImGuiScene scene, string configPath) : base("Boss mod UI development", false, new(600, 600))
+    public UITestWindow(SimpleImGuiScene scene, string configPath, string rotationRoot) : base("Boss mod UI development", false, new(600, 600))
     {
         _scene = scene;
         _testTypes = Utils.GetDerivedTypes<TestWindow>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract).ToList();
@@ -27,12 +30,17 @@ class UITestWindow : UIWindow
 
         Service.Config.Initialize();
         Service.Config.LoadFromFile(new(configPath));
-        Service.Config.Modified += () => _configModified = true;
+        _onConfigModified = Service.Config.Modified.Subscribe(() => ConfigModified = true);
+
+        _rotationDB = new(new(rotationRoot), null);
+        _replayManager = new(_rotationDB, ".");
     }
 
     protected override void Dispose(bool disposing)
     {
+        _onConfigModified.Dispose();
         _replayManager.Dispose();
+        base.Dispose(disposing);
     }
 
     public override void OnClose()
@@ -47,13 +55,13 @@ class UITestWindow : UIWindow
         if (ImGui.Button("Reload"))
         {
             Service.Config.LoadFromFile(new(_configPath));
-            _configModified = false;
+            ConfigModified = false;
         }
         ImGui.SameLine();
-        if (ImGui.Button(_configModified ? "Save (modified)" : "Save (no changes)"))
+        if (ImGui.Button(ConfigModified ? "Save (modified)" : "Save (no changes)"))
         {
             Service.Config.SaveToFile(new(_configPath));
-            _configModified = false;
+            ConfigModified = false;
         }
 
         ImGui.Separator();

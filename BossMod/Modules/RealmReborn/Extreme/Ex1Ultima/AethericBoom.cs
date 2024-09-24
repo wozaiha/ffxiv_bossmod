@@ -6,11 +6,11 @@
 class AethericBoom(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AethericBoom), "Knockback + orbs")
 {
     private bool _waitingForOrbs;
-    private List<Actor> _activeOrbs = new();
-    private List<Actor> _orbsToPop = new();
+    private readonly List<Actor> _activeOrbs = [];
+    private readonly List<Actor> _orbsToPop = [];
     public bool OrbsActive => _waitingForOrbs || _orbsToPop.Count > 0;
 
-    private static readonly float _explosionRadius = 8;
+    private const float _explosionRadius = 8;
 
     public override void Update()
     {
@@ -73,8 +73,8 @@ class AethericBoom(BossModule module) : Components.CastHint(module, ActionID.Mak
             else
             {
                 // third cast in progress => immune knockback and go to resolve positions
-                hints.PlannedActions.Add((ActionID.MakeSpell(WAR.AID.ArmsLength), actor, 1, false));
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Surecast), actor, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.ArmsLength), actor, ActionQueue.Priority.High);
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Surecast), actor, ActionQueue.Priority.High);
                 PrepositionForOrbs(hints, assignment, 3);
             }
         }

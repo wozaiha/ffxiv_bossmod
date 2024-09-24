@@ -11,10 +11,10 @@ public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
     AutoAttack2 = 6499, // BossAdd->player, no cast, single-target
-    RecklessAbandon = 13311, // Boss->player, 3,0s cast, single-target
-    Tornado = 13309, // Boss->location, 3,0s cast, range 6 circle
-    VoidCall = 13312, // Boss->self, 3,5s cast, single-target
-    Chirp = 13310, // Boss->self, 3,5s cast, range 8+R circle
+    RecklessAbandon = 13311, // Boss->player, 3.0s cast, single-target
+    Tornado = 13309, // Boss->location, 3.0s cast, range 6 circle
+    VoidCall = 13312, // Boss->self, 3.5s cast, single-target
+    Chirp = 13310, // Boss->self, 3.5s cast, range 8+R circle
 }
 
 class Chirp(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Chirp), new AOEShapeCircle(12.48f));
@@ -36,7 +36,7 @@ class SkateneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7587)]
-public class Skatene(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+public class Skatene(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -45,9 +45,8 @@ public class Skatene(WorldState ws, Actor primary) : BossModule(ws, primary, new
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

@@ -1,4 +1,6 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Interface.Utility.Raii;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
+using ImGuiNET;
 using System.Text;
 
 namespace BossMod;
@@ -7,14 +9,14 @@ class DebugGraphics
 {
     private class WatchedRenderObject
     {
-        public List<uint> Data = new();
-        public List<(int, int)> Modifications = new();
+        public List<uint> Data = [];
+        public List<(int, int)> Modifications = [];
         public bool Live;
     }
 
     private bool _showGraphicsLeafCharactersOnly = true;
-    private Dictionary<IntPtr, WatchedRenderObject> _watchedRenderObjects = new();
-    private bool _overlayCircle = false;
+    private readonly Dictionary<IntPtr, WatchedRenderObject> _watchedRenderObjects = [];
+    private bool _overlayCircle;
     private Vector2 _overlayCenter = new(100, 100);
     private Vector2 _overlayStep = new(2, 2);
     private Vector2 _overlayMaxOffset = new(20, 20);
@@ -92,7 +94,7 @@ class DebugGraphics
         if (root != null)
             UpdateWatchedMods(root);
 
-        List<IntPtr> del = new();
+        List<IntPtr> del = [];
         foreach (var v in _watchedRenderObjects)
             if (!v.Value.Live)
                 del.Add(v.Key);
@@ -177,7 +179,7 @@ class DebugGraphics
         if (start == end)
             return null; // nothing changed
 
-        List<(int, int)> res = new();
+        List<(int, int)> res = [];
         while (start < end)
         {
             int m = start + 1;
@@ -212,7 +214,7 @@ class DebugGraphics
         while (start < end)
         {
             if (sb.Length > 0)
-                sb.Append(" ");
+                sb.Append(' ');
             sb.AppendFormat("{0:X8}", w.Data[start++]);
 
             if ((start % 16) == 0)
@@ -228,46 +230,97 @@ class DebugGraphics
 
     public unsafe void DrawMatrices()
     {
-        if (Camera.Instance == null)
+        var camera = CameraManager.Instance()->CurrentCamera;
+        if (camera == null)
             return;
 
-        ImGui.BeginTable("matrices", 2);
+        using var table = ImRaii.Table("matrices", 2);
+        if (!table)
+            return;
+
         ImGui.TableSetupColumn("Name");
         ImGui.TableSetupColumn("Value");
         ImGui.TableHeadersRow();
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("VP");
-        ImGui.TableNextColumn(); DrawMatrix(Camera.Instance.ViewProj);
+        ImGui.TableNextColumn(); DrawMatrix(camera->ViewMatrix * camera->RenderCamera->ProjectionMatrix);
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("P");
-        ImGui.TableNextColumn(); DrawMatrix(Camera.Instance.Proj);
+        ImGui.TableNextColumn(); DrawMatrix(camera->RenderCamera->ProjectionMatrix);
+
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("P2");
+        ImGui.TableNextColumn(); DrawMatrix(camera->RenderCamera->ProjectionMatrix2);
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("V");
-        ImGui.TableNextColumn(); DrawMatrix(Camera.Instance.View);
+        ImGui.TableNextColumn(); DrawMatrix(camera->ViewMatrix);
 
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("V2");
+        ImGui.TableNextColumn(); DrawMatrix(camera->RenderCamera->ViewMatrix);
+
+        var altitude = MathF.Asin(camera->ViewMatrix.M23);
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("Camera Altitude");
-        ImGui.TableNextColumn(); ImGui.TextUnformatted(Camera.Instance.CameraAltitude.Radians().ToString());
+        ImGui.TableNextColumn(); ImGui.TextUnformatted(altitude.Radians().ToString());
 
+        var azimuth = MathF.Atan2(camera->ViewMatrix.M13, camera->ViewMatrix.M33);
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("Camera Azimuth");
-        ImGui.TableNextColumn(); ImGui.TextUnformatted(Camera.Instance.CameraAzimuth.Radians().ToString());
+        ImGui.TableNextColumn(); ImGui.TextUnformatted(azimuth.Radians().ToString());
 
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("Origin");
+        ImGui.TableNextColumn(); ImGui.TextUnformatted(Utils.Vec3String(camera->RenderCamera->Origin));
+
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("Near/far/aspect");
+        ImGui.TableNextColumn(); ImGui.TextUnformatted($"{camera->RenderCamera->NearPlane} / {camera->RenderCamera->FarPlane} / {camera->RenderCamera->AspectRatio}");
+
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("Projection flags");
+        ImGui.TableNextColumn();
+        if (ImGui.Button(camera->RenderCamera->IsOrtho ? $"ortho ({camera->RenderCamera->OrthoHeight})" : "perspective"))
+            camera->RenderCamera->IsOrtho ^= true;
+        ImGui.SameLine();
+        if (ImGui.Button(camera->RenderCamera->StandardZ ? "standard-z" : "reverse-z"))
+            camera->RenderCamera->StandardZ ^= true;
+        ImGui.SameLine();
+        if (ImGui.Button(camera->RenderCamera->FiniteFarPlane ? "finite-far" : "infinite-far"))
+            camera->RenderCamera->FiniteFarPlane ^= true;
+
+        var view = camera->ViewMatrix;
+        var lx = new Vector3(view.M11, view.M21, view.M31);
+        var ly = new Vector3(view.M12, view.M22, view.M32);
+        var lz = new Vector3(view.M13, view.M23, view.M33);
+        ImGui.TableNextRow();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted("View handedness");
+        ImGui.TableNextColumn(); ImGui.TextUnformatted($"{Vector3.Dot(lz, Vector3.Cross(lx, ly))}");
+
+        view.M44 = 1;
+        FFXIVClientStructs.FFXIV.Common.Math.Matrix4x4.Invert(view, out var world);
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("W");
-        ImGui.TableNextColumn(); DrawMatrix(Camera.Instance.CameraWorld);
+        ImGui.TableNextColumn(); DrawMatrix(world);
 
+        var device = FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device.Instance();
         ImGui.TableNextRow();
         ImGui.TableNextColumn(); ImGui.TextUnformatted("Viewport size");
-        ImGui.TableNextColumn(); ImGui.TextUnformatted($"{Camera.Instance.ViewportSize.X:f6} {Camera.Instance.ViewportSize.Y:f6}");
-
-        ImGui.EndTable();
+        ImGui.TableNextColumn(); ImGui.TextUnformatted($"{device->Width:f6} {device->Height:f6}");
     }
 
     private void DrawMatrix(SharpDX.Matrix mtx)
+    {
+        ImGui.TextUnformatted($"{mtx[0]:f6} {mtx[1]:f6} {mtx[2]:f6} {mtx[3]:f6}");
+        ImGui.TextUnformatted($"{mtx[4]:f6} {mtx[5]:f6} {mtx[6]:f6} {mtx[7]:f6}");
+        ImGui.TextUnformatted($"{mtx[8]:f6} {mtx[9]:f6} {mtx[10]:f6} {mtx[11]:f6}");
+        ImGui.TextUnformatted($"{mtx[12]:f6} {mtx[13]:f6} {mtx[14]:f6} {mtx[15]:f6}");
+    }
+
+    private void DrawMatrix(FFXIVClientStructs.FFXIV.Common.Math.Matrix4x4 mtx)
     {
         ImGui.TextUnformatted($"{mtx[0]:f6} {mtx[1]:f6} {mtx[2]:f6} {mtx[3]:f6}");
         ImGui.TextUnformatted($"{mtx[4]:f6} {mtx[5]:f6} {mtx[6]:f6} {mtx[7]:f6}");

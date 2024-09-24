@@ -40,13 +40,13 @@ public enum AID : uint
     ManusyaThunder2 = 25289, // Minduruva->player, 2.0s cast, single-target
     PraptiSiddhi = 25275, // Sanduruva->self, 2.0s cast, range 40 width 4 rect
     Samsara = 25273, // Boss->self, 3.0s cast, range 40 circle
-    ManusyaBio = 25290, // Minduruva->player, 4,0s cast, single-target
-    ManusyaBerserk = 25276, // Sanduruva->self, 3,0s cast, single-target
-    ExplosiveForce = 25277, // Sanduruva->self, 2,0s cast, single-target
-    SphereShatter = 25279, // BerserkerSphere->self, 1,5s cast, range 15 circle
-    PrakamyaSiddhi = 25278, // Sanduruva->self, 4,0s cast, range 5 circle
-    ManusyaBlizzardIII = 25285, // Minduruva->self, 4,0s cast, single-target
-    ManusyaBlizzardIII2 = 25286, // Helper->self, 4,0s cast, range 40+R 20-degree cone
+    ManusyaBio = 25290, // Minduruva->player, 4.0s cast, single-target
+    ManusyaBerserk = 25276, // Sanduruva->self, 3.0s cast, single-target
+    ExplosiveForce = 25277, // Sanduruva->self, 2.0s cast, single-target
+    SphereShatter = 25279, // BerserkerSphere->self, 1.5s cast, range 15 circle
+    PrakamyaSiddhi = 25278, // Sanduruva->self, 4.0s cast, range 5 circle
+    ManusyaBlizzardIII = 25285, // Minduruva->self, 4.0s cast, single-target
+    ManusyaBlizzardIII2 = 25286, // Helper->self, 4.0s cast, range 40+R 20-degree cone
 }
 
 public enum SID : uint
@@ -92,7 +92,7 @@ class ManusyaBio(BossModule module) : Components.SingleTargetCast(module, Action
 
 class Poison(BossModule module) : BossComponent(module)
 {
-    private List<Actor> _poisoned = [];
+    private readonly List<Actor> _poisoned = [];
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -123,9 +123,9 @@ class Poison(BossModule module) : BossComponent(module)
         foreach (var c in _poisoned)
         {
             if (_poisoned.Count > 0 && actor.Role == Role.Healer)
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Esuna), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
             if (_poisoned.Count > 0 && actor.Class == Class.BRD)
-                hints.PlannedActions.Add((ActionID.MakeSpell(BRD.AID.WardensPaean), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
         }
     }
 }
@@ -208,7 +208,7 @@ class D013MagusSistersStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10265)]
-class D013MagusSisters(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-27.5f, -49.5f), 20))
+class D013MagusSisters(WorldState ws, Actor primary) : BossModule(ws, primary, new(-27.5f, -49.5f), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -217,9 +217,8 @@ class D013MagusSisters(WorldState ws, Actor primary) : BossModule(ws, primary, n
         Arena.Actors(Enemies(OID.Sanduruva), ArenaColor.Enemy);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

@@ -9,11 +9,11 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6497, // 25D5->player, no cast, single-target
-    GrandStrike = 14366, // 25D5->self, 1,5s cast, range 75+R width 2 rect
+    GrandStrike = 14366, // 25D5->self, 1.5s cast, range 75+R width 2 rect
     Attack2 = 6499, // 25D6->player, no cast, single-target
-    MagitekField = 14369, // 25D5->self, 5,0s cast, single-target
+    MagitekField = 14369, // 25D5->self, 5.0s cast, single-target
     Spoil = 14362, // 25D6->self, no cast, range 6+R circle
-    MagitekRay = 14368, // 25D5->location, 3,0s cast, range 6 circle
+    MagitekRay = 14368, // 25D5->location, 3.0s cast, range 6 circle
 }
 
 class GrandStrike(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GrandStrike), new AOEShapeRect(77.5f, 2));
@@ -54,7 +54,7 @@ class Stage04Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 614, NameID = 8087, SortOrder = 2)]
 public class Stage04Act2 : BossModule
 {
-    public Stage04Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage04Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }
@@ -66,9 +66,8 @@ public class Stage04Act2 : BossModule
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

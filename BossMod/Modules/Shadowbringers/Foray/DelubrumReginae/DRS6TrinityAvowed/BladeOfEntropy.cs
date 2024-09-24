@@ -3,7 +3,7 @@
 // note: instead of trying to figure out cone intersections and shit, we use the fact that clones are always positioned on grid and just check each cell
 class BladeOfEntropy(BossModule module) : TemperatureAOE(module)
 {
-    private List<(Actor caster, WDir dir, int temperature)> _casters = new();
+    private readonly List<(Actor caster, WDir dir, int temperature)> _casters = [];
 
     private static readonly AOEShapeRect _shapeCell = new(5, 5, 5);
 
@@ -14,13 +14,13 @@ class BladeOfEntropy(BossModule module) : TemperatureAOE(module)
         {
             for (int z = -2; z <= +2; ++z)
             {
-                var cellCenter = Module.Bounds.Center + 10 * new WDir(x, z);
+                var cellCenter = Module.Center + 10 * new WDir(x, z);
                 int temperature = 0;
                 int numClips = 0;
                 DateTime activation = new();
                 foreach (var c in _casters)
                 {
-                    activation = c.caster.CastInfo!.NPCFinishAt;
+                    activation = Module.CastFinishAt(c.caster.CastInfo!);
                     if (c.dir.Dot(cellCenter - c.caster.Position) > 0)
                     {
                         temperature = c.temperature;

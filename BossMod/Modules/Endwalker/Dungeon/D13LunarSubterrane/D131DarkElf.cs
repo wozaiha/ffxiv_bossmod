@@ -10,19 +10,19 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // 3FE2->player, no cast, single-target
-    HexingStaves = 34777, // 3FE2->self, 3,0s cast, single-target
-    RuinousHex = 34783, // 3FE3->self, 5,0s cast, single-target
-    RuinousHex2 = 35254, // 3FE3->self, 5,0s cast, range 40 width 8 cross
-    RuinousHex3 = 34789, // 233C->self, 5,5s cast, range 40 width 8 cross
-    RuinousConfluence = 35205, // 3FE2->self, 5,0s cast, single-target
-    ShadowySigil = 34779, // 3FE2->self, 6,0s cast, single-target
-    ShadowySigil2 = 34780, // 3FE2->self, 6,0s cast, single-target
-    Explosion = 34787, // 233C->self, 6,5s cast, range 8 width 8 rect
-    SorcerousShroud = 34778, // 3FE2->self, 5,0s cast, single-target
-    VoidDarkII = 34781, // 3FE2->self, 2,5s cast, single-target
-    VoidDarkII2 = 34788, // 233C->player, 5,0s cast, range 6 circle
-    StaffSmite = 35204, // 3FE2->player, 5,0s cast, single-target
-    AbyssalOutburst = 34782, // 3FE2->self, 5,0s cast, range 60 circle
+    HexingStaves = 34777, // 3FE2->self, 3.0s cast, single-target
+    RuinousHex = 34783, // 3FE3->self, 5.0s cast, single-target
+    RuinousHex2 = 35254, // 3FE3->self, 5.0s cast, range 40 width 8 cross
+    RuinousHex3 = 34789, // 233C->self, 5.5s cast, range 40 width 8 cross
+    RuinousConfluence = 35205, // 3FE2->self, 5.0s cast, single-target
+    ShadowySigil = 34779, // 3FE2->self, 6.0s cast, single-target
+    ShadowySigil2 = 34780, // 3FE2->self, 6.0s cast, single-target
+    Explosion = 34787, // 233C->self, 6.5s cast, range 8 width 8 rect
+    SorcerousShroud = 34778, // 3FE2->self, 5.0s cast, single-target
+    VoidDarkII = 34781, // 3FE2->self, 2.5s cast, single-target
+    VoidDarkII2 = 34788, // 233C->player, 5.0s cast, range 6 circle
+    StaffSmite = 35204, // 3FE2->player, 5.0s cast, single-target
+    AbyssalOutburst = 34782, // 3FE2->self, 5.0s cast, range 60 circle
 }
 
 public enum SID : uint
@@ -32,7 +32,7 @@ public enum SID : uint
 
 class HexingStaves(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _staves = new();
+    private readonly List<Actor> _staves = [];
     private static readonly AOEShapeCross cross = new(40, 4);
     private DateTime _activation;
 
@@ -76,7 +76,7 @@ class AbyssalOutburst(BossModule module) : Components.RaidwideCast(module, Actio
 
 class Doom(BossModule module) : BossComponent(module)
 {
-    private List<Actor> _doomed = new();
+    private readonly List<Actor> _doomed = [];
     public bool Doomed { get; private set; }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -108,9 +108,9 @@ class Doom(BossModule module) : BossComponent(module)
         foreach (var c in _doomed)
         {
             if (_doomed.Count > 0 && actor.Role == Role.Healer)
-                hints.PlannedActions.Add((ActionID.MakeSpell(WHM.AID.Esuna), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
             if (_doomed.Count > 0 && actor.Class == Class.BRD)
-                hints.PlannedActions.Add((ActionID.MakeSpell(BRD.AID.WardensPaean), c, 1, false));
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
         }
     }
 }
@@ -130,4 +130,4 @@ class D131DarkElfStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12500)]
-public class D131DarkElf(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(-401, -231), 15.5f));
+public class D131DarkElf(WorldState ws, Actor primary) : BossModule(ws, primary, new(-401, -231), new ArenaBoundsSquare(15.5f));

@@ -16,25 +16,25 @@ public enum AID : uint
     Pendulum = 16777, // 278C->self, 5.0s cast, single-target, cast to jump
     PendulumAOE1 = 16790, // 278C->location, no cast, range 40 circle, jump to target
     PendulumAOE2 = 15833, // 278C->location, no cast, range 40 circle, jump back to center
-    PendulumAOE3 = 16778, // Helper->location, 4,5s cast, range 40 circle, damage fall off AOE visual
+    PendulumAOE3 = 16778, // Helper->location, 4.5s cast, range 40 circle, damage fall off AOE visual
     ChainDown = 17052, // 278C->self, 5.0s cast, single-target 
     Aethersup = 15848, // 278C->self, 15.0s cast, range 21 120-degree cone
     Aethersup2 = 15849, // Helper->self, no cast, range 24+R 120-degree cone
     RightKnout = 15846, // 278C->self, 5.0s cast, range 24 210-degree cone
     LeftKnout = 15847, // 278C->self, 5.0s cast, range 24 210-degree cone
     Taphephobia = 15842, // 278C->self, 4.5s cast, single-target
-    Taphephobia2 = 16769, // Helper->player, 5,0s cast, range 6 circle
+    Taphephobia2 = 16769, // Helper->player, 5.0s cast, range 6 circle
     IntoTheLight = 15844, // Helper->player, no cast, single-target, line stack
     IntoTheLight1 = 17232, // 278C->self, 5.0s cast, single-target
     IntoTheLight2 = 15845, // 278C->self, no cast, range 50 width 8 rect
     FierceBeating1 = 15834, // 278C->self, 5.0s cast, single-target
     FierceBeating2 = 15836, // 278C->self, no cast, single-target
     FierceBeating3 = 15835, // 278C->self, no cast, single-target
-    FierceBeating4 = 15837, // Helper->self, 5,0s cast, range 4 circle
+    FierceBeating4 = 15837, // Helper->self, 5.0s cast, range 4 circle
     FierceBeating5 = 15839, // Helper->location, no cast, range 4 circle
     FierceBeating6 = 15838, // Helper->self, no cast, range 4 circle
     CatONineTails = 15840, // 278C->self, no cast, single-target
-    CatONineTails2 = 15841, // Helper->self, 2,0s cast, range 25 120-degree cone
+    CatONineTails2 = 15841, // Helper->self, 2.0s cast, range 25 120-degree cone
 }
 
 public enum IconID : uint
@@ -132,7 +132,7 @@ class Aethersup(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID == AID.Aethersup)
         {
             _rotation = spell.Rotation;
-            _activation = spell.NPCFinishAt;
+            _activation = Module.CastFinishAt(spell);
         }
     }
 
@@ -182,7 +182,7 @@ class PendulumFlare(BossModule module) : Components.GenericBaitAway(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (target == actor && targeted)
-            hints.AddForbiddenZone(ShapeDistance.Rect(Module.Bounds.Center, target.Position, 18));
+            hints.AddForbiddenZone(ShapeDistance.Rect(Module.Center, target.Position, 18));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -247,7 +247,7 @@ class CatONineTails(BossModule module) : Components.GenericRotatingAOE(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.FierceBeating1)
-            Sequences.Add(new(_shape, Module.Bounds.Center, spell.Rotation + 180.Degrees(), -45.Degrees(), spell.NPCFinishAt, 2, 8));
+            Sequences.Add(new(_shape, Module.Center, spell.Rotation + 180.Degrees(), -45.Degrees(), Module.CastFinishAt(spell), 2, 8));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -274,9 +274,9 @@ class FierceBeating(BossModule module) : Components.Exaflare(module, 4)
         foreach (var (c, t, r) in ImminentAOEs())
             yield return new(Shape, c, r, t, ImminentColor);
         if (Lines.Count > 0 && linesstartedcount1 < 8)
-            yield return new(circle, CalculateCirclePosition(linesstartedcount1, Module.Bounds.Center, _casters[0]), default, _activation.AddSeconds(linesstartedcount1 * 3.7f));
+            yield return new(circle, CalculateCirclePosition(linesstartedcount1, Module.Center, _casters[0]), default, _activation.AddSeconds(linesstartedcount1 * 3.7f));
         if (Lines.Count > 1 && linesstartedcount2 < 8)
-            yield return new(circle, CalculateCirclePosition(linesstartedcount2, Module.Bounds.Center, _casters[1]), default, _activation.AddSeconds(linesstartedcount2 * 3.7f));
+            yield return new(circle, CalculateCirclePosition(linesstartedcount2, Module.Center, _casters[1]), default, _activation.AddSeconds(linesstartedcount2 * 3.7f));
     }
 
     private static WPos CalculateCirclePosition(int count, WPos origin, WPos caster)
@@ -301,8 +301,8 @@ class FierceBeating(BossModule module) : Components.Exaflare(module, 4)
     {
         if ((AID)spell.Action.ID == AID.FierceBeating4)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 2.5f * spell.Rotation.ToDirection(), NextExplosion = spell.NPCFinishAt, TimeToMove = 1, ExplosionsLeft = 7, MaxShownExplosions = 3 });
-            _activation = spell.NPCFinishAt;
+            Lines.Add(new() { Next = caster.Position, Advance = 2.5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1, ExplosionsLeft = 7, MaxShownExplosions = 3 });
+            _activation = Module.CastFinishAt(spell);
             ++linesstartedcounttotal;
             ++NumCasts;
             _casters.Add(caster.Position);
@@ -366,4 +366,4 @@ class D013PhiliaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8301)]
-public class D013Philia(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(134, -465), 19.5f));
+public class D013Philia(WorldState ws, Actor primary) : BossModule(ws, primary, new(134, -465), new ArenaBoundsCircle(19.5f));

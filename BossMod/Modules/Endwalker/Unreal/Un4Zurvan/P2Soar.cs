@@ -2,9 +2,9 @@
 
 class P2SoarTwinSpirit(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(Actor caster, AOEInstance aoe)> _pending = new();
+    private readonly List<(Actor caster, AOEInstance aoe)> _pending = [];
 
-    private AOEShapeRect _shape = new(50, 5);
+    private readonly AOEShapeRect _shape = new(50, 5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _pending.Select(p => p.aoe);
 
@@ -12,7 +12,7 @@ class P2SoarTwinSpirit(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID == AID.TwinSpiritFirst)
         {
-            _pending.Add((caster, new(_shape, caster.Position, Angle.FromDirection(spell.LocXZ - caster.Position), spell.NPCFinishAt)));
+            _pending.Add((caster, new(_shape, caster.Position, Angle.FromDirection(spell.LocXZ - caster.Position), Module.CastFinishAt(spell))));
         }
     }
 
@@ -23,7 +23,7 @@ class P2SoarTwinSpirit(BossModule module) : Components.GenericAOEs(module)
             case AID.TwinSpiritFirst:
                 var index = _pending.FindIndex(p => p.caster == caster);
                 if (index >= 0)
-                    _pending[index] = (caster, new(_shape, spell.LocXZ, Angle.FromDirection(Module.Bounds.Center - spell.LocXZ), WorldState.FutureTime(9.2f)));
+                    _pending[index] = (caster, new(_shape, spell.LocXZ, Angle.FromDirection(Module.Center - spell.LocXZ), WorldState.FutureTime(9.2f)));
                 break;
             case AID.TwinSpiritSecond:
                 _pending.RemoveAll(p => p.caster == caster);

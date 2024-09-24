@@ -2,7 +2,7 @@
 
 class DRS4States : StateMachineBuilder
 {
-    DRS4 _module;
+    readonly DRS4 _module;
 
     public DRS4States(DRS4 module) : base(module)
     {
@@ -11,9 +11,9 @@ class DRS4States : StateMachineBuilder
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !(_module.Knight()?.IsTargetable ?? true) && !(_module.Warrior()?.IsTargetable ?? true) && !(_module.Soldier()?.IsTargetable ?? true) && !(_module.Gunner()?.IsTargetable ?? true);
         SimplePhase(1, Phase1, "P1: knight+warrior")
             .ActivateOnEnter<SpellforgeSteelstingHint>()
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !(_module.Knight()?.IsTargetable ?? true) && module.Knight()?.HP.Cur <= 1 && !(_module.Warrior()?.IsTargetable ?? true) && module.Warrior()?.HP.Cur <= 1;
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !(_module.Knight()?.IsTargetable ?? true) && module.Knight()?.HPMP.CurHP <= 1 && !(_module.Warrior()?.IsTargetable ?? true) && module.Warrior()?.HPMP.CurHP <= 1;
         SimplePhase(2, Phase2, "P2: soldier+gunner")
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !(_module.Gunner()?.IsTargetable ?? true) && module.Gunner()?.HP.Cur <= 1 && !(_module.Soldier()?.IsTargetable ?? true) && module.Soldier()?.HP.Cur <= 1;
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !(_module.Gunner()?.IsTargetable ?? true) && module.Gunner()?.HPMP.CurHP <= 1 && !(_module.Soldier()?.IsTargetable ?? true) && module.Soldier()?.HPMP.CurHP <= 1;
         SimplePhase(3, Phase3, "P3: wards")
             .ActivateOnEnter<CoatOfArms>()
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed;
@@ -50,8 +50,10 @@ class DRS4States : StateMachineBuilder
         P2GunTurret(id + 0x40000, 10.2f);
         P2DoubleGambit(id + 0x50000, 10.3f);
         P2BloodAndBone(id + 0x60000, 5.7f);
-        // TODO: tankbusters -> 4th battery -> raidwides -> tankbusters -> enrage
-        SimpleState(id + 0xFF0000, 100, "???");
+        P2RapidSever(id + 0x70000, 4.2f);
+        P2AutomaticTurret(id + 0x80000, 10.2f);
+        // TODO: raidwides -> tankbusters -> enrage
+        SimpleState(id + 0xFF0000, 50, "???");
     }
 
     private void Phase3(uint id)
@@ -195,7 +197,7 @@ class DRS4States : StateMachineBuilder
         // +0.8s: create 2 big and 2 small flame actors
 
         ActorCastStart(id + 0x20, _module.Soldier, AID.FoolsGambit, 3.2f);
-        ActorCastStart(id + 0x21, _module.Gunner, AID.AutomaticTurret, 5.8f);
+        ActorCastStart(id + 0x21, _module.Gunner, AID.AutomaticTurretGambit, 5.8f);
         ActorCastEnd(id + 0x22, _module.Soldier, 0.2f);
         // +0.7s: flames gain transfiguration statuses
         ActorCastEnd(id + 0x23, _module.Gunner, 2.8f);
@@ -243,7 +245,7 @@ class DRS4States : StateMachineBuilder
         ActorCast(id + 0x10, _module.Soldier, AID.DoubleGambit, 3.2f, 3);
 
         ActorCastStart(id + 0x20, _module.Soldier, AID.SecretsRevealed, 3.2f); // note: tethers appear right before cast start
-        ActorCastStart(id + 0x21, _module.Gunner, AID.AutomaticTurret, 1.8f);
+        ActorCastStart(id + 0x21, _module.Gunner, AID.AutomaticTurretGambit, 1.8f);
         ActorCastEnd(id + 0x22, _module.Gunner, 3);
         ActorCastEnd(id + 0x23, _module.Soldier, 0.2f);
 
@@ -259,5 +261,21 @@ class DRS4States : StateMachineBuilder
             .ActivateOnEnter<TurretsTourUnseen>()
             .DeactivateOnExit<TurretsTourUnseen>()
             .DeactivateOnExit<PawnOff>();
+    }
+
+    private void P2AutomaticTurret(uint id, float delay)
+    {
+        ActorCast(id, _module.Gunner, AID.RelentlessBatteryGunner, delay, 5); // both soldier and gunner cast their visual
+        ActorCast(id + 0x10, _module.Gunner, AID.AutomaticTurretNormal, 3.2f, 3);
+        ActorCast(id + 0x20, _module.Gunner, AID.TurretsTourNormal, 3.2f, 5, false, "Turrets start")
+            .ActivateOnEnter<TurretsTour>();
+        ActorCastStartMulti(id + 0x30, _module.Soldier, [AID.FieryPortent, AID.IcyPortent], 0.9f);
+        ComponentCondition<TurretsTour>(id + 0x31, 0.8f, comp => comp.NumCasts >= 4, "Turrets resolve")
+            .ActivateOnEnter<FieryPortent>()
+            .ActivateOnEnter<IcyPortent>()
+            .DeactivateOnExit<TurretsTour>();
+        ActorCastEnd(id + 0x32, _module.Soldier, 5.2f, false, "Move/stay")
+            .DeactivateOnExit<FieryPortent>()
+            .DeactivateOnExit<IcyPortent>();
     }
 }

@@ -9,12 +9,12 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    TearyTwirl = 14693, // 2701->self, 3,0s cast, range 6+R circle
-    DemonEye = 14691, // 26FF->self, 5,0s cast, range 50+R circle
+    TearyTwirl = 14693, // 2701->self, 3.0s cast, range 6+R circle
+    DemonEye = 14691, // 26FF->self, 5.0s cast, range 50+R circle
     Attack = 6499, // /26FF/2701->player, no cast, single-target
-    ColdStare = 14692, // 26FF->self, 2,5s cast, range 40+R 90-degree cone
-    Stone = 14695, // 25CE->player, 1,0s cast, single-target
-    DreadGaze = 14694, // 25CE->self, 3,0s cast, range 6+R ?-degree cone
+    ColdStare = 14692, // 26FF->self, 2.5s cast, range 40+R 90-degree cone
+    Stone = 14695, // 25CE->player, 1.0s cast, single-target
+    DreadGaze = 14694, // 25CE->self, 3.0s cast, range 6+R ?-degree cone
 }
 
 public enum SID : uint
@@ -40,7 +40,7 @@ class DemonEye(BossModule module) : Components.CastGaze(module, ActionID.MakeSpe
 
     public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
     {
-        return _blinded[slot] ? Enumerable.Empty<Eye>() : base.ActiveEyes(slot, actor);
+        return _blinded[slot] ? [] : base.ActiveEyes(slot, actor);
     }
 }
 
@@ -62,7 +62,7 @@ class ColdStare(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _blinded[slot] ? Enumerable.Empty<AOEInstance>() : base.ActiveAOEs(slot, actor);
+        return _blinded[slot] ? [] : base.ActiveAOEs(slot, actor);
     }
 }
 
@@ -109,7 +109,7 @@ class DreadGaze(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _blinded[slot] ? Enumerable.Empty<AOEInstance>() : base.ActiveAOEs(slot, actor);
+        return _blinded[slot] ? [] : base.ActiveAOEs(slot, actor);
     }
 }
 
@@ -135,7 +135,7 @@ class Stage06Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8092, SortOrder = 2)]
 public class Stage06Act2 : BossModule
 {
-    public Stage06Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage06Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<DemonEye>();
         ActivateComponent<TearyTwirl>();
@@ -153,9 +153,8 @@ public class Stage06Act2 : BossModule
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

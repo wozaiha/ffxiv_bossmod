@@ -22,10 +22,10 @@ class P3ChasteningHeat(BossModule module) : Components.BaitAwayCast(module, Acti
 class P3DivineSpear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.DivineSpear), new AOEShapeCone(24.2f, 45.Degrees()), (uint)OID.AlexanderPrime); // TODO: verify angle
 class P3DivineJudgmentRaidwide(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.DivineJudgmentRaidwide));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694, PlanLevel = 80)]
 public class TEA : BossModule
 {
-    private IReadOnlyList<Actor> _liquidHand;
+    private readonly IReadOnlyList<Actor> _liquidHand;
     public Actor? BossP1() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? LiquidHand() => _liquidHand.FirstOrDefault();
 
@@ -35,14 +35,14 @@ public class TEA : BossModule
     public Actor? CruiseChaser() => _cruiseChaser;
 
     private Actor? _alexPrime;
-    private IReadOnlyList<Actor> _trueHeart;
+    private readonly IReadOnlyList<Actor> _trueHeart;
     public Actor? AlexPrime() => _alexPrime;
     public Actor? TrueHeart() => _trueHeart.FirstOrDefault();
 
     private Actor? _perfectAlex;
     public Actor? PerfectAlex() => _perfectAlex;
 
-    public TEA(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 22))
+    public TEA(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
     {
         _liquidHand = Enemies(OID.LiquidHand);
         _trueHeart = Enemies(OID.TrueHeart);

@@ -7,9 +7,9 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Blizzard = 14267, // Boss->player, 1,0s cast, single-target
-    VoidBlizzard = 15063, // Boss->player, 6,0s cast, single-target
-    Icefall = 15064, // Boss->location, 2,5s cast, range 5 circle
+    Blizzard = 14267, // Boss->player, 1.0s cast, single-target
+    VoidBlizzard = 15063, // Boss->player, 6.0s cast, single-target
+    Icefall = 15064, // Boss->location, 2.5s cast, range 5 circle
 }
 
 class Icefall(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Icefall), 5);
@@ -47,7 +47,7 @@ class Stage21Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 631, NameID = 8120, SortOrder = 1)]
 public class Stage21Act1 : BossModule
 {
-    public Stage21Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage21Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

@@ -2,7 +2,7 @@
 
 class SlashAndBurn(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeOut = new(14);
     private static readonly AOEShapeDonut _shapeIn = new(6, 30);
@@ -19,7 +19,7 @@ class SlashAndBurn(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
             _aoes.SortBy(aoe => aoe.Activation);
         }
     }

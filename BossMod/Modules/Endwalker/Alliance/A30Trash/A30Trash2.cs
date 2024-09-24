@@ -16,10 +16,8 @@ public enum AID : uint
     Skylight = 35446, // AngelosMikros->self, 3.0s cast, range 6 circle
 }
 
-class RingOfSkylight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RingOfSkylight), new AOEShapeDonut(8, 30));
-class RingOfSkylightInterruptHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.RingOfSkylight));
-class SkylightCross(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SkylightCross), new AOEShapeCross(60, 4));
-class SkylightCrossInterruptHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.SkylightCross));
+class RingOfSkylight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RingOfSkylight), new AOEShapeDonut(8, 30)); // note: it's interruptible, but that's not worth the hint
+class SkylightCross(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SkylightCross), new AOEShapeCross(60, 4)); // note: it's interruptible, but that's not worth the hint
 class Skylight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Skylight), new AOEShapeCircle(6));
 
 public class A30Trash2Pack1States : StateMachineBuilder
@@ -28,16 +26,14 @@ public class A30Trash2Pack1States : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<RingOfSkylight>()
-            .ActivateOnEnter<RingOfSkylightInterruptHint>()
             .ActivateOnEnter<SkylightCross>()
-            .ActivateOnEnter<SkylightCrossInterruptHint>()
             .ActivateOnEnter<Skylight>()
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && module.Enemies(OID.AngelosMikros).All(e => e.IsDead);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.AngelosPack1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 12481, SortOrder = 5)]
-public class A30Trash2Pack1(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsRect(new(800, 770), 15, 25))
+public class A30Trash2Pack1(WorldState ws, Actor primary) : BossModule(ws, primary, new(800, 770), new ArenaBoundsRect(15, 25))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -52,15 +48,13 @@ public class A30Trash2Pack2States : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<RingOfSkylight>()
-            .ActivateOnEnter<RingOfSkylightInterruptHint>()
             .ActivateOnEnter<SkylightCross>()
-            .ActivateOnEnter<SkylightCrossInterruptHint>()
             .Raw.Update = () => module.Enemies(OID.AngelosPack2).All(e => e.IsDead);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.AngelosPack2, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 12481, SortOrder = 6)]
-public class A30Trash2Pack2(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsSquare(new(800, 910), 20))
+public class A30Trash2Pack2(WorldState ws, Actor primary) : BossModule(ws, primary, new(800, 910), new ArenaBoundsSquare(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

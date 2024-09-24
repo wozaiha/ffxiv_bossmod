@@ -61,17 +61,16 @@ class T02TitanNStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 57, NameID = 1801)]
 public class T02TitanN : BossModule
 {
-    private IReadOnlyList<Actor> _heart;
+    private readonly IReadOnlyList<Actor> _heart;
     public IEnumerable<Actor> ActiveHeart => _heart.Where(h => h.IsTargetable && !h.IsDead);
 
-    public T02TitanN(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-0, 0), 20)) // note: initial area is size 25, but it becomes smaller at 75%
+    public T02TitanN(WorldState ws, Actor primary) : base(ws, primary, new(-0, 0), new ArenaBoundsCircle(20)) // note: initial area is size 25, but it becomes smaller at 75%
     {
         _heart = Enemies(OID.TitansHeart);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var heart in ActiveHeart)
             hints.PotentialTargets.Add(new(heart, actor.Role == Role.Tank));
         foreach (var e in hints.PotentialTargets)

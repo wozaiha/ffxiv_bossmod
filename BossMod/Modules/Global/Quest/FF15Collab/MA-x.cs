@@ -12,10 +12,10 @@ public enum AID : uint
 {
     AutoAttack = 14675, // 252A->player/Noctis, no cast, single-target
     AutoAttack2 = 872, // Boss->player, no cast, single-target
-    Chainsaw = 14601, // Boss->self, 3,0s cast, range 10 90-degree cone
-    MagitekMissile = 14598, // Boss->self, 1,0s cast, single-target
-    MagitekMissile2 = 14599, // Helper->location, 3,0s cast, range 5 circle
-    Shock = 14600, // Boss->self, 3,0s cast, range 10 circle
+    Chainsaw = 14601, // Boss->self, 3.0s cast, range 10 90-degree cone
+    MagitekMissile = 14598, // Boss->self, 1.0s cast, single-target
+    MagitekMissile2 = 14599, // Helper->location, 3.0s cast, range 5 circle
+    Shock = 14600, // Boss->self, 3.0s cast, range 10 circle
     unknown = 14531, // Boss->self, no cast, single-target
     unknown2 = 14533, // Boss->self, no cast, single-target
 }
@@ -36,7 +36,7 @@ class MAxStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68694, NameID = 7898)] // also: fate 1409
-public class MAx(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(295, -22), 25))
+public class MAx(WorldState ws, Actor primary) : BossModule(ws, primary, new(295, -22), new ArenaBoundsCircle(25))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

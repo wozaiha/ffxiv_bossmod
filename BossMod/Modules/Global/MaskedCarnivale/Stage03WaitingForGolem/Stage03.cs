@@ -9,9 +9,9 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6499, // 25D4->player, no cast, single-target
-    BoulderClap = 14363, // 25D4->self, 3,0s cast, range 14 120-degree cone
-    EarthenHeart = 14364, // 25D4->location, 3,0s cast, range 6 circle
-    Obliterate = 14365, // 25D4->self, 6,0s cast, range 60 circle
+    BoulderClap = 14363, // 25D4->self, 3.0s cast, range 14 120-degree cone
+    EarthenHeart = 14364, // 25D4->location, 3.0s cast, range 6 circle
+    Obliterate = 14365, // 25D4->self, 6.0s cast, range 60 circle
 }
 
 class BoulderClap(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BoulderClap), new AOEShapeCone(14, 60.Degrees()));
@@ -52,7 +52,7 @@ class Stage03States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 613, NameID = 8084)]
 public class Stage03 : BossModule
 {
-    public Stage03(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage03(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
     }

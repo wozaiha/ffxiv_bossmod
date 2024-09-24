@@ -6,6 +6,7 @@ class P2PartySynergy(BossModule module) : CommonAssignments(module)
 
     public Glitch ActiveGlitch;
     public bool EnableDistanceHints;
+    private readonly TOPConfig _config = Service.Config.Get<TOPConfig>();
 
     protected override (GroupAssignmentUnique assignment, bool global) Assignments()
     {
@@ -84,11 +85,30 @@ class P2PartySynergy(BossModule module) : CommonAssignments(module)
         Glitch.Remote => (34, 50),
         _ => (0, 50)
     };
+
+    // determine north => south order for player based on what glitch is active, used for flare stacks
+    public int GetNorthSouthOrder(PlayerState st)
+    {
+        if (st.Group is < 1 or > 2)
+            return 0;
+
+        if (st.Group == 1 || ActiveGlitch == Glitch.Mid)
+            return st.Order;
+
+        return st.Order switch
+        {
+            1 => 4,
+            2 => _config.P2PartySynergyG2ReverseAll ? 3 : 2,
+            3 => _config.P2PartySynergyG2ReverseAll ? 2 : 3,
+            4 => 1,
+            _ => 0
+        };
+    }
 }
 
 class P2PartySynergyDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = new();
+    public List<AOEInstance> AOEs = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
@@ -145,8 +165,8 @@ class P2PartySynergyOptimizedFire : Components.UniformStackSpread
 
 class P2PartySynergyOpticalLaser(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.OpticalLaser))
 {
-    private P2PartySynergy? _synergy = module.FindComponent<P2PartySynergy>();
-    private Actor? _source = module.Enemies(OID.OpticalUnit).FirstOrDefault();
+    private readonly P2PartySynergy? _synergy = module.FindComponent<P2PartySynergy>();
+    private readonly Actor? _source = module.Enemies(OID.OpticalUnit).FirstOrDefault();
     private DateTime _activation;
 
     private static readonly AOEShapeRect _shape = new(100, 8);
@@ -167,7 +187,7 @@ class P2PartySynergyOpticalLaser(BossModule module) : Components.GenericAOEs(mod
         Arena.Actor(_source, ArenaColor.Object, true);
         var pos = AssignedPosition(pcSlot);
         if (pos != default)
-            Arena.AddCircle(Module.Bounds.Center + pos, 1, ArenaColor.Safe);
+            Arena.AddCircle(Module.Center + pos, 1, ArenaColor.Safe);
     }
 
     private WDir AssignedPosition(int slot)
@@ -176,20 +196,14 @@ class P2PartySynergyOpticalLaser(BossModule module) : Components.GenericAOEs(mod
             return new();
 
         var ps = _synergy.PlayerStates[slot];
-        if (ps.Order == 0 || ps.Group == 0)
+        if (ps.Order == 0 || ps.Group == 0 || _synergy.ActiveGlitch == P2PartySynergy.Glitch.Unknown)
             return new();
 
-        var eyeOffset = _source.Position - Module.Bounds.Center;
-        switch (_synergy.ActiveGlitch)
-        {
-            case P2PartySynergy.Glitch.Mid:
-                var toRelNorth = eyeOffset.Normalized();
-                return 10 * (2.5f - ps.Order) * toRelNorth + 11 * (ps.Group == 1 ? toRelNorth.OrthoL() : toRelNorth.OrthoR());
-            case P2PartySynergy.Glitch.Remote:
-                return 19 * (Angle.FromDirection(eyeOffset) + ps.Order * 40.Degrees() - 10.Degrees() + (ps.Group == 1 ? 0.Degrees() : 180.Degrees())).ToDirection();
-            default:
-                return new();
-        }
+        var eyeOffset = _source.Position - Module.Center;
+        var toRelNorth = eyeOffset.Normalized();
+        var order = _synergy.GetNorthSouthOrder(ps);
+        var centerOffset = _synergy.ActiveGlitch == P2PartySynergy.Glitch.Remote && order is 2 or 3 ? 17.5f : 11;
+        return 10 * (2.5f - order) * toRelNorth + centerOffset * (ps.Group == 1 ? toRelNorth.OrthoL() : toRelNorth.OrthoR());
     }
 }
 
@@ -197,18 +211,19 @@ class P2PartySynergyDischarger(BossModule module) : Components.Knockback(module,
 {
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(Module.Bounds.Center, 13); // TODO: activation
+        yield return new(Module.Center, 13); // TODO: activation
     }
 }
 
 class P2PartySynergyEfficientBladework : Components.GenericAOEs
 {
-    private P2PartySynergy? _synergy;
+    private readonly P2PartySynergy? _synergy;
     private DateTime _activation;
-    private List<Actor> _sources = new();
+    private readonly List<Actor> _sources = [];
     private int _firstStackSlot = -1;
     private BitMask _firstGroup;
     private string _swaps = "";
+    private readonly TOPConfig _config = Service.Config.Get<TOPConfig>();
 
     private static readonly AOEShapeCircle _shape = new(10);
 
@@ -238,7 +253,7 @@ class P2PartySynergyEfficientBladework : Components.GenericAOEs
     {
         var pos = AssignedPosition(pcSlot);
         if (pos != default)
-            Arena.AddCircle(Module.Bounds.Center + pos, 1, ArenaColor.Safe);
+            Arena.AddCircle(Module.Center + pos, 1, ArenaColor.Safe);
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -275,8 +290,13 @@ class P2PartySynergyEfficientBladework : Components.GenericAOEs
                 var s2 = _synergy.PlayerStates[slot];
                 if (s1.Group == s2.Group)
                 {
-                    // ok, we need adjusts - assume whoever is more S adjusts - that is higher order in G1 or G2 with mid glitch, or lower order in G2 with remote glitch
-                    var adjustOrder = s1.Group == 2 && _synergy.ActiveGlitch == P2PartySynergy.Glitch.Remote ? Math.Min(s1.Order, s2.Order): Math.Max(s1.Order, s2.Order);
+                    // need adjust
+                    var s1Order = _synergy.GetNorthSouthOrder(s1);
+                    var s2Order = _synergy.GetNorthSouthOrder(s2);
+                    int adjustOrder = _config.P2PartySynergyStackSwapSouth
+                        ? s1Order > s2Order ? s1.Order : s2.Order // south = higher order will swap
+                        : s1Order > s2Order ? s2.Order : s1.Order; // north = lower
+
                     for (int s = 0; s < _synergy.PlayerStates.Length; ++s)
                     {
                         if (_synergy.PlayerStates[s].Order == adjustOrder)
@@ -302,14 +322,14 @@ class P2PartySynergyEfficientBladework : Components.GenericAOEs
             return new();
 
         // assumption: first source (F) is our relative north, G1 always goes to relative west, G2 goes to relative S/E depending on glitch
-        var relNorth = 1.4f * (_sources[0].Position - Module.Bounds.Center);
+        var relNorth = 1.4f * (_sources[0].Position - Module.Center);
         return _firstGroup[slot] ? relNorth.OrthoL() : _synergy.ActiveGlitch == P2PartySynergy.Glitch.Mid ? -relNorth : relNorth.OrthoR();
     }
 }
 
 class P2PartySynergySpotlight(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4, 4)
 {
-    private List<Actor> _stackTargets = new(); // don't show anything until knockbacks are done, to reduce visual clutter
+    private readonly List<Actor> _stackTargets = []; // don't show anything until knockbacks are done, to reduce visual clutter
 
     public override void OnEventIcon(Actor actor, uint iconID)
     {

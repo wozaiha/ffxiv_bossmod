@@ -45,7 +45,7 @@ class P4FateCalibrationAlphaStillnessMotion(BossModule module) : Components.Stay
             1 => _second,
             _ => Requirement.None
         };
-        Array.Fill(Requirements, req);
+        Array.Fill(PlayerStates, new(req, default));
     }
 }
 
@@ -54,7 +54,7 @@ class P4FateCalibrationAlphaDebuffs(BossModule module) : Components.UniformStack
     public enum Debuff { None, Defamation, SharedSentence, AggravatedAssault }
 
     public Debuff[] Debuffs = new Debuff[PartyState.MaxPartySize];
-    private P4FateProjection? _proj = module.FindComponent<P4FateProjection>();
+    private readonly P4FateProjection? _proj = module.FindComponent<P4FateProjection>();
     private BitMask _avoidMask;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -98,7 +98,7 @@ class P4FateCalibrationAlphaDebuffs(BossModule module) : Components.UniformStack
 
 class P4FateCalibrationAlphaSacrament(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(Actor caster, DateTime activation)> _casters = new();
+    private readonly List<(Actor caster, DateTime activation)> _casters = [];
     private WPos[]? _safespots;
 
     private static readonly AOEShapeCross _shape = new(100, 8);
@@ -141,11 +141,11 @@ class P4FateCalibrationAlphaSacrament(BossModule module) : Components.GenericAOE
         if (safeClone == null || debuffs == null)
             return;
 
-        var dirToSafe = (safeClone.Position - Module.Bounds.Center).Normalized();
+        var dirToSafe = (safeClone.Position - Module.Center).Normalized();
         _safespots = new WPos[PartyState.MaxPartySize];
         for (int i = 0; i < _safespots.Length; ++i)
         {
-            _safespots[i] = Module.Bounds.Center + debuffs.Debuffs[i] switch
+            _safespots[i] = Module.Center + debuffs.Debuffs[i] switch
             {
                 P4FateCalibrationAlphaDebuffs.Debuff.Defamation => 18 * dirToSafe,
                 P4FateCalibrationAlphaDebuffs.Debuff.AggravatedAssault => -18 * dirToSafe + 3 * dirToSafe.OrthoR(),

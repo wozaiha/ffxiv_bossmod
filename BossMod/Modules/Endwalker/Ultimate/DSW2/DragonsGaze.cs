@@ -4,7 +4,7 @@
 class DragonsGaze(BossModule module, OID bossOID) : Components.GenericGaze(module, ActionID.MakeSpell(AID.DragonsGazeAOE))
 {
     public bool EnableHints;
-    private OID _bossOID = bossOID;
+    private readonly OID _bossOID = bossOID;
     private Actor? _boss;
     private WPos _eyePosition;
 
@@ -15,8 +15,8 @@ class DragonsGaze(BossModule module, OID bossOID) : Components.GenericGaze(modul
         // TODO: activation time
         if (_boss != null && NumCasts == 0)
         {
-            yield return new(_eyePosition, risky: EnableHints);
-            yield return new(_boss.Position, risky: EnableHints);
+            yield return new(_eyePosition, Range: EnableHints ? 10000 : 0);
+            yield return new(_boss.Position, Range: EnableHints ? 10000 : 0);
         }
     }
 
@@ -26,7 +26,7 @@ class DragonsGaze(BossModule module, OID bossOID) : Components.GenericGaze(modul
         if (state == 0x00020001 && index <= 7)
         {
             _boss = Module.Enemies(_bossOID).FirstOrDefault();
-            _eyePosition = Module.Bounds.Center + 40 * (180 - index * 45).Degrees().ToDirection();
+            _eyePosition = Module.Center + 40 * (180 - index * 45).Degrees().ToDirection();
         }
     }
 }

@@ -26,7 +26,7 @@ class UITest
             //Width = 1200,
             //Height = 800,
             Fullscreen = true,
-            TransparentColor = new float[] { 0, 0, 0 },
+            TransparentColor = [0, 0, 0],
         });
 
         // the background color of your window - typically don't change this for fullscreen overlays
@@ -65,11 +65,16 @@ class UITest
             Service.WindowSystem.Draw();
         };
 
-        var configPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs", "BossMod.json");
-        var mainWindow = new UITestWindow(scene, configPath);
-        mainWindow.IsOpen = true;
+        var pluginConfigs = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs");
+        var configPath = Path.Join(pluginConfigs, "BossMod.json");
+        var rotationRoot = Path.Join(pluginConfigs, "BossMod", "autorot");
+        var mainWindow = new UITestWindow(scene, configPath, rotationRoot)
+        {
+            IsOpen = true
+        };
         scene.Run();
         mainWindow.Dispose();
+        ActionDefinitions.Instance.Dispose();
     }
 
     private static unsafe void InitializeDalamudStyle()
@@ -90,7 +95,6 @@ class UITest
 
         fontConfig.Destroy();
         rangeHandle.Free();
-
 
         ImGui.GetStyle().GrabRounding = 3f;
         ImGui.GetStyle().FrameRounding = 4f;
@@ -146,9 +150,27 @@ class UITest
                         }
                     }
                 }
+
+                // Should return "C:\Program Files (x86)\Steam\steamapps\common\game Online" if installed with default options.
+                Span<int> validSteamAppIds = [39210, 312060];
+                foreach (var steamAppId in validSteamAppIds)
+                {
+                    using (var subkey = hklm.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App {steamAppId}"))
+                    {
+                        if (subkey != null && subkey.GetValue("InstallLocation", null) is string path)
+                        {
+                            // InstallLocation is the root path of the game (the one containing boot and game) itself
+                            var dataPath = Path.Join(path, "game", "sqpack");
+                            if (Directory.Exists(dataPath))
+                            {
+                                return dataPath;
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        return "F:\\FFXIV\\game\\sqpack";
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack");
     }
 }

@@ -19,7 +19,7 @@ class OrdealOfPurgation(BossModule module) : Components.GenericAOEs(module)
     private int _midIncrement; // inner with this index is incremented by one (rotated CCW) when passing middle ring
     private int _midDecrement; // inner with this index is decremented by one (rotated CW) when passing middle ring
     private int _rotationOuter;
-    private Symbol[] _symbols = new Symbol[8];
+    private readonly Symbol[] _symbols = new Symbol[8];
     private DateTime _activation;
 
     private static readonly AOEShapeCone _shapeTri = new(60, 30.Degrees());
@@ -62,7 +62,7 @@ class OrdealOfPurgation(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.OrdealOfPurgation)
-            _activation = spell.NPCFinishAt; // note: actual activation is several seconds later, but we need to finish our movements before shackles, so effective activation is around cast end
+            _activation = Module.CastFinishAt(spell); // note: actual activation is several seconds later, but we need to finish our movements before shackles, so effective activation is around cast end
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -142,6 +142,6 @@ class OrdealOfPurgation(BossModule module) : Components.GenericAOEs(module)
         index = TransformByMiddle(index);
         var shape = ShapeAtDirection(index);
         var dir = DirectionIndexToAngle(index);
-        return shape != null ? new(shape, Module.Bounds.Center + Module.Bounds.HalfSize * dir.ToDirection(), dir + 180.Degrees(), _activation) : null;
+        return shape != null ? new(shape, Module.Center + Module.Bounds.Radius * dir.ToDirection(), dir + 180.Degrees(), _activation) : null;
     }
 }

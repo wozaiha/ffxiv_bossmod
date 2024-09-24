@@ -31,7 +31,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
         public DateTime JobBuffExpire; // 0 if not active
         public DateTime DutyBuffExpire; // 0 if not active
 
-        public bool ImmuneAt(DateTime time) => RoleBuffExpire > time || JobBuffExpire > time || DutyBuffExpire > time;
+        public readonly bool ImmuneAt(DateTime time) => RoleBuffExpire > time || JobBuffExpire > time || DutyBuffExpire > time;
     }
 
     public bool IgnoreImmunes { get; init; } = ignoreImmunes;
@@ -48,7 +48,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
     {
         if (from != to)
         {
-            arena.Actor(to, rot, ArenaColor.Danger);
+            arena.ActorProjected(from, to, rot, ArenaColor.Danger);
             if (arena.Config.ShowOutlinesAndShadows)
                 arena.AddLine(from, to, 0xFF000000, 2);
             arena.AddLine(from, to, ArenaColor.Danger);
@@ -60,7 +60,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
     public abstract IEnumerable<Source> Sources(int slot, Actor actor);
 
     // called to determine whether we need to show hint
-    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => StopAtWall ? false : !Module.Bounds.Contains(pos);
+    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !StopAtWall && !Module.InBounds(pos);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -138,7 +138,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
             if (s.Shape != null && !s.Shape.Check(from, s.Origin, s.Direction))
                 continue; // this source won't affect player due to being out of aoe
 
-            WDir dir = s.Kind switch
+            var dir = s.Kind switch
             {
                 Kind.AwayFromOrigin => from != s.Origin ? (from - s.Origin).Normalized() : default,
                 Kind.TowardsOrigin => from != s.Origin ? (s.Origin - from).Normalized() : default,
@@ -157,7 +157,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
                 continue; // this could happen if attract starts from < min distance
 
             if (StopAtWall)
-                distance = Math.Min(distance, Module.Bounds.IntersectRay(from, dir) - actor.HitboxRadius);
+                distance = Math.Min(distance, Module.Arena.IntersectRayBounds(from, dir) - actor.HitboxRadius);
 
             var to = from + distance * dir;
             yield return (from, to);
@@ -179,7 +179,7 @@ public class KnockbackFromCastTarget(BossModule module, ActionID aid, float dist
     public Kind KnockbackKind = kind;
     public float MinDistance = minDistance;
     public bool MinDistanceBetweenHitboxes = minDistanceBetweenHitboxes;
-    public readonly List<Actor> Casters = new();
+    public readonly List<Actor> Casters = [];
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
@@ -189,12 +189,12 @@ public class KnockbackFromCastTarget(BossModule module, ActionID aid, float dist
             var minDist = MinDistance + (MinDistanceBetweenHitboxes ? actor.HitboxRadius + c.HitboxRadius : 0);
             if (c.CastInfo!.TargetID == c.InstanceID)
             {
-                yield return new(c.Position, Distance, c.CastInfo.NPCFinishAt, Shape, c.CastInfo.Rotation, KnockbackKind, minDist);
+                yield return new(c.Position, Distance, Module.CastFinishAt(c.CastInfo), Shape, c.CastInfo.Rotation, KnockbackKind, minDist);
             }
             else
             {
                 var origin = WorldState.Actors.Find(c.CastInfo.TargetID)?.Position ?? c.CastInfo.LocXZ;
-                yield return new(origin, Distance, c.CastInfo.NPCFinishAt, Shape, Angle.FromDirection(origin - c.Position), KnockbackKind, minDist);
+                yield return new(origin, Distance, Module.CastFinishAt(c.CastInfo), Shape, Angle.FromDirection(origin - c.Position), KnockbackKind, minDist);
             }
         }
     }

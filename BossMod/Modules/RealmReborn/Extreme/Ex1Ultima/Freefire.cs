@@ -2,7 +2,7 @@
 
 class Freefire(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Freefire))
 {
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
     private DateTime _resolve;
     public bool Active => _casters.Count > 0;
 
@@ -27,7 +27,7 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, ActionID.Make
             };
             if (invuln)
             {
-                hints.PlannedActions.Add((invuln, actor, (float)(_resolve - WorldState.CurrentTime).TotalSeconds, false));
+                hints.ActionsToExecute.Push(invuln, actor, ActionQueue.Priority.High, (float)(_resolve - WorldState.CurrentTime).TotalSeconds);
                 return;
             }
         }

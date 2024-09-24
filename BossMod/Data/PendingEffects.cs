@@ -7,9 +7,9 @@
 // TODO: refactor:
 // - move out of worldstate, it has no business being here; things like replays handle this better anyway
 // - handle things we care about (hp, statuses, knockbacks) independently, taking into account how game handles all that stuff (no ER for buff reapplication or instant buffs, no ER for 100% overheals or holmgang 'overkills', etc etc)
-public class PendingEffects
+public sealed class PendingEffects
 {
-    public class Entry
+    public sealed class Entry
     {
         public DateTime Timestamp;
         public ulong Source;
@@ -28,7 +28,7 @@ public class PendingEffects
                 bool confirmTarget = false;
                 foreach (var eff in ev.Targets[i].Effects)
                 {
-                    if (eff.Type is ActionEffectType.Damage or ActionEffectType.BlockedDamage or ActionEffectType.ParriedDamage or ActionEffectType.Heal or ActionEffectType.ApplyStatusEffectTarget or ActionEffectType.ApplyStatusEffectSource or ActionEffectType.RecoveredFromStatusEffect)
+                    if (eff.Type is ActionEffectType.Damage or ActionEffectType.BlockedDamage or ActionEffectType.ParriedDamage or ActionEffectType.Heal or ActionEffectType.ApplyStatusEffectTarget or ActionEffectType.ApplyStatusEffectSource or ActionEffectType.RecoveredFromStatusEffect or ActionEffectType.MpGain or ActionEffectType.MpLoss)
                     {
                         if (ev.Targets[i].ID == source)
                             confirmSource = confirmTarget = true;
@@ -46,7 +46,7 @@ public class PendingEffects
         }
     }
 
-    private List<Entry> _entries = new(); // implicitly sorted by timestamp/global sequence?
+    private readonly List<Entry> _entries = []; // implicitly sorted by timestamp/global sequence?
     public IReadOnlyList<Entry> Entries => _entries;
 
     public void AddEntry(DateTime ts, ulong source, ActorCastEvent ev)
@@ -102,7 +102,8 @@ public class PendingEffects
     public void RemoveExpired(DateTime ts)
     {
         var minRemaining = ts.AddSeconds(-3);
-        _entries.RemoveAll(e => {
+        _entries.RemoveAll(e =>
+        {
             bool expired = e.Timestamp < minRemaining;
             // note: this can happen if we misjudge and assume event required confirmation, but get none
             //if (expired)
@@ -128,6 +129,19 @@ public class PendingEffects
         return res;
     }
 
+    public int PendingMPDifference(ulong target)
+    {
+        int res = 0;
+        foreach (var eff in PendingEffectsAtTarget(_entries, target))
+        {
+            if (eff.Type is ActionEffectType.MpLoss)
+                res -= eff.Value;
+            else if (eff.Type is ActionEffectType.MpGain)
+                res += eff.Value;
+        }
+        return res;
+    }
+
     // returns low byte of extra if pending (stack count), or null if not
     public byte? PendingStatus(ulong target, uint statusID, ulong source)
     {
@@ -140,6 +154,20 @@ public class PendingEffects
         }
         return null;
     }
+
+    public byte? PendingStatus(ulong target, uint statusID)
+    {
+        foreach (var eff in PendingEffectsAtTarget(_entries, target))
+        {
+            if (eff.Type is ActionEffectType.ApplyStatusEffectTarget or ActionEffectType.ApplyStatusEffectSource && eff.Value == statusID)
+            {
+                return eff.Param2;
+            }
+        }
+        return null;
+    }
+
+    public bool PendingKnockbacks(ulong target) => PendingEffectsAtTarget(_entries, target).Any(eff => eff.Type is >= ActionEffectType.Knockback and <= ActionEffectType.AttractCustom3);
 
     private static IEnumerable<ActionEffect> PendingEffectsAtTarget(IEnumerable<Entry> entries, ulong target)
     {

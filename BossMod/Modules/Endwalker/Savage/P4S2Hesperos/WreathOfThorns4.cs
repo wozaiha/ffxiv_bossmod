@@ -4,13 +4,13 @@
 class WreathOfThorns4(BossModule module) : BossComponent(module)
 {
     public bool ReadyToBreak;
-    private IconID[] _playerIcons = new IconID[8];
-    private Actor?[] _playerTetherSource = new Actor?[8];
+    private readonly IconID[] _playerIcons = new IconID[8];
+    private readonly Actor?[] _playerTetherSource = new Actor?[8];
     private List<Actor>? _darkOrder; // contains sources
-    private int _doneTowers = 0;
-    private int _activeTethers = 0;
+    private int _doneTowers;
+    private int _activeTethers;
 
-    private static readonly float _waterExplosionRange = 10;
+    private const float _waterExplosionRange = 10;
 
     public override void Update()
     {
@@ -18,8 +18,8 @@ class WreathOfThorns4(BossModule module) : BossComponent(module)
         {
             // build order for dark explosion; TODO: this is quite hacky right now, and probably should be configurable
             // current logic assumes we break N or NW tether first, and then move clockwise
-            _darkOrder = new();
-            var c = Module.Bounds.Center;
+            _darkOrder = [];
+            var c = Module.Center;
             AddAOETargetToOrder(_darkOrder, p => p.Z < c.Z && p.X <= c.X);
             AddAOETargetToOrder(_darkOrder, p => p.X > c.X && p.Z <= c.Z);
             AddAOETargetToOrder(_darkOrder, p => p.Z > c.Z && p.X >= c.X);
@@ -30,13 +30,13 @@ class WreathOfThorns4(BossModule module) : BossComponent(module)
             // update order if unexpected tether was the first one to break
             if (_darkOrder[1].Tether.Target == 0)
             {
-                var moved = _darkOrder.First();
+                var moved = _darkOrder[0];
                 _darkOrder.RemoveAt(0);
                 _darkOrder.Add(moved);
             }
-            else if (_darkOrder[_darkOrder.Count - 1].Tether.Target == 0)
+            else if (_darkOrder[^1].Tether.Target == 0)
             {
-                var moved = _darkOrder.Last();
+                var moved = _darkOrder[^1];
                 _darkOrder.RemoveAt(_darkOrder.Count - 1);
                 _darkOrder.Insert(0, moved);
             }
@@ -60,7 +60,7 @@ class WreathOfThorns4(BossModule module) : BossComponent(module)
             }
             else if (_playerIcons[slot] == IconID.AkanthaiDark)
             {
-                var soakedTower = _playerTetherSource.Zip(_playerIcons).Where(si => si.Item1 != null && si.Item2 == IconID.AkanthaiWater).Select(si => si.Item1!).InRadius(actor.Position, P4S2.WreathTowerRadius).FirstOrDefault();
+                var soakedTower = _playerTetherSource.Zip(_playerIcons).Where(si => si.First != null && si.Second == IconID.AkanthaiWater).Select(si => si.First!).InRadius(actor.Position, P4S2.WreathTowerRadius).FirstOrDefault();
                 hints.Add("Soak the tower!", soakedTower == null);
             }
         }
@@ -128,9 +128,9 @@ class WreathOfThorns4(BossModule module) : BossComponent(module)
             else
             {
                 // if player has dark => show AOE radius around blue players and single tower to soak
-                foreach ((var player, var icon) in Raid.Members.Zip(_playerIcons))
+                for (int i = 0; i < _playerIcons.Length; ++i)
                 {
-                    if (icon == IconID.AkanthaiWater && player != null)
+                    if (_playerIcons[i] == IconID.AkanthaiWater && Raid[i] is var player && player != null)
                     {
                         Arena.AddCircle(player.Position, _waterExplosionRange, ArenaColor.Danger);
                     }
@@ -185,21 +185,21 @@ class WreathOfThorns4(BossModule module) : BossComponent(module)
 
     private void AddAOETargetToOrder(List<Actor> order, Predicate<WPos> sourcePred)
     {
-        var source = _playerTetherSource.Zip(_playerIcons).Where(si => si.Item2 == IconID.AkanthaiDark && si.Item1 != null && sourcePred(si.Item1.Position)).FirstOrDefault().Item1;
+        var source = _playerTetherSource.Zip(_playerIcons).FirstOrDefault(si => si.Second == IconID.AkanthaiDark && si.First != null && sourcePred(si.First.Position)).First;
         if (source != null)
             order.Add(source);
     }
 
     private WPos RotateCW(WPos pos, Angle angle, float radius)
     {
-        var dir = Angle.FromDirection(pos - Module.Bounds.Center) - angle;
-        return Module.Bounds.Center + radius * dir.ToDirection();
+        var dir = Angle.FromDirection(pos - Module.Center) - angle;
+        return Module.Center + radius * dir.ToDirection();
     }
 
     private WPos DetermineWaterSafeSpot(Actor source)
     {
         bool ccw = Service.Config.Get<P4S2Config>().Act4WaterBreakCCW;
-        Angle dir = (ccw ? -3 : 3) * 45.Degrees();
+        var dir = (ccw ? -3 : 3) * 45.Degrees();
         return RotateCW(source.Position, dir, 18);
     }
 

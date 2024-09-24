@@ -23,7 +23,7 @@ class FaithUnmoving(BossModule module) : Components.Knockback(module, ActionID.M
 {
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(Module.Bounds.Center, 16);
+        yield return new(Module.Center, 16);
     }
 }
 
@@ -32,12 +32,12 @@ class MeteorCircle(BossModule module) : Components.Adds(module, (uint)OID.Meteor
 
 class HeavyImpact(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = { new AOEShapeCone(6.5f, 135.Degrees()), new AOEShapeDonutSector(6.5f, 12.5f, 135.Degrees()), new AOEShapeDonutSector(12.5f, 18.5f, 135.Degrees()), new AOEShapeDonutSector(18.5f, 27.5f, 135.Degrees()) };
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, 135.Degrees()), new AOEShapeDonutSector(6.5f, 12.5f, 135.Degrees()), new AOEShapeDonutSector(12.5f, 18.5f, 135.Degrees()), new AOEShapeDonutSector(18.5f, 27.5f, 135.Degrees())];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.HeavyImpactAOE1)
-            AddSequence(caster.Position, spell.NPCFinishAt, spell.Rotation);
+            AddSequence(caster.Position, Module.CastFinishAt(spell), spell.Rotation);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

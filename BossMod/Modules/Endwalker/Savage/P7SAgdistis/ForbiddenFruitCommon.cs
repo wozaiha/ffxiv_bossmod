@@ -9,8 +9,8 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
     public bool MinotaursBaited { get; private set; }
     protected Actor?[] TetherSources = new Actor?[8];
     protected BitMask[] SafePlatforms = new BitMask[8];
-    private List<(Actor, AOEShape, DateTime)> _predictedAOEs = new();
-    private List<(Actor, AOEShape)> _activeAOEs = new();
+    private readonly List<(Actor, AOEShape, DateTime)> _predictedAOEs = [];
+    private readonly List<(Actor, AOEShape)> _activeAOEs = [];
     private BitMatrix _tetherClips; // [i,j] is set if i is tethered and clips j
 
     protected static readonly BitMask ValidPlatformsMask = new(7);
@@ -27,7 +27,7 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
         foreach (var (source, shape, time) in _predictedAOEs)
             yield return new(shape, source.Position, source.Rotation, time);
         foreach (var (source, shape) in _activeAOEs)
-            yield return new(shape, source.Position, source.CastInfo!.Rotation, source.CastInfo.NPCFinishAt);
+            yield return new(shape, source.Position, source.CastInfo!.Rotation, Module.CastFinishAt(source.CastInfo));
     }
 
     public override void Update()
@@ -65,7 +65,7 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
             Arena.AddLine(tetherSource.Position, pc.Position, TetherColor(tetherSource));
 
         foreach (var platform in SafePlatforms[pcSlot].SetBits())
-            Arena.AddCircle(Module.Bounds.Center + PlatformDirection(platform).ToDirection() * Border.SmallPlatformOffset, Border.SmallPlatformRadius, ArenaColor.Safe);
+            Arena.AddCircle(Module.Center + PlatformDirection(platform).ToDirection() * Border.SmallPlatformOffset, Border.SmallPlatformRadius, ArenaColor.Safe);
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)

@@ -10,15 +10,15 @@ public enum OID : uint
 public enum AID : uint
 {
     Fungah = 14705, // 272C->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
-    Fireball = 14706, // 272C->location, 3,5s cast, range 8 circle
-    Snort = 14704, // 272C->self, 7,0s cast, range 50+R circle
+    Fireball = 14706, // 272C->location, 3.5s cast, range 8 circle
+    Snort = 14704, // 272C->self, 7.0s cast, range 50+R circle
     Fireball2 = 14707, // 272C->player, no cast, range 8 circle
-    Tentacle = 14747, // 272E->self, 3,0s cast, range 8 circle
-    Wallop = 14748, // 272E->self, 3,5s cast, range 50+R width 10 rect, knockback 20 away from source
+    Tentacle = 14747, // 272E->self, 3.0s cast, range 8 circle
+    Wallop = 14748, // 272E->self, 3.5s cast, range 50+R width 10 rect, knockback 20 away from source
     Clearout = 14749, // 272E->self, no cast, range 13+R ?-degree cone, knockback 20 away from source
-    AquaBreath = 14745, // 272D->self, 2,5s cast, range 8+R 90-degree cone
-    Megavolt = 14746, // 272D->self, 3,0s cast, range 6+R circle
-    ImpSong = 14744, // 272D->self, 6,0s cast, range 50+R circle
+    AquaBreath = 14745, // 272D->self, 2.5s cast, range 8+R 90-degree cone
+    Megavolt = 14746, // 272D->self, 3.0s cast, range 6+R circle
+    ImpSong = 14744, // 272D->self, 6.0s cast, range 50+R circle
 }
 
 class AquaBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AquaBreath), new AOEShapeCone(13.1f, 45.Degrees()));
@@ -65,7 +65,7 @@ class Stage20Act3States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 3046, SortOrder = 3)]
 public class Stage20Act3 : BossModule
 {
-    public Stage20Act3(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))
+    public Stage20Act3(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
     {
         ActivateComponent<Hints>();
     }
@@ -79,9 +79,8 @@ public class Stage20Act3 : BossModule
             Arena.Actor(s, ArenaColor.Object, false);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

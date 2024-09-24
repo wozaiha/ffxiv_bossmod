@@ -33,17 +33,16 @@ class D153TonberryKingStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1547)]
-public class D153TonberryKing(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(73, -435), 30))
+public class D153TonberryKing(WorldState ws, Actor primary) : BossModule(ws, primary, new(73, -435), new ArenaBoundsCircle(30))
 {
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         //var rancorStacks = PrimaryActor.FindStatus(SID.Rancor)?.Extra ?? 0;
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch
             {
-                //OID.Tonberry => a.HP.Cur > 1 && rancorStacks < 3 ? 0 : AIHints.Enemy.PriorityForbidAI, // note: we don't bother with them - let tank aoe them when they reach center and invuln high stacks...
+                //OID.Tonberry => a.HPMP.CurHP > 1 && rancorStacks < 3 ? 0 : AIHints.Enemy.PriorityForbidAI, // note: we don't bother with them - let tank aoe them when they reach center and invuln high stacks...
                 OID.Boss => 1,
                 _ => 0
             };

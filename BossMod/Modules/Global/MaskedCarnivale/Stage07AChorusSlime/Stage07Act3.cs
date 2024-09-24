@@ -8,7 +8,7 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    LowVoltage = 14710, // 2706->self, 12,0s cast, range 30+R circle - can be line of sighted by barricade
+    LowVoltage = 14710, // 2706->self, 12.0s cast, range 30+R circle - can be line of sighted by barricade
     Detonation = 14696, // 2707->self, no cast, range 6+R circle
     Object130 = 14711, // 2706->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
@@ -56,7 +56,7 @@ class Stage07Act3States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8095, SortOrder = 3)]
 public class Stage07Act3 : BossModule
 {
-    public Stage07Act3(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage07Act3(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<Layout2Corners>();

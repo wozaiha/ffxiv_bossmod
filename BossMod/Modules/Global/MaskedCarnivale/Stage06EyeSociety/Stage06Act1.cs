@@ -8,10 +8,10 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    TearyTwirl = 14693, // 2700->self, 3,0s cast, range 6+R circle
-    DemonEye = 14691, // 25CD->self, 5,0s cast, range 50+R circle
+    TearyTwirl = 14693, // 2700->self, 3.0s cast, range 6+R circle
+    DemonEye = 14691, // 25CD->self, 5.0s cast, range 50+R circle
     Attack = 6499, // 2700/25CD->player, no cast, single-target
-    ColdStare = 14692, // 25CD->self, 2,5s cast, range 40+R 90-degree cone
+    ColdStare = 14692, // 25CD->self, 2.5s cast, range 40+R 90-degree cone
 }
 
 public enum SID : uint
@@ -37,7 +37,7 @@ class DemonEye(BossModule module) : Components.CastGaze(module, ActionID.MakeSpe
 
     public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
     {
-        return _blinded[slot] ? Enumerable.Empty<Eye>() : base.ActiveEyes(slot, actor);
+        return _blinded[slot] ? [] : base.ActiveEyes(slot, actor);
     }
 }
 
@@ -59,7 +59,7 @@ class ColdStare(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _blinded[slot] ? Enumerable.Empty<AOEInstance>() : base.ActiveAOEs(slot, actor);
+        return _blinded[slot] ? [] : base.ActiveAOEs(slot, actor);
     }
 }
 
@@ -110,7 +110,7 @@ class Stage06Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8090, SortOrder = 1)]
 public class Stage06Act1 : BossModule
 {
-    public Stage06Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))
+    public Stage06Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
     {
         ActivateComponent<Hints>();
         ActivateComponent<LayoutBigQuad>();
@@ -128,9 +128,8 @@ public class Stage06Act1 : BossModule
             Arena.Actor(s, ArenaColor.Object);
     }
 
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             e.Priority = (OID)e.Actor.OID switch

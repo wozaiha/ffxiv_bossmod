@@ -25,7 +25,7 @@ class SMasterOfLevin(BossModule module) : MasterOfLevin(module, AID.SMasterOfLev
 
 class C020RaikoStates : StateMachineBuilder
 {
-    private bool _savage;
+    private readonly bool _savage;
 
     public C020RaikoStates(BossModule module, bool savage) : base(module)
     {
@@ -41,8 +41,7 @@ class C020RaikoStates : StateMachineBuilder
             .ActivateOnEnter<SBarrelingSmash>(savage)
             .ActivateOnEnter<SHowl>(savage)
             .ActivateOnEnter<SMasterOfLevin>(savage)
-            // for yuki
-            .ActivateOnEnter<NRightSwipe>(!savage)
+            .ActivateOnEnter<NRightSwipe>(!savage) // for yuki
             .ActivateOnEnter<NLeftSwipe>(!savage)
             .ActivateOnEnter<SRightSwipe>(savage)
             .ActivateOnEnter<SLeftSwipe>(savage);

@@ -9,9 +9,9 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
     protected Actor? LightBeacon;
     protected Actor? DarkBeacon;
 
-    private static readonly float _forcedMarchDistance = 20; // TODO: verify
-    private static readonly float _minLightDistance = 22; // TODO: verify
-    private static readonly float _maxDarkDistance = 5; // TODO: verify
+    private const float _forcedMarchDistance = 20; // TODO: verify
+    private const float _minLightDistance = 22; // TODO: verify
+    private const float _maxDarkDistance = 5; // TODO: verify
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -27,7 +27,7 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
             case Debuff.DarkFollow:
                 if (DarkBeacon != null)
                 {
-                    if (!Module.Bounds.Contains(Components.Knockback.AwayFromSource(actor.Position, DarkBeacon.Position, _forcedMarchDistance)))
+                    if (!Module.InBounds(Components.Knockback.AwayFromSource(actor.Position, DarkBeacon.Position, _forcedMarchDistance)))
                         hints.Add("Aim away from wall!");
                     if ((actor.Position - DarkBeacon.Position).LengthSq() > _maxDarkDistance * _maxDarkDistance)
                         hints.Add("Move closer to dark beacon!");
@@ -40,7 +40,7 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
     {
         if (Done || Debuffs[slot] == Debuff.None)
             return;
-        movementHints.Add(actor.Position, Module.Bounds.Center + SafeSpotDirection(slot), ArenaColor.Safe);
+        movementHints.Add(actor.Position, Module.Center + SafeSpotDirection(slot), ArenaColor.Safe);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -66,7 +66,7 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
                 break;
         }
 
-        Arena.AddCircle(Module.Bounds.Center + SafeSpotDirection(pcSlot), 1, ArenaColor.Safe);
+        Arena.AddCircle(Module.Center + SafeSpotDirection(pcSlot), 1, ArenaColor.Safe);
     }
 
     protected abstract WDir SafeSpotDirection(int slot);

@@ -32,8 +32,8 @@ public enum AID : uint
     RawSteel = 23943, // Boss->player, 5.0s cast, width 4 rect charge cleaving tankbuster
     CloseQuarters = 23944, // Boss->self, 5.0s cast, single-target, visual
     CloseQuartersAOE = 23945, // Helper->self, 5.0s cast, range 15 circle
-    FarAfield = 23946, // Boss->self, 5,0s cast, single-target, visual
-    FarAfieldAOE = 23947, // Helper->self, 5,0s cast, range 10-30 donut
+    FarAfield = 23946, // Boss->self, 5.0s cast, single-target, visual
+    FarAfieldAOE = 23947, // Helper->self, 5.0s cast, range 10-30 donut
     CallControlledBurn = 23950, // Boss->self, 5.0s cast, single-target, visual (spread)
     CallControlledBurnAOE = 23951, // ImperialAssaultCraft->players, 5.0s cast, range 6 circle spread
     MagitekBlaster = 23952, // Boss->players, 5.0s cast, range 8 circle stack
@@ -70,8 +70,8 @@ class RideDownKnockback(BossModule module) : Components.Knockback(module, Action
         {
             _sources.Clear();
             // charge always happens through center, so create two sources with origin at center looking orthogonally
-            _sources.Add(new(Module.Bounds.Center, 12, spell.NPCFinishAt, _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
-            _sources.Add(new(Module.Bounds.Center, 12, spell.NPCFinishAt, _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(Module.Center, 12, Module.CastFinishAt(spell), _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(Module.Center, 12, Module.CastFinishAt(spell), _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
         }
     }
 
@@ -90,7 +90,7 @@ class CallRaze(BossModule module) : Components.RaidwideCast(module, ActionID.Mak
 // since hitbox is 7.2 it is probably starting to be optimal around distance 15
 class RawSteel(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.RawSteel), 2)
 {
-    private static readonly float _safeDistance = 15;
+    private const float _safeDistance = 15;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -112,7 +112,7 @@ class RawSteel(BossModule module) : Components.BaitAwayChargeCast(module, Action
         {
             if (b.Target == actor)
                 hints.AddForbiddenZone(ShapeDistance.Circle(b.Source.Position, _safeDistance));
-            hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(b.Target.InstanceID)), b.Source.CastInfo?.NPCFinishAt ?? default));
+            hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(b.Target.InstanceID)), Module.CastFinishAt(b.Source.CastInfo)));
         }
     }
 
@@ -153,7 +153,7 @@ class CE53HereComesTheCavalryStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 22)] // bnpcname=9929
-public class CE53HereComesTheCavalry(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(-750, 790), 25))
+public class CE53HereComesTheCavalry(WorldState ws, Actor primary) : BossModule(ws, primary, new(-750, 790), new ArenaBoundsCircle(25))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat; // not targetable at start
 

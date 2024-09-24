@@ -1,62 +1,32 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using System.Globalization;
+﻿using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BossMod;
 
 public static class Serialization
 {
-    public static JsonSerializer BuildSerializer()
+    public class JsonTypeConverter : JsonConverter<Type>
     {
-        var res = new JsonSerializer();
-        res.Converters.Add(new StringEnumConverter());
-        return res;
+        public override Type? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => Type.GetType(reader.GetString() ?? "");
+        public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options) => writer.WriteStringValue(value.FullName);
+        public override Type ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => Type.GetType(reader.GetString() ?? "")!;
+        public override void WriteAsPropertyName(Utf8JsonWriter writer, Type value, JsonSerializerOptions options) => writer.WritePropertyName(value.FullName!);
     }
 
-    public static void DeserializeFields(this JsonSerializer ser, JObject from, object to)
+    public static JsonSerializerOptions BuildSerializationOptions() => new()
     {
-        foreach (var (f, data) in from)
-            ser.DeserializeField(f, data, to);
+        IncludeFields = true,
+        WriteIndented = true,
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+        Converters = { new JsonStringEnumConverter(), new JsonTypeConverter() }
+    };
+
+    public static JsonDocument ReadJson(string path)
+    {
+        using var fstream = File.OpenRead(path);
+        return JsonDocument.Parse(fstream, new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
     }
 
-    public static void DeserializeField(this JsonSerializer ser, string name, JToken? data, object to)
-    {
-        var field = to.GetType().GetField(name);
-        if (field != null)
-        {
-            var value = data?.ToObject(field.FieldType, ser);
-            if (value != null)
-            {
-                field.SetValue(to, value);
-            }
-        }
-    }
-
-    public static uint? DeserializeHex(this JsonSerializer ser, JToken? from)
-    {
-        var str = from?.Value<string>();
-        return (str != null && str.StartsWith("0x")) ? uint.Parse(str.Substring(2), NumberStyles.HexNumber) : null;
-    }
-
-    public static uint? DeserializeEnum(this JsonSerializer ser, JToken? from, Type? enumType)
-    {
-        object? val;
-        return (enumType != null && Enum.TryParse(enumType, from?.Value<string>(), out val) && val != null) ? (uint)val : null;
-    }
-
-    public static ActionID? DeserializeActionID(this JsonSerializer ser, JToken? from, Type? aidType)
-    {
-        var aid = ser.DeserializeEnum(from, aidType);
-        if (aid != null)
-            return new(ActionType.Spell, aid.Value);
-        var uaid = ser.DeserializeHex(from);
-        return uaid != null ? new(uaid.Value) : null;
-    }
-
-    public static string SerializeActionID(this JsonSerializer ser, ActionID value, Type? aidType)
-    {
-        var aidStr = value.Type == ActionType.Spell ? aidType?.GetEnumName(value.ID) : null;
-        return aidStr ?? $"0x{value.Raw:X}";
-    }
+    public static Utf8JsonWriter WriteJson(Stream fstream, bool indented = true) => new(fstream, new JsonWriterOptions() { Indented = indented });
 }

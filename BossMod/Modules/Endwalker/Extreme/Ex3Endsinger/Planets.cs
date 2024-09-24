@@ -4,13 +4,13 @@
 class Planets(BossModule module) : BossComponent(module)
 {
     private Actor? _head;
-    private List<WPos> _planetsFiery = new();
-    private List<WPos> _planetsAzure = new();
+    private readonly List<WPos> _planetsFiery = [];
+    private readonly List<WPos> _planetsAzure = [];
 
     private static readonly AOEShapeCone _aoeHead = new(20, 90.Degrees());
     private static readonly AOEShapeCircle _aoePlanet = new(30);
-    private static readonly float _knockbackDistance = 25;
-    private static readonly float _planetOffset = 19.8f; // == 14 * sqrt(2)
+    private const float _knockbackDistance = 25;
+    private const float _planetOffset = 19.8f; // == 14 * sqrt(2)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -25,7 +25,7 @@ class Planets(BossModule module) : BossComponent(module)
         if (_planetsAzure.Count > 0)
         {
             var offsetLocation = Components.Knockback.AwayFromSource(actor.Position, _planetsAzure[0], _knockbackDistance);
-            if (!Module.Bounds.Contains(offsetLocation))
+            if (!Module.InBounds(offsetLocation))
             {
                 hints.Add("About to be knocked into wall!");
             }
@@ -100,7 +100,7 @@ class Planets(BossModule module) : BossComponent(module)
 
     private void AddPlanet(Actor caster, bool azure, bool firstOfPair)
     {
-        var origin = Module.Bounds.Center + _planetOffset * caster.Rotation.ToDirection();
+        var origin = Module.Center + _planetOffset * caster.Rotation.ToDirection();
         var planets = azure ? _planetsAzure : _planetsFiery;
         int index = firstOfPair ? 0 : planets.Count;
         planets.Insert(index, origin);

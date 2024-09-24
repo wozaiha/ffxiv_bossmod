@@ -40,8 +40,15 @@ class FeveredFlagellation(BossModule module) : Components.GenericBaitAway(module
 {
     public override void Update()
     {
-        foreach (var b in CurrentBaits)
-            ((AOEShapeRect)b.Shape).LengthFront = (b.Target.Position - b.Source.Position).Length();
+        foreach (ref var b in CurrentBaits.AsSpan())
+        {
+            if (b.Shape is AOEShapeRect shape)
+            {
+                var len = (b.Target.Position - b.Source.Position).Length();
+                if (shape.LengthFront != len)
+                    b.Shape = shape with { LengthFront = len };
+            }
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -53,7 +60,7 @@ class FeveredFlagellation(BossModule module) : Components.GenericBaitAway(module
     public override void OnEventIcon(Actor actor, uint iconID)
     {
         var icon = (IconID)iconID;
-        if (icon >= IconID.Icon1 && icon <= IconID.Icon4)
+        if (icon is >= IconID.Icon1 and <= IconID.Icon4)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, new AOEShapeRect(0, 2)));
     }
 }
@@ -75,4 +82,4 @@ class D012TesleentheForgivenStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8300)]
-public class D012TesleentheForgiven(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(78, -82), 19.5f));
+public class D012TesleentheForgiven(WorldState ws, Actor primary) : BossModule(ws, primary, new(78, -82), new ArenaBoundsCircle(19.5f));

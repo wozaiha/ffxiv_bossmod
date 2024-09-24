@@ -28,13 +28,13 @@ public enum AID : uint
 
 class Border(BossModule module) : BossComponent(module)
 {
-    private static readonly float _platformOffset = 25;
-    private static readonly float _platformRadius = 8;
+    private const float _platformOffset = 25;
+    private const float _platformRadius = 8;
     private static readonly Angle[] _platformDirections = [-90.Degrees(), -45.Degrees(), 0.Degrees(), 45.Degrees(), 90.Degrees()];
     private static readonly WDir[] _platformCenters = _platformDirections.Select(d => _platformOffset * d.ToDirection()).ToArray();
 
-    private static readonly float _bridgeInner = 22;
-    private static readonly float _bridgeOuter = 26;
+    private const float _bridgeInner = 22;
+    private const float _bridgeOuter = 26;
     private static readonly Angle _offInner = DirToPointAtDistance(_bridgeInner);
     private static readonly Angle _offOuter = DirToPointAtDistance(_bridgeOuter);
 
@@ -43,10 +43,10 @@ class Border(BossModule module) : BossComponent(module)
         hints.AddForbiddenZone(p =>
         {
             // union of platforms
-            var res = _platformCenters.Select(off => ShapeDistance.Circle(Module.Bounds.Center + off, _platformRadius)(p)).Min();
+            var res = _platformCenters.Select(off => ShapeDistance.Circle(Module.Center + off, _platformRadius)(p)).Min();
             // union of bridges
             for (int i = 1; i < 5; ++i)
-                res = Math.Min(res, ShapeDistance.Rect(Module.Bounds.Center + _platformCenters[i - 1], Module.Bounds.Center + _platformCenters[i], 3)(p));
+                res = Math.Min(res, ShapeDistance.Rect(Module.Center + _platformCenters[i - 1], Module.Center + _platformCenters[i], 3)(p));
             // invert
             return -res;
         });
@@ -58,7 +58,7 @@ class Border(BossModule module) : BossComponent(module)
     {
         // draw platforms
         foreach (var c in _platformCenters)
-            Arena.AddCircle(Module.Bounds.Center + c, _platformRadius, ArenaColor.Border);
+            Arena.AddCircle(Module.Center + c, _platformRadius, ArenaColor.Border);
 
         // draw bridges
         for (int i = 1; i < 5; ++i)
@@ -72,8 +72,8 @@ class Border(BossModule module) : BossComponent(module)
 
     private void DrawBridgeLine(Angle from, Angle to, Angle offset, float distance)
     {
-        var p1 = Module.Bounds.Center + distance * (from + offset).ToDirection();
-        var p2 = Module.Bounds.Center + distance * (to - offset).ToDirection();
+        var p1 = Module.Center + distance * (from + offset).ToDirection();
+        var p2 = Module.Center + distance * (to - offset).ToDirection();
         Arena.AddLine(p1, p2, ArenaColor.Border);
     }
 }
@@ -108,7 +108,7 @@ class D123OctomammothStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12334)]
 class D123Octomammoth : BossModule
 {
-    public D123Octomammoth(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-370, -368), 33.3f))
+    public D123Octomammoth(WorldState ws, Actor primary) : base(ws, primary, new(-370, -368), new ArenaBoundsCircle(33.3f))
     {
         ActivateComponent<Border>();
     }

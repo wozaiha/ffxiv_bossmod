@@ -2,7 +2,7 @@
 
 class Shockwave(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCone _shape = new(15, 90.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
@@ -11,8 +11,8 @@ class Shockwave(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.LeftSidedShockwaveFirst or AID.RightSidedShockwaveFirst)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation + 180.Degrees(), spell.NPCFinishAt.AddSeconds(2.6f)));
+            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape, caster.Position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.6f)));
         }
     }
 

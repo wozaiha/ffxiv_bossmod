@@ -7,10 +7,10 @@ class DemigodDouble(BossModule module) : Components.CastSharedTankbuster(module,
 // TODO: consider showing some tank swap / invul hint...
 class HeartStake(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.HeartStakeSecond));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 801, NameID = 10744, SortOrder = 2)]
-public class P4S2(WorldState ws, Actor primary) : BossModule(ws, primary, new ArenaBoundsCircle(new(100, 100), 20))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 801, NameID = 10744, SortOrder = 2, PlanLevel = 90)]
+public class P4S2(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     // common wreath of thorns constants
-    public static readonly float WreathAOERadius = 20;
-    public static readonly float WreathTowerRadius = 4;
+    public const float WreathAOERadius = 20;
+    public const float WreathTowerRadius = 4;
 }

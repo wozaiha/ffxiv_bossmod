@@ -2,7 +2,7 @@
 
 class P6HotWingTail(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shapeWing = new(50, 10.5f);
     private static readonly AOEShapeRect _shapeTail = new(50, 8);
@@ -20,7 +20,7 @@ class P6HotWingTail(BossModule module) : Components.GenericAOEs(module)
             _ => null
         };
         if (shape != null)
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     // note: we don't remove aoe's, since that is used e.g. by spreads component

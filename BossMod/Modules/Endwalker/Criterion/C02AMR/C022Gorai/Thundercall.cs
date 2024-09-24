@@ -2,10 +2,10 @@
 
 class Thundercall(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<Actor> _orbs = new();
+    private readonly List<Actor> _orbs = [];
     private Actor? _safeOrb;
     private Actor? _miniTarget;
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeSmall = new(8);
     private static readonly AOEShapeCircle _shapeLarge = new(18);
@@ -29,8 +29,8 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
             _orbs.AddRange(Module.Enemies(OID.SBallOfLevin));
             WDir center = new();
             foreach (var o in _orbs)
-                center += o.Position - Module.Bounds.Center;
-            _safeOrb = _orbs.Farthest(Module.Bounds.Center + center);
+                center += o.Position - Module.Center;
+            _safeOrb = _orbs.Farthest(Module.Center + center);
             _miniTarget = WorldState.Actors.Find(spell.TargetID);
         }
     }
