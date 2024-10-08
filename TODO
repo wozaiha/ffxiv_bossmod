@@ -1,13 +1,14 @@
 immediate plans
-- auto control
-- goal priority for aoes
+- nechuciho - seen incorrect rotations...
+- merge prs!
 - collisions for pathfinding
-- hunt modules
+-- embedded mode
 - brd rotation
 
 general:
 - horizontal timeline / cooldown planner
 - cdplanner should use real cds
+- assignments per ui order rather than per player + class-specific assignments
 - restore view-timeline to module ui
 - module packs
 -- dlls, loaded as usual
@@ -35,6 +36,9 @@ general:
 --- target is not a priority, but damaging it is a nice bonus (lower priority than max target)
 -- use that for targeting utils in aihints
 - debug utility to play action animations, spawn actors, play vfx, etc...
+- encounter hints (to show before pull)
+- zone modules: replay visualization
+- zone modules: module info ui
 
 boss modules:
 - timers

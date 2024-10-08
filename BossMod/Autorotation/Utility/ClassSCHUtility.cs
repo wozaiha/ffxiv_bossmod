@@ -2,86 +2,92 @@
 
 public sealed class ClassSCHUtility(RotationModuleManager manager, Actor player) : RoleHealerUtility(manager, player)
 {
-    public enum Track { WhisperingDawn = SharedTrack.Count, Adloquium, Succor, FeyIllumination, Lustrate, Indomitability, DeploymentTactics, EmergencyTactics, Dissipation, Excogitation, Aetherpact, Recitation, FeyBlessing, Consolation, Protraction, Expedient, Seraphism, Resurrection, Summons, PetActions }
+    public enum Track { WhisperingDawn = SharedTrack.Count, Adloquium, Succor, FeyIllumination, Lustrate, SacredSoil, Indomitability, DeploymentTactics, EmergencyTactics, Dissipation, Excogitation, Aetherpact, Recitation, FeyBlessing, Consolation, Protraction, Expedient, Seraphism, Summons }
     public enum SuccorOption { None, Succor, Concitation }
     public enum DeployOption { None, Use, UseEx }
+    public enum AetherpactOption { None, Use, End }
     public enum RecitationOption { None, Use, UseEx }
     public enum PetOption { None, Eos, Seraph }
+    public bool HasEffect<SID>(SID sid) where SID : Enum => Player.FindStatus((uint)(object)sid, Player.InstanceID) != null; //Checks if Status effect is on self
 
     public static readonly ActionID IDLimitBreak3 = ActionID.MakeSpell(SCH.AID.AngelFeathers);
 
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("Utility: SCH", "Planner support for utility actions", "Akechi", RotationModuleQuality.Basic, BitMask.Build((int)Class.SCH), 100);
-        DefineShared(def, IDLimitBreak3);
+        var res = new RotationModuleDefinition("Utility: SCH", "Cooldown Planner support for Utility Actions.\nNOTE: This is NOT a rotation preset! All Utility modules are STRICTLY for cooldown-planning usage.", "Akechi", RotationModuleQuality.Ok, BitMask.Build((int)Class.SCH), 100);
+        DefineShared(res, IDLimitBreak3);
 
-        DefineSimpleConfig(def, Track.WhisperingDawn, "WhisperingDawn", "W.Dawn", 140, SCH.AID.WhisperingDawn);
-        DefineSimpleConfig(def, Track.Adloquium, "Adloquium", "Adlo", 100, SCH.AID.Adloquium);
+        DefineSimpleConfig(res, Track.WhisperingDawn, "WhisperingDawn", "W.Dawn", 140, SCH.AID.WhisperingDawn, 21);
+        DefineSimpleConfig(res, Track.Adloquium, "Adloquium", "Adlo", 100, SCH.AID.Adloquium, 30);
 
-        def.Define(Track.Succor).As<SuccorOption>("Succor", "", 200)
+        res.Define(Track.Succor).As<SuccorOption>("Succor", "", 200)
             .AddOption(SuccorOption.None, "None", "Do not use automatically")
             .AddOption(SuccorOption.Succor, "Use", "Use Succor", 2, 30, ActionTargets.Self, 35, 95)
             .AddOption(SuccorOption.Concitation, "UseEx", "Use Concitation", 2, 30, ActionTargets.Self, 96)
             .AddAssociatedActions(SCH.AID.Succor, SCH.AID.Concitation);
 
-        DefineSimpleConfig(def, Track.FeyIllumination, "FeyIllumination", "FeyIll", 240, SCH.AID.FeyIllumination);
-        DefineSimpleConfig(def, Track.Lustrate, "Lustrate", "Lust", 150, SCH.AID.Lustrate, 1);
-        //DefineSimpleConfig(def, Track.SacredSoil, "SacredSoil", "Soil", 180, SCH.AID.SacredSoil, 15); (TODO: how to deal with targeting?)
-        DefineSimpleConfig(def, Track.Indomitability, "Indomitability", "Indom", 90, SCH.AID.Indomitability);
+        DefineSimpleConfig(res, Track.FeyIllumination, "FeyIllumination", "FeyIll", 240, SCH.AID.FeyIllumination, 20);
+        DefineSimpleConfig(res, Track.Lustrate, "Lustrate", "Lust", 150, SCH.AID.Lustrate);
+        DefineSimpleConfig(res, Track.SacredSoil, "SacredSoil", "Soil", 180, SCH.AID.SacredSoil, 15);
+        DefineSimpleConfig(res, Track.Indomitability, "Indomitability", "Indom", 90, SCH.AID.Indomitability);
 
-        def.Define(Track.DeploymentTactics).As<DeployOption>("DeploymentTactics", "Deploy", 150)
+        res.Define(Track.DeploymentTactics).As<DeployOption>("DeploymentTactics", "Deploy", 150)
             .AddOption(DeployOption.None, "None", "Do not use automatically")
             .AddOption(DeployOption.Use, "Use", "Use Deployment Tactics", 120, 0, ActionTargets.Self, 56, 87)
             .AddOption(DeployOption.UseEx, "UseEx", "Use Enhanced Deployment Tactics", 90, 0, ActionTargets.Self, 88)
             .AddAssociatedActions(SCH.AID.DeploymentTactics);
 
-        DefineSimpleConfig(def, Track.EmergencyTactics, "EmergencyTactics", "Emerg", 100, SCH.AID.EmergencyTactics);
-        DefineSimpleConfig(def, Track.Dissipation, "Dissipation", "Dissi", 290, SCH.AID.Dissipation);
-        DefineSimpleConfig(def, Track.Excogitation, "Excogitation", "Excog", 100, SCH.AID.Excogitation);
-        DefineSimpleConfig(def, Track.Aetherpact, "Aetherpact", "Pact", 100, SCH.AID.Aetherpact);
+        DefineSimpleConfig(res, Track.EmergencyTactics, "EmergencyTactics", "Emerg", 100, SCH.AID.EmergencyTactics, 15);
+        DefineSimpleConfig(res, Track.Dissipation, "Dissipation", "Dissi", 290, SCH.AID.Dissipation, 15);
+        DefineSimpleConfig(res, Track.Excogitation, "Excogitation", "Excog", 100, SCH.AID.Excogitation, 45);
 
-        def.Define(Track.Recitation).As<RecitationOption>("Recitation", "Recit", 130)
+        res.Define(Track.Aetherpact).As<AetherpactOption>("Aetherpact", "", 300)
+            .AddOption(AetherpactOption.None, "None", "Do not use automatically")
+            .AddOption(AetherpactOption.Use, "Use", "Use Aetherpact", 0, 0, ActionTargets.Self | ActionTargets.Party, 70)
+            .AddOption(AetherpactOption.End, "UseEx", "End Aetherpact", 0, 0, ActionTargets.Self | ActionTargets.Party, 70)
+            .AddAssociatedActions(SCH.AID.Aetherpact, SCH.AID.DissolveUnion);
+
+        res.Define(Track.Recitation).As<RecitationOption>("Recitation", "Recit", 130)
             .AddOption(RecitationOption.None, "None", "Do not use automatically")
             .AddOption(RecitationOption.Use, "Use", "Use Recitation", 90, 0, ActionTargets.Self, 74, 97)
             .AddOption(RecitationOption.UseEx, "UseEx", "Use Enhanced Recitation", 60, 0, ActionTargets.Self, 98)
             .AddAssociatedActions(SCH.AID.Recitation);
 
-        DefineSimpleConfig(def, Track.FeyBlessing, "FeyBlessing", "Bless", 120, SCH.AID.FeyBlessing);
-        DefineSimpleConfig(def, Track.Consolation, "Consolation", "Consol", 80, SCH.AID.Consolation);
-        DefineSimpleConfig(def, Track.Protraction, "Protraction", "Prot", 110, SCH.AID.Protraction);
-        DefineSimpleConfig(def, Track.Expedient, "Expedient", "Exped", 200, SCH.AID.Expedient);
-        DefineSimpleConfig(def, Track.Seraphism, "Seraphism", "", 300, SCH.AID.Seraphism);
-        DefineSimpleConfig(def, Track.Resurrection, "Resurrection", "Raise", 10, SCH.AID.Resurrection);
+        DefineSimpleConfig(res, Track.FeyBlessing, "FeyBlessing", "Bless", 120, SCH.AID.FeyBlessing);
+        DefineSimpleConfig(res, Track.Consolation, "Consolation", "Consol", 80, SCH.AID.Consolation, 30);
+        DefineSimpleConfig(res, Track.Protraction, "Protraction", "Prot", 110, SCH.AID.Protraction, 10);
+        DefineSimpleConfig(res, Track.Expedient, "Expedient", "Exped", 200, SCH.AID.Expedient, 20);
+        DefineSimpleConfig(res, Track.Seraphism, "Seraphism", "", 300, SCH.AID.Seraphism, 20);
+
         // Pet Summons
-        def.Define(Track.Summons).As<PetOption>("Pet", "", 180)
+        res.Define(Track.Summons).As<PetOption>("Pet", "", 180)
             .AddOption(PetOption.None, "None", "Do not use automatically")
             .AddOption(PetOption.Eos, "Eos", "Summon Eos", 2, 0, ActionTargets.Self, 4)
             .AddOption(PetOption.Seraph, "Seraph", "Summon Seraph", 120, 22, ActionTargets.Self, 80)
             .AddAssociatedActions(SCH.AID.SummonEos, SCH.AID.SummonSeraph);
 
-        return def;
+        return res;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         ExecuteShared(strategy, IDLimitBreak3);
         ExecuteSimple(strategy.Option(Track.WhisperingDawn), SCH.AID.WhisperingDawn, Player);
-        ExecuteSimple(strategy.Option(Track.Adloquium), SCH.AID.Adloquium, primaryTarget);
+        ExecuteSimple(strategy.Option(Track.Adloquium), SCH.AID.Adloquium, primaryTarget ?? Player);
         ExecuteSimple(strategy.Option(Track.FeyIllumination), SCH.AID.FeyIllumination, Player);
-        ExecuteSimple(strategy.Option(Track.Lustrate), SCH.AID.Lustrate, primaryTarget);
-        //ExecuteSimple(strategy.Option(Track.SacredSoil), SCH.AID.SacredSoil, ???); (TODO: how to deal with targeting?)
-        ExecuteSimple(strategy.Option(Track.Indomitability), SCH.AID.Indomitability, primaryTarget);
-        ExecuteSimple(strategy.Option(Track.EmergencyTactics), SCH.AID.EmergencyTactics, primaryTarget);
-        ExecuteSimple(strategy.Option(Track.Dissipation), SCH.AID.Dissipation, primaryTarget);
-        ExecuteSimple(strategy.Option(Track.Excogitation), SCH.AID.Excogitation, primaryTarget);
-        ExecuteSimple(strategy.Option(Track.Aetherpact), SCH.AID.Aetherpact, primaryTarget);
+        ExecuteSimple(strategy.Option(Track.Lustrate), SCH.AID.Lustrate, primaryTarget ?? Player);
+        ExecuteSimple(strategy.Option(Track.SacredSoil), SCH.AID.SacredSoil, Player);
+        ExecuteSimple(strategy.Option(Track.Indomitability), SCH.AID.Indomitability, Player);
+        ExecuteSimple(strategy.Option(Track.EmergencyTactics), SCH.AID.EmergencyTactics, Player);
+        ExecuteSimple(strategy.Option(Track.Dissipation), SCH.AID.Dissipation, Player);
+        ExecuteSimple(strategy.Option(Track.Excogitation), SCH.AID.Excogitation, primaryTarget ?? Player);
         ExecuteSimple(strategy.Option(Track.FeyBlessing), SCH.AID.FeyBlessing, Player);
         ExecuteSimple(strategy.Option(Track.Consolation), SCH.AID.Consolation, Player);
-        ExecuteSimple(strategy.Option(Track.Protraction), SCH.AID.Protraction, Player);
-        ExecuteSimple(strategy.Option(Track.Expedient), SCH.AID.Expedient, primaryTarget);
+        ExecuteSimple(strategy.Option(Track.Protraction), SCH.AID.Protraction, primaryTarget ?? Player);
+        ExecuteSimple(strategy.Option(Track.Expedient), SCH.AID.Expedient, Player);
         ExecuteSimple(strategy.Option(Track.Seraphism), SCH.AID.Seraphism, Player);
-        ExecuteSimple(strategy.Option(Track.Resurrection), SCH.AID.Resurrection, primaryTarget);
 
+        var alreadyUp = HasEffect(SGE.SID.EukrasianPrognosis) || HasEffect(SCH.SID.Galvanize);
         var succ = strategy.Option(Track.Succor);
         var succAction = succ.As<SuccorOption>() switch
         {
@@ -89,26 +95,36 @@ public sealed class ClassSCHUtility(RotationModuleManager manager, Actor player)
             SuccorOption.Concitation => SCH.AID.Concitation,
             _ => default
         };
-        if (succAction != default)
+        if (succAction != default && !alreadyUp)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(succAction), Player, succ.Priority(), succ.Value.ExpireIn);
 
         var deploy = strategy.Option(Track.DeploymentTactics);
         if (deploy.As<DeployOption>() != DeployOption.None)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(SCH.AID.DeploymentTactics), Player, deploy.Priority(), deploy.Value.ExpireIn);
 
+        var pact = strategy.Option(Track.Aetherpact);
+        var pactAction = pact.As<AetherpactOption>() switch
+        {
+            AetherpactOption.Use => SCH.AID.Aetherpact,
+            AetherpactOption.End => SCH.AID.DissolveUnion,
+            _ => default
+        };
+        if (pactAction != default)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(pactAction), primaryTarget ?? Player, pact.Priority(), pact.Value.ExpireIn);
+
         var recit = strategy.Option(Track.Recitation);
         if (recit.As<RecitationOption>() != RecitationOption.None)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(SCH.AID.Recitation), Player, recit.Priority(), recit.Value.ExpireIn);
 
-        var pet = strategy.Option(Track.PetActions);
-        var petAction = succ.As<PetOption>() switch
+        var pet = strategy.Option(Track.Summons);
+        var petSummons = pet.As<PetOption>() switch
         {
             PetOption.Eos => SCH.AID.SummonEos,
             PetOption.Seraph => SCH.AID.SummonSeraph,
             _ => default
         };
-        if (petAction != default)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(petAction), Player, pet.Priority(), pet.Value.ExpireIn);
+        if (petSummons != default)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(petSummons), Player, pet.Priority(), pet.Value.ExpireIn);
 
     }
 }

@@ -10,6 +10,7 @@ public class ConfigRoot
     private const int _version = 10;
 
     public Event Modified = new();
+    public Version AssemblyVersion = new(); // we use this to show newly added config options
     private readonly Dictionary<Type, ConfigNode> _nodes = [];
 
     public IEnumerable<ConfigNode> Nodes => _nodes.Values;
@@ -45,6 +46,7 @@ public class ConfigRoot
                 var node = type != null ? _nodes.GetValueOrDefault(type) : null;
                 node?.Deserialize(jconfig.Value, ser);
             }
+            AssemblyVersion = json.RootElement.TryGetProperty(nameof(AssemblyVersion), out var jver) ? new(jver.GetString() ?? "") : new();
         }
         catch (Exception e)
         {
@@ -66,6 +68,7 @@ public class ConfigRoot
                     n.Serialize(jwriter, ser);
                 }
                 jwriter.WriteEndObject();
+                jwriter.WriteString(nameof(AssemblyVersion), AssemblyVersion.ToString());
             });
         }
         catch (Exception e)
@@ -231,7 +234,7 @@ public class ConfigRoot
                 foreach (var (k, planData) in plans)
                 {
                     var oid = uint.Parse(k);
-                    var info = ModuleRegistry.FindByOID(oid);
+                    var info = BossModuleRegistry.FindByOID(oid);
                     var config = info?.PlanLevel > 0 ? info.ConfigType : null;
                     if (config?.FullName == null)
                         continue;
@@ -396,7 +399,7 @@ public class ConfigRoot
                     jplan.WriteString("Name", plan!["Name"]!.GetValue<string>());
                     jplan.WriteString("Encounter", t);
                     jplan.WriteString("Class", cls);
-                    jplan.WriteNumber("Level", type != null ? ModuleRegistry.FindByType(type)?.PlanLevel ?? 0 : 0);
+                    jplan.WriteNumber("Level", type != null ? BossModuleRegistry.FindByType(type)?.PlanLevel ?? 0 : 0);
                     jplan.WriteStartArray("PhaseDurations");
                     foreach (var d in plan["Timings"]!["PhaseDurations"]!.AsArray())
                         jplan.WriteNumberValue(d!.GetValue<float>());
